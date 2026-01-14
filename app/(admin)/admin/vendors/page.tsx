@@ -1,43 +1,137 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { FileDown } from "lucide-react";
+import ActivePagination from "./_components/ActivePagination";
+
+/* ================= TYPES ================= */
+
+type VendorStatus =
+  | "Active"
+  | "Review"
+  | "Recently Approved"
+  | "Flagged"
+  | "Suspended";
+
+interface Vendor {
+  id: string;
+  name: string;
+  category: string;
+  status: VendorStatus;
+  rating: string;
+}
+
+/* ================= DATA ================= */
+
+const vendors: Vendor[] = [
+  {
+    id: "V-7891",
+    name: "Elegant weddings",
+    category: "Photography",
+    status: "Active",
+    rating: "★★★★☆",
+  },
+  {
+    id: "V-7892",
+    name: "London Category Co.",
+    category: "Catering",
+    status: "Review",
+    rating: "★★★★☆",
+  },
+  {
+    id: "V-7893",
+    name: "Premier",
+    category: "Venues",
+    status: "Recently Approved",
+    rating: "★★★★★",
+  },
+  {
+    id: "V-7894",
+    name: "Magic Moment",
+    category: "Planning",
+    status: "Review",
+    rating: "-----",
+  },
+  {
+    id: "V-7895",
+    name: "City Sounds DJ",
+    category: "Entertainment",
+    status: "Suspended",
+    rating: "★★★☆☆",
+  },
+];
+
+const statusStyles: Record<string, string> = {
+  Active: "bg-green-100 text-green-700",
+  Review: "bg-yellow-100 text-yellow-700",
+  Flagged: "bg-orange-100 text-orange-700",
+  Suspended: "bg-red-100 text-red-700",
+  "Recently Approved": "bg-blue-100 text-blue-700",
+};
+
+/* ================= PAGE ================= */
+
 export default function VendorPage() {
+  const router = useRouter();
+
+  const [filter, setFilter] = useState<
+    "All" | "Review" | "Recently Approved" | "Flagged" | "Suspended"
+  >("All");
+
+  const filteredVendors =
+    filter === "All"
+      ? vendors
+      : vendors.filter((vendor) => vendor.status === filter);
+
   return (
     <div className="space-y-6">
-
       {/* HEADER CARD */}
       <div className="bg-white rounded-xl p-4 sm:p-6">
-        <h1 className="text-xl sm:text-2xl font-semibold">
-          Vendor Management dashboard
-        </h1>
+        <button className="text-xl sm:text-2xl font-semibold">
+          Vendor Management
+        </button>
         <p className="text-muted-foreground text-sm">
-          2,487 Active Vendors
+          {filteredVendors.length} Active Vendors
         </p>
       </div>
 
       {/* FILTER BAR */}
-      <div className="bg-white p-4 rounded-xl">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full">
+        <div className="w-full sm:flex-1 overflow-x-auto">
+          <div className="flex items-center gap-6 sm:gap-10 text-[13px] bg-[#D9D9D9] p-2 rounded-lg min-w-max">
+            <div className="p-1">
+              <span
+                onClick={() => setFilter("All")}
+                className="font-medium text-[#2B4EFF] bg-white p-1 px-2 rounded-lg cursor-pointer"
+              >
+                All <span className="pl-3">(145)</span>
+              </span>
+            </div>
 
-          {/* FILTER TABS */}
-          <div className="flex flex-wrap gap-3 text-sm">
-            <span className="font-medium text-[#2B4EFF]">
-              All (145)
+            <span onClick={() => setFilter("Review")} className="text-[#718096] cursor-pointer">
+              Pending Review 12
             </span>
-            <span>Pending Review 12</span>
-            <span>Recently Approved 3</span>
-            <span>Flagged 3</span>
-            <span>Suspended 3</span>
+            <span onClick={() => setFilter("Recently Approved")} className="text-[#718096] cursor-pointer">
+              Recently Approved 3
+            </span>
+            <span onClick={() => setFilter("Flagged")} className="text-[#718096] cursor-pointer">
+              Flagged 3
+            </span>
+            <span onClick={() => setFilter("Suspended")} className="text-[#718096] cursor-pointer">
+              Suspended 3
+            </span>
           </div>
-
-          {/* ACTION */}
-          <button className="self-start sm:self-auto px-4 py-2 rounded-lg bg-gray-100 text-sm">
-            Download
-          </button>
         </div>
+
+        <button className="px-4 py-2 rounded-lg bg-[#D9D9D9] text-[#718096] text-sm flex items-center gap-2">
+          <FileDown className="text-[#A0AEC0]" />
+          Download
+        </button>
       </div>
 
       {/* TABLE */}
       <div className="bg-white rounded-xl overflow-hidden">
-
-        {/* MOBILE SCROLL WRAPPER */}
         <div className="overflow-x-auto">
           <table className="min-w-[700px] w-full text-sm">
             <thead className="border-b">
@@ -52,29 +146,44 @@ export default function VendorPage() {
             </thead>
 
             <tbody>
-              {["Elegant Weddings", "London Catering"].map((name, i) => (
-                <tr key={i} className="border-b last:border-none">
-                  <td className="p-4">V-789{i}</td>
-                  <td className="font-medium">{name}</td>
-                  <td>Photography</td>
+              {filteredVendors.map((vendor) => (
+                <tr
+                  key={vendor.id}
+                  onClick={() => router.push(`/admin/vendorprofile/${vendor.id}`)}
+                  className="cursor-pointer"
+                >
+                  <td className="p-4">{vendor.id}</td>
+                  <td className="font-medium">{vendor.name}</td>
+                  <td>{vendor.category}</td>
                   <td>
-                    <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs">
-                      Active
+                    <span
+                      className={`px-5 py-2 rounded-lg text-xs ${statusStyles[vendor.status]}`}
+                    >
+                      {vendor.status}
                     </span>
                   </td>
-                  <td>★★★★★</td>
-                  <td className="text-[#2B4EFF] whitespace-nowrap space-x-4">
+                  <td>{vendor.rating}</td>
+                  <td
+                    className="text-[#2B4EFF] space-x-4"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <button>Edit</button>
-                    <button>View</button>
+                    <button
+                      onClick={() =>
+                        router.push(`/admin/vendorreview/${vendor.id}`)
+                      }
+                    >
+                      View
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-
       </div>
 
+      <ActivePagination />
     </div>
-  )
+  );
 }

@@ -100,7 +100,7 @@ export default function ActionRequiredCard() {
           className="
             space-y-3
             overflow-y-auto
-            max-h-[320px]
+            h-full
             pr-1
           "
         >
