@@ -155,7 +155,7 @@ export default function VendorProfileClient({
             ].map(([title, value, sub]) => (
               <div
                 key={title}
-                className="bg-white rounded-xl p-4 border space-y-4"
+                className="bg-white rounded-xl p-4 border space-y-4 last:col-span-2 lg:col-span-1"
               >
                 <p className="text-[14px] font-semibold text-[#000000]">
                   {title}
@@ -169,7 +169,7 @@ export default function VendorProfileClient({
           </div>
 
           {/* BUSINESS DETAILS */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 text-[20px] text-[#1E1E1E]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5text-[#1E1E1E]">
             <div className="space-y-3">
               <h3 className="font-medium">Business Details</h3>
 

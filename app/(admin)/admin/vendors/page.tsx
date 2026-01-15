@@ -4,63 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FileDown } from "lucide-react";
 import ActivePagination from "./_components/ActivePagination";
-
-/* ================= TYPES ================= */
-
-type VendorStatus =
-  | "Active"
-  | "Review"
-  | "Recently Approved"
-  | "Flagged"
-  | "Suspended";
-
-interface Vendor {
-  id: string;
-  name: string;
-  category: string;
-  status: VendorStatus;
-  rating: string;
-}
-
-/* ================= DATA ================= */
-
-const vendors: Vendor[] = [
-  {
-    id: "V-7891",
-    name: "Elegant weddings",
-    category: "Photography",
-    status: "Active",
-    rating: "★★★★☆",
-  },
-  {
-    id: "V-7892",
-    name: "London Category Co.",
-    category: "Catering",
-    status: "Review",
-    rating: "★★★★☆",
-  },
-  {
-    id: "V-7893",
-    name: "Premier",
-    category: "Venues",
-    status: "Recently Approved",
-    rating: "★★★★★",
-  },
-  {
-    id: "V-7894",
-    name: "Magic Moment",
-    category: "Planning",
-    status: "Review",
-    rating: "-----",
-  },
-  {
-    id: "V-7895",
-    name: "City Sounds DJ",
-    category: "Entertainment",
-    status: "Suspended",
-    rating: "★★★☆☆",
-  },
-];
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { vendors } from "./mockdata";
 
 const statusStyles: Record<string, string> = {
   Active: "bg-green-100 text-green-700",
@@ -73,8 +19,6 @@ const statusStyles: Record<string, string> = {
 /* ================= PAGE ================= */
 
 export default function VendorPage() {
-  const router = useRouter();
-
   const [filter, setFilter] = useState<
     "All" | "Review" | "Recently Approved" | "Flagged" | "Suspended"
   >("All");
@@ -161,17 +105,19 @@ export default function VendorPage() {
               {filteredVendors.map((vendor) => (
                 <tr
                   key={vendor.id}
-                  onClick={() =>
-                    router.push(`/admin/vendorprofile/${vendor.id}`)
-                  }
-                  className="cursor-pointer"
+                  // onClick={() =>
+                  //   router.push(`/admin/vendorprofile/${vendor.id}`)
+                  // }
+                  // className="cursor-pointer"
                 >
                   <td className="p-4">{vendor.id}</td>
                   <td className="font-medium">{vendor.name}</td>
                   <td>{vendor.category}</td>
                   <td>
                     <span
-                      className={`px-5 py-2 rounded-lg text-xs ${statusStyles[vendor.status]}`}
+                      className={`px-5 py-2 rounded-lg text-xs ${
+                        statusStyles[vendor.status]
+                      }`}
                     >
                       {vendor.status}
                     </span>
@@ -181,14 +127,10 @@ export default function VendorPage() {
                     className="text-[#2B4EFF] space-x-4"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <button>Edit</button>
-                    <button
-                      onClick={() =>
-                        router.push(`/admin/vendorreview/${vendor.id}`)
-                      }
-                    >
-                      View
-                    </button>
+                    <Button variant={"link"}>Edit</Button>
+                    <Button variant={"link"}>
+                      <Link href={`/admin/vendors/${vendor.id}`}>View</Link>
+                    </Button>
                   </td>
                 </tr>
               ))}
