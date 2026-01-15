@@ -10,9 +10,7 @@ interface VendorReviewPageProps {
   };
 }
 
-export default function VendorReviewPage({
-  params,
-}: VendorReviewPageProps) {
+export default function VendorReviewPage({ params }: VendorReviewPageProps) {
   const router = useRouter();
   const { vendorId } = params;
 
@@ -67,11 +65,8 @@ export default function VendorReviewPage({
             </div>
 
             <div className="space-y-3">
-              {["doc1", "doc2",].map((doc) => (
-                <div
-                  key={doc}
-                  className="border p-2 flex justify-center"
-                >
+              {["doc1", "doc2"].map((doc) => (
+                <div key={doc} className="border p-2 flex justify-center">
                   <Image
                     src="/image-two.png"
                     alt="Document"
@@ -83,10 +78,7 @@ export default function VendorReviewPage({
             </div>
             <div className="space-y-3">
               {["doc3"].map((doc) => (
-                <div
-                  key={doc}
-                  className="border p-2 flex justify-center"
-                >
+                <div key={doc} className="border p-2 flex justify-center">
                   <div className="relative h-[120px] w-[250px]">
                     <Image
                       src="/image-four.png"
@@ -100,9 +92,6 @@ export default function VendorReviewPage({
                 </div>
               ))}
             </div>
-
-
-
           </div>
 
           {/* RIGHT INFO */}
@@ -128,12 +117,26 @@ export default function VendorReviewPage({
                 Application Details
               </h2>
               <ul className="space-y-2 text-[20px] list-disc pl-5 text-gray-700">
-                <li><strong>Business: </strong>3 years experience • Sole proprietor</li>
-                <li><strong>Registration Type: </strong>Public liability</li>
-                <li><strong>Portfolio: </strong>15 images uploaded • Strong wedding focus</li>
-                <li><strong>Location: </strong>London</li>
-                <li><strong>Service area: </strong>50-mile radius</li>
-                <li><strong>Pricing: </strong>£150/hour • Minimum 4 hours</li>
+                <li>
+                  <strong>Business: </strong>3 years experience • Sole
+                  proprietor
+                </li>
+                <li>
+                  <strong>Registration Type: </strong>Public liability
+                </li>
+                <li>
+                  <strong>Portfolio: </strong>15 images uploaded • Strong
+                  wedding focus
+                </li>
+                <li>
+                  <strong>Location: </strong>London
+                </li>
+                <li>
+                  <strong>Service area: </strong>50-mile radius
+                </li>
+                <li>
+                  <strong>Pricing: </strong>£150/hour • Minimum 4 hours
+                </li>
               </ul>
             </div>
 
@@ -143,12 +146,8 @@ export default function VendorReviewPage({
                 <span className=" flex items-center border justify-center py-2  text-blue-600 w-[94px] h-[40px]">
                   Logo
                 </span>
-                <span className="text-gray-400">
-                  Registration_Cert.pdf
-                </span>
-                <span className="text-gray-400">
-                  Business_License.pdf
-                </span>
+                <span className="text-gray-400">Registration_Cert.pdf</span>
+                <span className="text-gray-400">Business_License.pdf</span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 text-xs text-gray-400">
@@ -169,7 +168,13 @@ export default function VendorReviewPage({
               Previous Reviewer Notes
             </p>
             <div className="border rounded-lg p-4 text-sm text-gray-600 bg-gray-50">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+              enim ad minim veniam, quis nostrud exercitation ullamco laboris
+              nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
+              reprehenderit in voluptate velit esse cillum dolore eu fugiat
+              nulla pariatur. Excepteur sint occaecat cupidatat non proident,
+              sunt in culpa qui officia deserunt mollit anim id est laborum.
             </div>
           </div>
 

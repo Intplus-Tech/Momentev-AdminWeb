@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { MoreVertical } from "lucide-react"
+import { MoreVertical } from "lucide-react";
 
 export default function ActionRequiredCard() {
   return (
@@ -44,12 +44,8 @@ export default function ActionRequiredCard() {
                 <p className="text-sm font-semibold text-gray-900">
                   High Priority
                 </p>
-                <p className="text-sm text-gray-600">
-                  Dispute #D-891 urgent
-                </p>
-                <p className="text-xs text-gray-500">
-                  3 refunding to process
-                </p>
+                <p className="text-sm text-gray-600">Dispute #D-891 urgent</p>
+                <p className="text-xs text-gray-500">3 refunding to process</p>
               </div>
 
               <p className="text-xs text-gray-400 whitespace-nowrap">
@@ -64,12 +60,8 @@ export default function ActionRequiredCard() {
               <p className="text-sm font-semibold text-gray-900">
                 Medium Priority
               </p>
-              <p className="text-sm text-gray-600">
-                12 vendor reviews
-              </p>
-              <p className="text-xs text-gray-500">
-                Category updates
-              </p>
+              <p className="text-sm text-gray-600">12 vendor reviews</p>
+              <p className="text-xs text-gray-500">Category updates</p>
             </div>
           </div>
         </div>
@@ -86,9 +78,7 @@ export default function ActionRequiredCard() {
       >
         {/* HEADER */}
         <div className="flex items-center justify-between mb-4">
-          <p className="text-sm font-medium text-black">
-            Recent Activities
-          </p>
+          <p className="text-sm font-medium text-black">Recent Activities</p>
 
           <button className="text-gray-400 hover:text-gray-600">
             <MoreVertical size={18} />
@@ -105,14 +95,9 @@ export default function ActionRequiredCard() {
           "
         >
           {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="bg-[#F9FCFF] rounded-lg p-4"
-            >
+            <div key={i} className="bg-[#F9FCFF] rounded-lg p-4">
               <div className="flex items-start justify-between gap-4">
-                <p className="text-sm font-semibold text-gray-900">
-                  09:42
-                </p>
+                <p className="text-sm font-semibold text-gray-900">09:42</p>
 
                 <p className="text-xs text-gray-400 whitespace-nowrap">
                   Vendor #872 approved
@@ -123,5 +108,5 @@ export default function ActionRequiredCard() {
         </div>
       </div>
     </section>
-  )
+  );
 }

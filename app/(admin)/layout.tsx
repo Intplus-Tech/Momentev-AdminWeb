@@ -1,18 +1,17 @@
-"use client"
+"use client";
 
-import AdminNavbar from "./_component/AdminNavbar"
-import AppSidebar from "./_component/AppSidebar"
-import { LayoutProvider } from "@/context/layout-context"
+import AdminNavbar from "./_component/AdminNavbar";
+import AppSidebar from "./_component/AppSidebar";
+import { LayoutProvider } from "@/context/layout-context";
 
 export default function AdminLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <LayoutProvider>
       <div className="h-screen bg-[#F5F5F7] overflow-hidden">
-
         {/* FIXED NAVBAR */}
         <div className="fixed top-0 left-0 right-0 z-50">
           <AdminNavbar />
@@ -20,7 +19,6 @@ export default function AdminLayout({
 
         {/* BODY */}
         <div className="flex pt-[72px] h-full">
-
           {/* FIXED SIDEBAR */}
           <AppSidebar />
 
@@ -36,9 +34,8 @@ export default function AdminLayout({
           >
             {children}
           </main>
-
         </div>
       </div>
     </LayoutProvider>
-  )
+  );
 }

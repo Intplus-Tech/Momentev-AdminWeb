@@ -5,11 +5,31 @@ import FilterDropdown from "./FilterDropdown";
 import BookingsTable from "./BookingsTable";
 
 const filtersConfig = [
-  { key: "date", label: "Date Range", options: ["Today", "This Week", "This Month"] },
-  { key: "status", label: "Status", options: ["In Progress", "Completed", "Upcoming"] },
-  { key: "payment", label: "Payment Status", options: ["Paid", "Pending", "Escrow"] },
-  { key: "amount", label: "Amount Range", options: ["< £500", "£500 - £2000", "> £2000"] },
-  { key: "service", label: "Service Category", options: ["Wedding", "Corporate", "Engagement"] },
+  {
+    key: "date",
+    label: "Date Range",
+    options: ["Today", "This Week", "This Month"],
+  },
+  {
+    key: "status",
+    label: "Status",
+    options: ["In Progress", "Completed", "Upcoming"],
+  },
+  {
+    key: "payment",
+    label: "Payment Status",
+    options: ["Paid", "Pending", "Escrow"],
+  },
+  {
+    key: "amount",
+    label: "Amount Range",
+    options: ["< £500", "£500 - £2000", "> £2000"],
+  },
+  {
+    key: "service",
+    label: "Service Category",
+    options: ["Wedding", "Corporate", "Engagement"],
+  },
   { key: "client", label: "Client Type", options: ["Individual", "Business"] },
 ];
 

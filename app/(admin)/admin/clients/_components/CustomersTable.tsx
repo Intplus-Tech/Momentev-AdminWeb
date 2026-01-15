@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 export default function CustomersTable() {
   const rows = [
@@ -52,13 +52,13 @@ export default function CustomersTable() {
       amount: "£4,830",
       date: "Oct 25",
     },
-  ]
+  ];
 
   const statusStyles: Record<string, string> = {
     Active: "bg-green-100 text-green-700",
     Inactive: "bg-yellow-100 text-yellow-700",
     Suspended: "bg-red-500 text-white",
-  }
+  };
 
   return (
     <div className="bg-white rounded-xl overflow-hidden">
@@ -112,5 +112,5 @@ export default function CustomersTable() {
         </table>
       </div>
     </div>
-  )
+  );
 }

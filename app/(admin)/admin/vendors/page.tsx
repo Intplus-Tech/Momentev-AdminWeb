@@ -109,16 +109,28 @@ export default function VendorPage() {
               </span>
             </div>
 
-            <span onClick={() => setFilter("Review")} className="text-[#718096] cursor-pointer">
+            <span
+              onClick={() => setFilter("Review")}
+              className="text-[#718096] cursor-pointer"
+            >
               Pending Review 12
             </span>
-            <span onClick={() => setFilter("Recently Approved")} className="text-[#718096] cursor-pointer">
+            <span
+              onClick={() => setFilter("Recently Approved")}
+              className="text-[#718096] cursor-pointer"
+            >
               Recently Approved 3
             </span>
-            <span onClick={() => setFilter("Flagged")} className="text-[#718096] cursor-pointer">
+            <span
+              onClick={() => setFilter("Flagged")}
+              className="text-[#718096] cursor-pointer"
+            >
               Flagged 3
             </span>
-            <span onClick={() => setFilter("Suspended")} className="text-[#718096] cursor-pointer">
+            <span
+              onClick={() => setFilter("Suspended")}
+              className="text-[#718096] cursor-pointer"
+            >
               Suspended 3
             </span>
           </div>
@@ -149,7 +161,9 @@ export default function VendorPage() {
               {filteredVendors.map((vendor) => (
                 <tr
                   key={vendor.id}
-                  onClick={() => router.push(`/admin/vendorprofile/${vendor.id}`)}
+                  onClick={() =>
+                    router.push(`/admin/vendorprofile/${vendor.id}`)
+                  }
                   className="cursor-pointer"
                 >
                   <td className="p-4">{vendor.id}</td>

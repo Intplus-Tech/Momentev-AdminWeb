@@ -17,8 +17,8 @@ const Logo: React.FC<LogoProps> = ({
     variant === "white"
       ? "/assets/svg/logo-white.svg"
       : variant === "mixed"
-      ? "/assets/svg/logo-mixed.svg"
-      : url;
+        ? "/assets/svg/logo-mixed.svg"
+        : url;
 
   return (
     <Link href="/" className={className}>

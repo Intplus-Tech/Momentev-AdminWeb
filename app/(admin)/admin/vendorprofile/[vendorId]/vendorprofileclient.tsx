@@ -97,10 +97,11 @@ export default function VendorProfileClient({
           <button
             key={tab}
             onClick={() => setActiveTab(tab as Tab)}
-            className={`pb-3 ${activeTab === tab
+            className={`pb-3 ${
+              activeTab === tab
                 ? "border-b-2 border-red-500 font-medium"
                 : "text-[#191919] hover:text-gray-700"
-              }`}
+            }`}
           >
             {tab}
           </button>
@@ -126,12 +127,14 @@ export default function VendorProfileClient({
               <span className="text-sm">Temporarily Suspend Account</span>
               <button
                 onClick={() => setSuspended(!suspended)}
-                className={`w-12 h-6 rounded-full relative transition ${suspended ? "bg-green-500" : "bg-gray-300"
-                  }`}
+                className={`w-12 h-6 rounded-full relative transition ${
+                  suspended ? "bg-green-500" : "bg-gray-300"
+                }`}
               >
                 <span
-                  className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition ${suspended ? "translate-x-6" : ""
-                    }`}
+                  className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition ${
+                    suspended ? "translate-x-6" : ""
+                  }`}
                 />
               </button>
             </div>

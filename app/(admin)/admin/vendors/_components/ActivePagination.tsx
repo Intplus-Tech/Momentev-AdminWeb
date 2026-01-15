@@ -1,35 +1,35 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { ArrowLeft, ArrowRight } from "lucide-react"
+import { useState } from "react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 export default function ActivePagination() {
-  const totalPages = 68
-  const [currentPage, setCurrentPage] = useState(1)
+  const totalPages = 68;
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleNext = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-  }
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
 
   const handlePrevious = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1))
-  }
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
 
   const isActive = (page: number) =>
     page === currentPage
       ? "bg-primary text-white"
-      : "text-[#757575] hover:text-primary"
+      : "text-[#757575] hover:text-primary";
 
   // 🔹 Generate visible pages dynamically
   const getVisiblePages = () => {
-    const pages: (number | string)[] = []
+    const pages: (number | string)[] = [];
 
-    const windowSize = 1 // pages before & after current
+    const windowSize = 1; // pages before & after current
 
-    pages.push(1)
+    pages.push(1);
 
     if (currentPage > 3) {
-      pages.push("...")
+      pages.push("...");
     }
 
     for (
@@ -37,21 +37,20 @@ export default function ActivePagination() {
       i <= Math.min(totalPages - 1, currentPage + windowSize);
       i++
     ) {
-      pages.push(i)
+      pages.push(i);
     }
 
     if (currentPage < totalPages - 2) {
-      pages.push("...")
+      pages.push("...");
     }
 
-    pages.push(totalPages)
+    pages.push(totalPages);
 
-    return pages
-  }
+    return pages;
+  };
 
   return (
     <div className="flex items-center justify-center gap-10">
-
       {/* PREVIOUS */}
       <button
         onClick={handlePrevious}
@@ -66,10 +65,7 @@ export default function ActivePagination() {
       <div className="flex items-center space-x-7">
         {getVisiblePages().map((page, index) =>
           page === "..." ? (
-            <span
-              key={`dots-${index}`}
-              className="text-[#757575]"
-            >
+            <span key={`dots-${index}`} className="text-[#757575]">
               ...
             </span>
           ) : (
@@ -80,7 +76,7 @@ export default function ActivePagination() {
             >
               {page}
             </button>
-          )
+          ),
         )}
       </div>
 
@@ -94,5 +90,5 @@ export default function ActivePagination() {
         <ArrowRight />
       </button>
     </div>
-  )
+  );
 }

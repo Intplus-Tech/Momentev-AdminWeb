@@ -73,21 +73,14 @@ export function BookingTable() {
               <th className="px-4 py-3 text-left font-medium hidden md:table-cell">
                 Date
               </th>
-              <th className="px-4 py-3 text-left font-medium">
-                Amount
-              </th>
-              <th className="px-4 py-3 text-left font-medium">
-                Status
-              </th>
+              <th className="px-4 py-3 text-left font-medium">Amount</th>
+              <th className="px-4 py-3 text-left font-medium">Status</th>
             </tr>
           </thead>
 
           <tbody>
             {bookings.map((booking) => (
-              <tr
-                key={booking.id}
-                className=" last:border-0"
-              >
+              <tr key={booking.id} className=" last:border-0">
                 <td className="px-4 py-3 text-[#1D1B20] text-[16px]">
                   {booking.id}
                 </td>
@@ -110,10 +103,11 @@ export function BookingTable() {
 
                 <td className="px-4 py-3">
                   <span
-                    className={`text-xs font-medium ${booking.status === "Paid"
+                    className={`text-xs font-medium ${
+                      booking.status === "Paid"
                         ? "text-emerald-400"
                         : "text-amber-400"
-                      }`}
+                    }`}
                   >
                     {booking.status}
                   </span>

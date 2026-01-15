@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Home,
   Users,
@@ -10,21 +10,26 @@ import {
   Wallet,
   AlertTriangle,
   Settings,
-} from "lucide-react"
-import { useLayout } from "@/context/layout-context"
+} from "lucide-react";
+import { useLayout } from "@/context/layout-context";
 
 const menu = [
-  { label: "Overview", icon: Home, href: "/admin" },
+  { label: "Overview", icon: Home, href: "/admin/overview" },
   { label: "Vendors", icon: Users, href: "/admin/vendors" },
   { label: "Clients", icon: User, href: "/admin/clients" },
   { label: "Financial", icon: Wallet, href: "/admin/financial" },
-  { label: "Disputes", icon: AlertTriangle, href: "/admin/disputes", badge: 23 },
+  {
+    label: "Disputes",
+    icon: AlertTriangle,
+    href: "/admin/disputes",
+    badge: 23,
+  },
   { label: "Settings", icon: Settings, href: "/admin/settings" },
-]
+];
 
 export default function AppSidebar() {
-  const pathname = usePathname()
-  const { state, dispatch } = useLayout()
+  const pathname = usePathname();
+  const { state, dispatch } = useLayout();
 
   return (
     <>
@@ -72,8 +77,7 @@ export default function AppSidebar() {
         <nav className="space-y-1">
           {menu.map((item) => {
             const isActive =
-              pathname === item.href ||
-              pathname.startsWith(item.href + "/")
+              pathname === item.href || pathname.startsWith(item.href + "/");
 
             return (
               <Link
@@ -95,10 +99,10 @@ export default function AppSidebar() {
                   </span>
                 )}
               </Link>
-            )
+            );
           })}
         </nav>
       </aside>
     </>
-  )
+  );
 }

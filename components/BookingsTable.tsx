@@ -47,7 +47,7 @@ export default function BookingsTable() {
             <th className="p-3 text-left">Actions</th>
           </tr>
         </thead>
-A
+        A
         <tbody>
           {rows.map((row) => (
             <tr key={row.id} className="border-b hover:bg-gray-50">
@@ -58,9 +58,7 @@ A
               <td className="p-3">{row.status}</td>
               <td className="p-3">{row.payment}</td>
               <td className="p-3">{row.amount}</td>
-              <td className="p-3 text-blue-600 cursor-pointer">
-                {row.action}
-              </td>
+              <td className="p-3 text-blue-600 cursor-pointer">{row.action}</td>
             </tr>
           ))}
         </tbody>

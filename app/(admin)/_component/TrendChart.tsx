@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   LineChart,
@@ -8,7 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
-} from "recharts"
+} from "recharts";
 
 const data = [
   { month: "Jan", value: 10000 },
@@ -23,17 +23,14 @@ const data = [
   { month: "Oct", value: 22000 },
   { month: "Nov", value: 24500 },
   { month: "Dec", value: 23500 },
-]
+];
 
 export default function TrendsChart() {
   return (
     <div className="bg-white rounded-2xl p-6 w-full">
-
       {/* HEADER */}
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-700">
-          Booking Trends
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-700">Booking Trends</h3>
 
         <select className="border rounded-lg px-4 py-2 text-sm text-gray-500 outline-none">
           <option>Month</option>
@@ -43,14 +40,12 @@ export default function TrendsChart() {
       {/* CHART */}
       <div className="w-full h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
-
+          <LineChart
+            data={data}
+            margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
+          >
             {/* GRID */}
-            <CartesianGrid
-              vertical
-              horizontal={false}
-              stroke="#EEF0F3"
-            />
+            <CartesianGrid vertical horizontal={false} stroke="#EEF0F3" />
 
             {/* X AXIS */}
             <XAxis
@@ -76,9 +71,9 @@ export default function TrendsChart() {
                     <div className="bg-blue-500 text-white text-xs px-3 py-1 rounded-lg">
                       £ {payload[0].value?.toLocaleString()}
                     </div>
-                  )
+                  );
                 }
-                return null
+                return null;
               }}
               cursor={{
                 stroke: "#3B82F6",
@@ -101,7 +96,6 @@ export default function TrendsChart() {
               }
               activeDot={false}
             />
-
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -111,16 +105,12 @@ export default function TrendsChart() {
         {data.map((item) => (
           <div
             key={item.month}
-            className={`w-2 h-2 rounded-full ${item.month === "Jun"
-                ? "bg-blue-500"
-                : "bg-gray-300"
-              }`}
+            className={`w-2 h-2 rounded-full ${
+              item.month === "Jun" ? "bg-blue-500" : "bg-gray-300"
+            }`}
           />
         ))}
       </div>
-
     </div>
-  )
+  );
 }
-
-
