@@ -6,6 +6,9 @@ import { Check, ChevronDown, X } from "lucide-react";
 
 import { BookingTable } from "../BookingTable";
 import AccountStatus from "../AccountStatus";
+import BookingsTab from "./BookingsTabs";
+
+
 
 /* ================= TYPES ================= */
 
@@ -321,6 +324,9 @@ export default function VendorProfileClient({
           </div>
         </div>
       )}
+
+      {activeTab === "Bookings" && <BookingsTab vendorId={vendorId} />}
+
     </div>
   );
 }

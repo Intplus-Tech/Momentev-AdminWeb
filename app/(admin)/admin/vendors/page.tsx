@@ -8,6 +8,16 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { vendors } from "./mockdata";
 
+/* ================= TYPES ================= */
+interface Vendor {
+  id: string;
+  name: string;
+  category: string;
+  status: "Active" | "Review" | "Recently Approved" | "Flagged" | "Suspended";
+  rating: string;
+}
+
+/* ================= STYLES ================= */
 const statusStyles: Record<string, string> = {
   Active: "bg-green-100 text-green-700",
   Review: "bg-yellow-100 text-yellow-700",
@@ -17,8 +27,8 @@ const statusStyles: Record<string, string> = {
 };
 
 /* ================= PAGE ================= */
-
 export default function VendorPage() {
+  const router = useRouter(); // ✅ Fix: useRouter defined
   const [filter, setFilter] = useState<
     "All" | "Review" | "Recently Approved" | "Flagged" | "Suspended"
   >("All");
@@ -28,13 +38,20 @@ export default function VendorPage() {
       ? vendors
       : vendors.filter((vendor) => vendor.status === filter);
 
+  /* ================= VIEW HANDLER ================= */
+  const handleViewVendor = (vendor: Vendor) => {
+    if (vendor.status === "Active") {
+      router.push(`/admin/vendorprofile/${vendor.id}`);
+    } else {
+      router.push(`/admin/vendorreview/${vendor.id}`);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* HEADER CARD */}
       <div className="bg-white rounded-xl p-4 sm:p-6">
-        <button className="text-xl sm:text-2xl font-semibold">
-          Vendor Management
-        </button>
+        <h1 className="text-xl sm:text-2xl font-semibold">Vendor Management</h1>
         <p className="text-muted-foreground text-sm">
           {filteredVendors.length} Active Vendors
         </p>
@@ -44,36 +61,41 @@ export default function VendorPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full">
         <div className="w-full sm:flex-1 overflow-x-auto">
           <div className="flex items-center gap-6 sm:gap-10 text-[13px] bg-[#D9D9D9] p-2 rounded-lg min-w-max">
-            <div className="p-1">
-              <span
-                onClick={() => setFilter("All")}
-                className="font-medium text-[#2B4EFF] bg-white p-1 px-2 rounded-lg cursor-pointer"
-              >
-                All <span className="pl-3">(145)</span>
-              </span>
-            </div>
+            <span
+              onClick={() => setFilter("All")}
+              className={`font-medium p-1 px-2 rounded-lg cursor-pointer ${filter === "All" ? "text-[#2B4EFF] bg-white" : "text-[#718096]"
+                }`}
+            >
+              All <span className="pl-3">(145)</span>
+            </span>
 
             <span
               onClick={() => setFilter("Review")}
-              className="text-[#718096] cursor-pointer"
+              className={`cursor-pointer ${filter === "Review" ? "text-[#2B4EFF]" : "text-[#718096]"
+                }`}
             >
               Pending Review 12
             </span>
             <span
               onClick={() => setFilter("Recently Approved")}
-              className="text-[#718096] cursor-pointer"
+              className={`cursor-pointer ${filter === "Recently Approved"
+                  ? "text-[#2B4EFF]"
+                  : "text-[#718096]"
+                }`}
             >
               Recently Approved 3
             </span>
             <span
               onClick={() => setFilter("Flagged")}
-              className="text-[#718096] cursor-pointer"
+              className={`cursor-pointer ${filter === "Flagged" ? "text-[#2B4EFF]" : "text-[#718096]"
+                }`}
             >
               Flagged 3
             </span>
             <span
               onClick={() => setFilter("Suspended")}
-              className="text-[#718096] cursor-pointer"
+              className={`cursor-pointer ${filter === "Suspended" ? "text-[#2B4EFF]" : "text-[#718096]"
+                }`}
             >
               Suspended 3
             </span>
@@ -97,7 +119,7 @@ export default function VendorPage() {
                 <th>Category</th>
                 <th>Status</th>
                 <th>Rating</th>
-                <th />
+                <th>Actions</th>
               </tr>
             </thead>
 
@@ -105,19 +127,16 @@ export default function VendorPage() {
               {filteredVendors.map((vendor) => (
                 <tr
                   key={vendor.id}
-                  // onClick={() =>
-                  //   router.push(`/admin/vendorprofile/${vendor.id}`)
-                  // }
-                  // className="cursor-pointer"
+                  className="hover:bg-gray-50 cursor-pointer"
+                  onClick={() => handleViewVendor(vendor)}
                 >
                   <td className="p-4">{vendor.id}</td>
                   <td className="font-medium">{vendor.name}</td>
                   <td>{vendor.category}</td>
                   <td>
                     <span
-                      className={`px-5 py-2 rounded-lg text-xs ${
-                        statusStyles[vendor.status]
-                      }`}
+                      className={`px-5 py-2 rounded-lg text-xs ${statusStyles[vendor.status]
+                        }`}
                     >
                       {vendor.status}
                     </span>
@@ -127,8 +146,8 @@ export default function VendorPage() {
                     className="text-[#2B4EFF] space-x-4"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <Button variant={"link"}>Edit</Button>
-                    <Button variant={"link"}>
+                    <Button variant="link">Edit</Button>
+                    <Button variant="link">
                       <Link href={`/admin/vendors/${vendor.id}`}>View</Link>
                     </Button>
                   </td>
@@ -139,6 +158,7 @@ export default function VendorPage() {
         </div>
       </div>
 
+      {/* PAGINATION */}
       <ActivePagination />
     </div>
   );

@@ -1,6 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation"
+
 export default function CustomersTable() {
+  const router = useRouter()
+
   const rows = [
     {
       id: "C-8921",
@@ -60,12 +64,18 @@ export default function CustomersTable() {
     Suspended: "bg-red-500 text-white",
   };
 
+  /* ================= HANDLER ================= */
+
+  const handleView = (id: string, status: string) => {
+    if (status === "Active") {
+      router.push(`/admin/clientprofile/${id}`)
+    }
+  }
+
   return (
     <div className="bg-white rounded-xl overflow-hidden">
-      {/* MOBILE SCROLL */}
       <div className="overflow-x-auto">
-        <table className="min-w-[1100px] w-full text-sm">
-          {/* HEADER */}
+        <table className="min-w-[1000px] w-full text-sm">
           <thead className="border-b">
             <tr className="text-left text-gray-500">
               <th className="p-4">ID</th>
@@ -80,7 +90,6 @@ export default function CustomersTable() {
             </tr>
           </thead>
 
-          {/* BODY */}
           <tbody>
             {rows.map((row) => (
               <tr key={row.id} className="hover:bg-gray-50 transition">
@@ -99,7 +108,10 @@ export default function CustomersTable() {
                 <td className="text-gray-600">{row.amount}</td>
                 <td className="text-gray-600">{row.date}</td>
                 <td className="text-right pr-6 space-x-4">
-                  <button className="text-blue-600 hover:underline">
+                  <button
+                    onClick={() => handleView(row.id, row.status)}
+                    className="text-blue-600 hover:underline"
+                  >
                     View
                   </button>
                   <button className="text-blue-600 hover:underline">
