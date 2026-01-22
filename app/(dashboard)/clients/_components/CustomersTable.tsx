@@ -1,9 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation"
+import { useRouter } from "next/navigation";
 
 export default function CustomersTable() {
-  const router = useRouter()
+  const router = useRouter();
 
   const rows = [
     {
@@ -68,9 +68,9 @@ export default function CustomersTable() {
 
   const handleView = (id: string, status: string) => {
     if (status === "Active") {
-      router.push(`/admin/clientprofile/${id}`)
+      router.push(`/clientprofile/${id}`);
     }
-  }
+  };
 
   return (
     <div className="bg-white rounded-xl overflow-hidden">

@@ -14,17 +14,17 @@ import {
 import { useLayout } from "@/context/layout-context";
 
 const menu = [
-  { label: "Overview", icon: Home, href: "/admin/overview" },
-  { label: "Vendors", icon: Users, href: "/admin/vendors" },
-  { label: "Clients", icon: User, href: "/admin/clients" },
-  { label: "Financial", icon: Wallet, href: "/admin/financial" },
+  { label: "Overview", icon: Home, href: "/overview" },
+  { label: "Vendors", icon: Users, href: "/vendors" },
+  { label: "Clients", icon: User, href: "/clients" },
+  { label: "Financial", icon: Wallet, href: "/financial" },
   {
     label: "Disputes",
     icon: AlertTriangle,
-    href: "/admin/disputes",
+    href: "/disputes",
     badge: 23,
   },
-  { label: "Settings", icon: Settings, href: "/admin/settings" },
+  { label: "Settings", icon: Settings, href: "/settings" },
 ];
 
 export default function AppSidebar() {

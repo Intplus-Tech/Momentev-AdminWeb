@@ -30,17 +30,13 @@ export default function ClientSpendingPage() {
         {/* TABS */}
         <div className="flex justify-center gap-6 border-b text-sm font-medium pt-4">
           <span
-            onClick={() =>
-              router.push(`/admin/clientprofile/${clientId}`)
-            }
+            onClick={() => router.push(`/clientprofile/${clientId}`)}
             className="cursor-pointer text-gray-500"
           >
             Overview
           </span>
           <span
-            onClick={() =>
-              router.push(`/admin/clientprofile/${clientId}/bookings`)
-            }
+            onClick={() => router.push(`/clientprofile/${clientId}/bookings`)}
             className="cursor-pointer text-gray-500"
           >
             Bookings
@@ -49,9 +45,7 @@ export default function ClientSpendingPage() {
             Spending
           </span>
           <span
-            onClick={() =>
-              router.push(`/admin/clientprofile/${clientId}/reviews`)
-            }
+            onClick={() => router.push(`/clientprofile/${clientId}/reviews`)}
             className="cursor-pointer text-gray-500"
           >
             Reviews

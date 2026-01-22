@@ -63,9 +63,9 @@ export default function ClientProfilePage() {
   /* ================= TAB HANDLER ================= */
   const goTo = (tab?: string) => {
     if (!tab) {
-      router.push(`/admin/clientprofile/${clientId}`);
+      router.push(`/clientprofile/${clientId}`);
     } else {
-      router.push(`/admin/clientprofile/${clientId}/${tab}`);
+      router.push(`/clientprofile/${clientId}/${tab}`);
     }
   };
 
@@ -86,9 +86,7 @@ export default function ClientProfilePage() {
         </h1>
       </div>
 
-      <p className="text-center text-sm text-muted-foreground">
-        {client.id}
-      </p>
+      <p className="text-center text-sm text-muted-foreground">{client.id}</p>
 
       <div className="bg-[#FFFFFF] w-full px-4 py-6 space-y-8">
         {/* Tabs */}
@@ -104,24 +102,15 @@ export default function ClientProfilePage() {
             Overview
           </span>
 
-          <span
-            onClick={() => goTo("bookings")}
-            className="cursor-pointer"
-          >
+          <span onClick={() => goTo("bookings")} className="cursor-pointer">
             Bookings
           </span>
 
-          <span
-            onClick={() => goTo("spending")}
-            className="cursor-pointer"
-          >
+          <span onClick={() => goTo("spending")} className="cursor-pointer">
             Spending
           </span>
 
-          <span
-            onClick={() => goTo("reviews")}
-            className="cursor-pointer"
-          >
+          <span onClick={() => goTo("reviews")} className="cursor-pointer">
             Reviews
           </span>
         </div>
@@ -208,7 +197,7 @@ function Metric({
   subtitle,
 }: {
   title: string;
-    value: string | number;
+  value: string | number;
   subtitle?: string;
 }) {
   return (
