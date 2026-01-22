@@ -81,7 +81,7 @@ export default function ClientProfilePage() {
         >
           ← Back
         </button>
-        <h1 className="text-xl md:text-2xl font-semibold flex-1 text-center">
+        <h1 className="text-xl md:text-2xl font-semibold flex-1 text-center text-[#191919]">
           CLIENT PROFILE MANAGEMENT
         </h1>
       </div>

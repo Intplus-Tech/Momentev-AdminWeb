@@ -8,6 +8,10 @@ import { BookingTable } from "../BookingTable";
 import AccountStatus from "../AccountStatus";
 import BookingsTab from "./BookingsTabs";
 
+import EarningTab from "./EarningTabs";
+import ReviewTab from "./ReviewTab";
+
+
 
 
 /* ================= TYPES ================= */
@@ -326,6 +330,8 @@ export default function VendorProfileClient({
       )}
 
       {activeTab === "Bookings" && <BookingsTab vendorId={vendorId} />}
+      {activeTab === "Earnings" && <EarningTab vendorId={vendorId} />}
+      {activeTab === "Reviews" && <ReviewTab vendorId={vendorId} />}
 
     </div>
   );
