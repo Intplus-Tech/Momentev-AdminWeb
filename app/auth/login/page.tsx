@@ -38,7 +38,7 @@ function LoginForm() {
   const [serverError, setServerError] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/overview";
+  const callbackUrl = "/overview";
 
   const {
     register,
