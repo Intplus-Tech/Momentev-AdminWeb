@@ -1,6 +1,6 @@
-import ActionRequiredCard from "../../_component/ActionRequiredCard";
-import OverviewCard from "../../_component/OverviewCards";
-import TrendsChart from "../../_component/TrendChart";
+import ActionRequiredCard from "../_component/ActionRequiredCard";
+import OverviewCard from "../_component/OverviewCards";
+import TrendsChart from "../_component/TrendChart";
 
 export default function AdminOverviewPage() {
   return (

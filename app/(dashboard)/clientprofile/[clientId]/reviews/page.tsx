@@ -36,8 +36,7 @@ export default function ClientReviewsPage() {
       date: "Oct 26, 2025",
       vendor: "Ira Motions",
       rating: "⭐⭐⭐",
-      review:
-        "Great engagement shoot! Minor editing delay but worth the wait.",
+      review: "Great engagement shoot! Minor editing delay but worth the wait.",
       status: 3,
     },
   ];
@@ -65,25 +64,19 @@ export default function ClientReviewsPage() {
         {/* TABS */}
         <div className="flex gap-8 border-b text-sm font-medium pt-4">
           <span
-            onClick={() =>
-              router.push(`/admin/clientprofile/${clientId}`)
-            }
+            onClick={() => router.push(`/clientprofile/${clientId}`)}
             className="cursor-pointer text-gray-500"
           >
             Overview
           </span>
           <span
-            onClick={() =>
-              router.push(`/admin/clientprofile/${clientId}/bookings`)
-            }
+            onClick={() => router.push(`/clientprofile/${clientId}/bookings`)}
             className="cursor-pointer text-gray-500"
           >
             Bookings
           </span>
           <span
-            onClick={() =>
-              router.push(`/admin/clientprofile/${clientId}/spending`)
-            }
+            onClick={() => router.push(`/clientprofile/${clientId}/spending`)}
             className="cursor-pointer text-gray-500"
           >
             Spending
@@ -117,9 +110,7 @@ export default function ClientReviewsPage() {
                   <td className="p-4">{item.date}</td>
                   <td className="font-medium">{item.vendor}</td>
                   <td>{item.rating}</td>
-                  <td className="max-w-[420px] text-gray-600">
-                    {item.review}
-                  </td>
+                  <td className="max-w-[420px] text-gray-600">{item.review}</td>
 
                   {/* STATUS WITH ICON */}
                   <td>
