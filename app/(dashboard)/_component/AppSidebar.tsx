@@ -25,6 +25,7 @@ const menu = [
     badge: 23,
   },
   { label: "Settings", icon: Settings, href: "/settings" },
+  { label: "Categories", icon: Settings, href: "/categories" },
 ];
 
 // Profile fallback component
