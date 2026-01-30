@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -38,11 +37,11 @@ function ProfileAvatar({
 }) {
   const initials = name
     ? name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
     : "AD";
 
   return (
@@ -60,15 +59,16 @@ function ProfileAvatar({
   );
 }
 
-export default function AppSidebar() {
+export default function AppSidebar({
+  user,
+}: {
+  user: {
+    name?: string;
+    subdomain?: string;
+  };
+}) {
   const pathname = usePathname();
   const { state, dispatch } = useLayout();
-
-  // TODO: Replace with real user data from auth context
-  const user = {
-    name: "Michelle Adeyemi",
-    subdomain: "thelusyfashion.momentev.com",
-  };
 
   return (
     <>
@@ -103,10 +103,10 @@ export default function AppSidebar() {
         {/* MENU */}
         <nav className="space-y-1" role="navigation">
           {menu.map((item) => {
-            // Improved active detection
             const isActive =
               pathname === item.href ||
-              (item.href !== "/" && pathname.startsWith(item.href + "/"));
+              (item.href !== "/" &&
+                pathname.startsWith(item.href + "/"));
 
             return (
               <Link
@@ -122,7 +122,9 @@ export default function AppSidebar() {
                   <span className="absolute left-0 h-full w-[3px] bg-primary rounded-r" />
                 )}
                 <item.icon size={18} />
-                <span className="flex-1 text-sm font-medium">{item.label}</span>
+                <span className="flex-1 text-sm font-medium">
+                  {item.label}
+                </span>
                 {item.badge && (
                   <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">
                     {item.badge}

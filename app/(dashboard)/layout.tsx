@@ -1,6 +1,7 @@
 import { LayoutProvider } from "@/context/layout-context";
 import AdminNavbar from "./_component/AdminNavbar";
-import AppSidebar from "./_component/AppSidebar";
+
+import AppSidebarWrapper from "./_component/AppSidebarWrapper";
 
 export default function dashboardLayout({
   children,
@@ -19,7 +20,7 @@ export default function dashboardLayout({
           {/* BODY */}
           <div className="flex pt-[72px] h-full">
             {/* FIXED SIDEBAR */}
-            <AppSidebar />
+           <AppSidebarWrapper/>
 
             {/* SCROLLABLE CONTENT */}
             <div

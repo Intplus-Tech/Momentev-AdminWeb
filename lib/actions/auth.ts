@@ -1,8 +1,9 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { setAuthCookies, clearAuthCookies, getRefreshToken, refreshAccessToken } from '@/lib/session';
+import { setAuthCookies, clearAuthCookies, getRefreshToken, refreshAccessToken, getAccessToken } from '@/lib/session';
 import type { LoginResponse } from '@/types/auth';
+
 
 export interface LoginInput {
   email: string;
@@ -85,3 +86,41 @@ export async function tryRefreshToken() {
 
   return refreshAccessToken(refreshTokenValue);
 }
+
+/**
+ * Get currently authenticated user profile
+ * Server-only: reads token from HTTP-only cookies
+ */
+export interface CurrentUser {
+  fullName: string;
+  subdomain: string;
+  avatarUrl?: string | null;
+}
+
+export async function getCurrentUser(): Promise<CurrentUser | null> {
+  try {
+    if (!process.env.BACKEND_URL) return null;
+
+    const token = await getAccessToken();
+    if (!token) return null;
+
+    const response = await fetch(
+      `${process.env.BACKEND_URL}/api/v1/auth/me`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      }
+    );
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    return data?.data ?? null;
+  } catch (error) {
+    console.error("GetCurrentUser error:", error);
+    return null;
+  }
+}
+
