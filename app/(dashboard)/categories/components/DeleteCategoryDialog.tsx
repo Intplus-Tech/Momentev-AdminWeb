@@ -20,46 +20,60 @@ export default function DeleteCategoryDialog({
     setError("");
     startTransition(async () => {
       const result = await deleteServiceCategory(categoryId);
+
       if (!result.success) {
         setError(result.error || "Failed to delete");
         return;
       }
+
       setOpen(false);
     });
   };
 
-  if (!open) {
-    return (
+  return (
+    <>
+      {/* Delete button (unchanged UI) */}
       <button
         onClick={() => setOpen(true)}
         className="text-red-600 hover:underline"
       >
         Delete
       </button>
-    );
-  }
 
-  return (
-    <div className="border p-3 rounded bg-red-50 space-y-2">
-      <p className="text-sm">
-        Are you sure you want to delete <strong>{categoryName}</strong>?
-      </p>
-      {error && <p className="text-red-500 text-sm">{error}</p>}
-      <div className="flex gap-2">
-        <button
-          onClick={handleDelete}
-          disabled={isPending}
-          className="bg-red-600 text-white px-3 py-1 rounded"
-        >
-          {isPending ? "Deleting..." : "Confirm"}
-        </button>
-        <button
-          onClick={() => setOpen(false)}
-          className="border px-3 py-1 rounded"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
+      {/* Full-screen overlay */}
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 w-full">
+          <div className="border p-3 rounded bg-white space-y-2 w-full max-w-sm mx-4">
+            <div className="text-black flex items-center justify-center text-[19px] font-  bold">Delete Category</div>
+            <p className="text-sm flex items-center justify-center">
+              Are you sure you want to delete{" "}
+              <strong>{categoryName}</strong>?
+            </p>
+
+
+            {error && (
+              <p className="text-red-500 text-sm">{error}</p>
+            )}
+
+            <div className="flex gap-2 justify-center items-center">
+              <button
+                onClick={handleDelete}
+                disabled={isPending}
+                className="bg-red-600 text-white px-3 py-1 rounded"
+              >
+                {isPending ? "Deleting..." : "Confirm"}
+              </button>
+
+              <button
+                onClick={() => setOpen(false)}
+                className="border px-3 py-1 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

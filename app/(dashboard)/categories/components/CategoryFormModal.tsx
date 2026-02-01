@@ -76,7 +76,7 @@ export default function CategoryFormModal({
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
       <div className="bg-white p-6 rounded w-[400px] space-y-4">
-        <h2 className="text-lg font-semibold">{category ? "Edit Category" : "Add Category"}</h2>
+        <h2 className="text-lg font-semibold text-primary">{category ? "Edit Category" : "Add Category"}</h2>
 
         {error && <p className="text-sm text-red-500">{error}</p>}
 
@@ -100,13 +100,13 @@ export default function CategoryFormModal({
         />
 
         <div className="flex justify-end gap-2">
-          <button onClick={onClose} className="border px-4 py-2 rounded" disabled={isPending}>
+          <button onClick={onClose} className="border px-4 py-2 rounded text-primary" disabled={isPending}>
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={isPending}
-            className="bg-black text-white px-4 py-2 rounded disabled:opacity-50"
+            className="bg-primary text-white px-4 py-2 rounded disabled:opacity-50"
           >
             {isPending ? "Saving..." : "Save"}
           </button>

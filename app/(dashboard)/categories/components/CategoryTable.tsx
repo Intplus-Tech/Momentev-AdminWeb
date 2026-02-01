@@ -26,7 +26,7 @@ export default function CategoryTable({ initialData }: CategoryTableProps) {
   return (
     <div className="space-y-4">
       <button
-        className="px-4 py-2 bg-black text-white rounded hover:opacity-90"
+        className="px-4 py-2 bg-primary text-white rounded hover:opacity-90"
         onClick={handleAdd}
       >
         Add Category
