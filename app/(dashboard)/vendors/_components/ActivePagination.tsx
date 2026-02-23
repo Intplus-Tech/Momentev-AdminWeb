@@ -1,30 +1,52 @@
 "use client";
 
-import { useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { useCallback } from "react";
 
-export default function ActivePagination() {
-  const totalPages = 68;
-  const [currentPage, setCurrentPage] = useState(1);
+interface ActivePaginationProps {
+  totalPages: number;
+  currentPage: number;
+}
+
+export default function ActivePagination({ totalPages, currentPage }: ActivePaginationProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const createQueryString = useCallback(
+    (name: string, value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set(name, value);
+      return params.toString();
+    },
+    [searchParams]
+  );
+
+  const navigateToPage = (page: number) => {
+    router.push(`${pathname}?${createQueryString("page", page.toString())}`);
+  };
 
   const handleNext = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+    if (currentPage < totalPages) navigateToPage(currentPage + 1);
   };
 
   const handlePrevious = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
+    if (currentPage > 1) navigateToPage(currentPage - 1);
   };
 
   const isActive = (page: number) =>
     page === currentPage
-      ? "bg-primary text-white"
-      : "text-[#757575] hover:text-primary";
+      ? "bg-[#2B4EFF] text-white"
+      : "text-[#757575] hover:text-[#2B4EFF]";
 
   // 🔹 Generate visible pages dynamically
   const getVisiblePages = () => {
     const pages: (number | string)[] = [];
-
     const windowSize = 1; // pages before & after current
+    
+    // If no pages needed, return empty
+    if (totalPages <= 1) return pages;
 
     pages.push(1);
 
@@ -44,35 +66,39 @@ export default function ActivePagination() {
       pages.push("...");
     }
 
-    pages.push(totalPages);
+    if (totalPages > 1) {
+      pages.push(totalPages);
+    }
 
     return pages;
   };
 
+  if (totalPages <= 1) return null;
+
   return (
-    <div className="flex items-center justify-center gap-10">
+    <div className="flex items-center justify-center gap-10 mt-8">
       {/* PREVIOUS */}
       <button
         onClick={handlePrevious}
         disabled={currentPage === 1}
-        className="flex items-center gap-2 text-[#757575] disabled:opacity-40"
+        className="flex items-center gap-2 text-[#757575] disabled:opacity-40 hover:text-[#2B4EFF] transition-colors"
       >
-        <ArrowLeft />
-        <span>Previous</span>
+        <ArrowLeft className="w-4 h-4" />
+        <span className="text-sm font-medium">Previous</span>
       </button>
 
       {/* PAGE NUMBERS */}
-      <div className="flex items-center space-x-7">
+      <div className="flex items-center space-x-2 sm:space-x-4 text-sm font-medium">
         {getVisiblePages().map((page, index) =>
           page === "..." ? (
-            <span key={`dots-${index}`} className="text-[#757575]">
+            <span key={`dots-${index}`} className="text-[#757575] px-2">
               ...
             </span>
           ) : (
             <button
               key={page}
-              onClick={() => setCurrentPage(page as number)}
-              className={`w-10 h-10 border rounded-lg ${isActive(page as number)}`}
+              onClick={() => navigateToPage(page as number)}
+              className={`w-10 h-10 border rounded-lg transition-colors ${isActive(page as number)}`}
             >
               {page}
             </button>
@@ -84,10 +110,10 @@ export default function ActivePagination() {
       <button
         onClick={handleNext}
         disabled={currentPage === totalPages}
-        className="flex items-center gap-2 text-[#757575] disabled:opacity-40"
+        className="flex items-center gap-2 text-[#757575] disabled:opacity-40 hover:text-[#2B4EFF] transition-colors"
       >
-        <span>Next</span>
-        <ArrowRight />
+        <span className="text-sm font-medium">Next</span>
+        <ArrowRight className="w-4 h-4" />
       </button>
     </div>
   );
