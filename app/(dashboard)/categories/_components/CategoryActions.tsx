@@ -30,16 +30,19 @@ import { TagInput } from "@/components/ui/tag-input";
 import { Label } from "@/components/ui/label";
 import { ManageSpecialtiesDialog } from "./ManageSpecialtiesDialog";
 import { ServiceSpecialty } from "@/lib/actions/specialties";
+import { Commission } from "@/lib/actions/commissions";
 import { updateServiceCategory, deleteServiceCategory, ServiceCategory } from "@/lib/actions/categories";
 
 // Simple custom toast hook substitution: since we could not find 'toast' in the app directory,
 // we will rely on native alert or simple console/state feedback for now until a robust toast system is confirmed.
 export function CategoryActions({ 
   category, 
-  initialSpecialties 
+  initialSpecialties,
+  commissions 
 }: { 
   category: ServiceCategory;
   initialSpecialties: ServiceSpecialty[];
+  commissions: Commission[];
 }) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -151,6 +154,7 @@ export function CategoryActions({
       <ManageSpecialtiesDialog 
         category={category} 
         initialSpecialties={initialSpecialties} 
+        commissions={commissions}
       />
 
       {/* DELETE ALERT DIALOG */}

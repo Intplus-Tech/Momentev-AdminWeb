@@ -3,8 +3,10 @@ import ActivePagination from "../vendors/_components/ActivePagination";
 import { Button } from "@/components/ui/button";
 import { getServiceCategories } from "@/lib/actions/categories";
 import { getServiceSpecialtiesByCategory } from "@/lib/actions/specialties";
+import { getCommissions } from "@/lib/actions/commissions";
 import { DynamicIcon } from "lucide-react/dynamic";
 import { CategoryActions } from "./_components/CategoryActions";
+import { CreateCategoryDialog } from "./_components/CreateCategoryDialog";
 
 interface PageProps {
   searchParams: {
@@ -22,9 +24,16 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
   const totalCategories = data?.total || 0;
   const categories = data?.data || [];
   
-  // Fetch specialties concurrently for each category
+  // Fetch specialties and commissions concurrently
   const specialtiesPromises = categories.map(cat => getServiceSpecialtiesByCategory(cat._id));
-  const specialtiesResponses = await Promise.all(specialtiesPromises);
+  const commissionsPromise = getCommissions(1, 100);
+  
+  const [specialtiesResponses, commissionsResult] = await Promise.all([
+    Promise.all(specialtiesPromises),
+    commissionsPromise
+  ]);
+
+  const commissions = commissionsResult.success ? commissionsResult.data?.data || [] : [];
   
   // Map successful responses into a dictionary for fast lookup O(1)
   const specialtiesMap: Record<string, any[]> = {};
@@ -47,9 +56,7 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
             {totalCategories} Total Categories
           </p>
         </div>
-        <Button className="bg-[#2B4EFF] hover:bg-blue-700 text-white">
-          + Add Category
-        </Button>
+        <CreateCategoryDialog />
       </div>
 
       {/* TABLE */}
@@ -115,6 +122,7 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
                         <CategoryActions 
                           category={category} 
                           initialSpecialties={specialtiesMap[category._id] || []}
+                          commissions={commissions}
                         />
                       </td>
                     </tr>

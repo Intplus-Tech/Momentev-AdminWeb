@@ -59,12 +59,50 @@ export async function getServiceCategories(
   }
 }
 
+export async function createServiceCategory(
+  data: { name: string; icon: string; suggestedTags: string[] }
+): Promise<ActionResult<ServiceCategory>> {
+  try {
+    const token = await getAccessToken();
+
+    if (!token) {
+      return { success: false, error: "Unauthorized: No access token found" };
+    }
+
+    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/service-categories`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    revalidatePath("/admin/categories");
+    return { success: true, data: body.data };
+  } catch (error) {
+    console.error("Create Service Category Error:", error);
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
+
 export async function updateServiceCategory(
   id: string,
   data: { name: string; icon: string; suggestedTags: string[] }
 ): Promise<ActionResult<ServiceCategory>> {
   try {
-    console.log(`[Update Category]: Triggered for ID ${id}`, data);
     const token = await getAccessToken();
 
     if (!token) {
@@ -81,7 +119,6 @@ export async function updateServiceCategory(
     });
 
     const body = await response.json();
-    console.log(`[Update Category]: Backend Response`, body);
 
     if (!response.ok) {
       return {

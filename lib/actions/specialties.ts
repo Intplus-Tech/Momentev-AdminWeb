@@ -98,9 +98,39 @@ export async function getServiceSpecialtiesByCategory(
   }
 }
 
+export async function createServiceSpecialty(
+  payload: { serviceCategoryId: string; name: string; description?: string; commissionId?: string }
+): Promise<ActionResult<ServiceSpecialty>> {
+  try {
+    const token = await getAccessToken();
+    if (!token) return { success: false, error: "Unauthorized: No access token found" };
+
+    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/service-specialties`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return { success: false, error: body.message || `Error: ${response.statusText}` };
+    }
+
+    revalidatePath("/admin/categories");
+    return { success: true, data: body.data };
+  } catch (error) {
+    console.error("Create Service Specialty Error:", error);
+    return { success: false, error: "An unexpected network error occurred." };
+  }
+}
+
 export async function updateServiceSpecialty(
   id: string,
-  payload: { name?: string; description?: string }
+  payload: { name?: string; description?: string; commissionId?: string }
 ): Promise<ActionResult<ServiceSpecialty>> {
   try {
     const token = await getAccessToken();
