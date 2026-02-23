@@ -14,7 +14,7 @@ export default function ClientPage() {
       </div>
       {/* TABLE */}
       <CustomersTable />
-      <ActivePagination />
+      <ActivePagination currentPage={1} totalPages={1} />
     </div>
   );
 }

@@ -2,7 +2,9 @@ import { FileDown } from "lucide-react";
 import ActivePagination from "./_components/ActivePagination";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { getVendors, VendorProfile } from "@/lib/actions/vendors";
+import { getAdminVendors, VendorProfile } from "@/lib/actions/vendors";
+import VendorFilterTabs from "./_components/VendorFilterTabs";
+import { Search } from "lucide-react";
 
 /* ================= STYLES ================= */
 const statusStyles: Record<string, string> = {
@@ -14,6 +16,7 @@ interface PageProps {
   searchParams: {
     page?: string;
     filter?: string;
+    search?: string;
   };
 }
 
@@ -23,24 +26,25 @@ export default async function VendorPage({ searchParams }: PageProps) {
   const resolvedParams = await searchParams;
   const currentPage = Number(resolvedParams.page) || 1;
   const currentFilter = resolvedParams.filter || "All";
+  const currentSearch = resolvedParams.search || "";
   
-  const result = await getVendors(currentPage, 20);
+  // Map "Active" / "Inactive" filters to boolean for the database
+  let isActiveFilter: boolean | undefined = undefined;
+  if (currentFilter === "Active") isActiveFilter = true;
+  if (currentFilter === "Inactive") isActiveFilter = false;
+
+  const result = await getAdminVendors(currentPage, 20, currentSearch, isActiveFilter, undefined);
   const data = result.success ? result.data : null;
   const totalVendors = data?.total || 0;
   
-  // Apply visual filtering on the server (if backend doesn't support active/inactive filtering)
-  let displayVendors = data?.data || [];
-  
-  if (currentFilter === "Active") {
-    displayVendors = displayVendors.filter(v => v.isActive);
-  } else if (currentFilter === "Inactive") {
-    displayVendors = displayVendors.filter(v => !v.isActive);
-  }
+  const displayVendors = data?.data || [];
 
-  // Count active vs inactive for the tabs
-  const allCount = data?.data.length || 0;
-  const activeCount = data?.data.filter(v => v.isActive).length || 0;
-  const inactiveCount = data?.data.filter(v => !v.isActive).length || 0;
+  // If using a unified endpoint with pagination, we only have the total count for the CURRENT filter.
+  // To avoid firing 3 queries on every page load just to get counts, we'll display the count of the ACTIVE filter tab only.
+  // The backend could be updated to return global aggregates (e.g. `meta: { active: 10, inactive: 5 }`), but for now, we just rely on totalVendors.
+  const activeCountLabel = currentFilter === "Active" ? `(${totalVendors})` : "";
+  const inactiveCountLabel = currentFilter === "Inactive" ? `(${totalVendors})` : "";
+  const allCountLabel = currentFilter === "All" ? `(${totalVendors})` : "";
 
   return (
     <div className="space-y-6">
@@ -55,34 +59,33 @@ export default async function VendorPage({ searchParams }: PageProps) {
       {/* FILTER BAR */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full">
         <div className="w-full sm:flex-1 overflow-x-auto">
-          <div className="flex items-center gap-6 sm:gap-10 text-[13px] bg-[#D9D9D9] p-2 rounded-lg min-w-max">
-            <Link
-              href="?filter=All"
-              className={`font-medium p-1 px-2 rounded-lg cursor-pointer ${currentFilter === "All" ? "text-[#2B4EFF] bg-white" : "text-[#718096]"}`}
-            >
-              All <span className="pl-3">({allCount})</span>
-            </Link>
-
-            <Link
-              href="?filter=Active"
-              className={`font-medium p-1 px-2 rounded-lg cursor-pointer ${currentFilter === "Active" ? "text-[#2B4EFF] bg-white" : "text-[#718096]"}`}
-            >
-              Active {activeCount}
-            </Link>
-            
-            <Link
-              href="?filter=Inactive"
-              className={`font-medium p-1 px-2 rounded-lg cursor-pointer ${currentFilter === "Inactive" ? "text-[#2B4EFF] bg-white" : "text-[#718096]"}`}
-            >
-              Inactive/Suspended {inactiveCount}
-            </Link>
-          </div>
+          <VendorFilterTabs 
+            currentFilter={currentFilter}
+            allCountLabel={currentFilter === "All" ? `(${totalVendors})` : ""}
+            activeCountLabel={activeCountLabel}
+            inactiveCountLabel={inactiveCountLabel}
+          />
         </div>
 
-        <button className="px-4 py-2 rounded-lg bg-[#D9D9D9] text-[#718096] text-sm flex items-center gap-2 hover:bg-gray-300 transition-colors">
-          <FileDown className="text-[#A0AEC0] w-4 h-4" />
-          Download
-        </button>
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+          {/* Basic form to submit search query */}
+          <form className="relative w-full sm:w-64" action="">
+            <input type="hidden" name="filter" value={currentFilter} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              name="search"
+              defaultValue={currentSearch}
+              placeholder="Search vendors..."
+              className="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#2B4EFF]"
+            />
+          </form>
+
+          <button className="px-4 py-2 rounded-lg bg-[#D9D9D9] text-[#718096] text-sm flex items-center gap-2 hover:bg-gray-300 transition-colors whitespace-nowrap">
+            <FileDown className="text-[#A0AEC0] w-4 h-4" />
+            Download
+          </button>
+        </div>
       </div>
 
       {/* TABLE */}
@@ -91,11 +94,12 @@ export default async function VendorPage({ searchParams }: PageProps) {
           <div className="overflow-x-auto">
             <table className="min-w-[700px] w-full text-sm">
               <thead className="border-b">
-                <tr className="text-left text-gray-500 font-medium">
-                  <th className="p-4">ID</th>
-                  <th>Business Name</th>
-                  <th>Category</th>
-                  <th>Status</th>
+                <tr className="text-left text-gray-500 font-medium whitespace-nowrap">
+                  <th className="p-4">Vendor</th>
+                  <th>Contact Info</th>
+                  <th>Category / Type</th>
+                  <th>Status & Stage</th>
+                  <th>Commission</th>
                   <th>Rating</th>
                   <th>Actions</th>
                 </tr>
@@ -105,23 +109,60 @@ export default async function VendorPage({ searchParams }: PageProps) {
                 {displayVendors.length > 0 ? (
                   displayVendors.map((vendor) => {
                     const statusText = vendor.isActive ? "Active" : "Inactive";
+                    const businessName = vendor.businessProfile?.businessName || "Unnamed Vendor";
+                    const contactName = vendor.businessProfile?.contactInfo?.primaryContactName || "No Contact Name";
+                    const contactEmail = vendor.businessProfile?.contactInfo?.emailAddress || vendor.userId?.email || "No Email";
+                    const bType = vendor.businessProfile?.businessRegType ? vendor.businessProfile.businessRegType.replace(/_/g, " ") : "N/A";
+                    
+                    let commissionDisplay = "N/A";
+                    if (vendor.commissionAgreement?.accepted && vendor.commissionAgreement.commissionAmount) {
+                      const amount = vendor.commissionAgreement.commissionAmount;
+                      const type = vendor.commissionAgreement.commissionType;
+                      commissionDisplay = type === 'percentage' ? `${amount}%` : `${amount} ${vendor.commissionAgreement.currency || ''}`;
+                    }
+                    
                     return (
                       <tr
                         key={vendor._id}
                         className="hover:bg-gray-50 transition-colors border-b last:border-b-0"
                       >
-                        <td className="p-4 text-gray-400 text-xs font-mono">{vendor._id.slice(-6)}</td>
-                        <td className="font-semibold text-gray-900">{vendor.businessProfile?.businessName || "Unnamed Vendor"}</td>
-                        <td className="text-gray-500">N/A</td>
-                        <td>
-                          <span className={`px-3 flex items-center justify-center w-fit py-1.5 rounded-full text-xs font-medium ${statusStyles[statusText]}`}>
-                            {statusText}
-                          </span>
+                        <td className="p-4">
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-gray-900">{businessName}</span>
+                            <span className="text-gray-400 text-[10px] font-mono mt-0.5">ID: {vendor._id}</span>
+                          </div>
                         </td>
-                        <td className="text-gray-600">{vendor.rate} ★</td>
-                        <td className="text-[#2B4EFF] space-x-2">
-                          <Button variant="link" className="p-0 h-auto">Edit</Button>
-                          <Button variant="link" className="p-0 h-auto" asChild>
+                        <td className="py-2 pr-4">
+                          <div className="flex flex-col">
+                            <span className="text-sm text-gray-800">{contactName}</span>
+                            <span className="text-xs text-gray-500">{contactEmail}</span>
+                          </div>
+                        </td>
+                        <td className="py-2 pr-4 text-gray-500 text-sm capitalize">{bType}</td>
+                        <td className="py-2 pr-4">
+                          <div className="flex flex-col items-start gap-1.5">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${statusStyles[statusText]}`}>
+                              {statusText}
+                            </span>
+                            {!vendor.onBoarded && (
+                              <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-200 px-1.5 py-0.5 rounded-sm">
+                                Stage: {vendor.onBoardingStage}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-2 pr-4 text-sm font-medium text-gray-700">
+                           {commissionDisplay}
+                        </td>
+                        <td className="py-2 pr-4 text-gray-600 text-sm">
+                          <div className="flex flex-col">
+                            <span>{vendor.rate} ★</span>
+                            <span className="text-[10px] text-gray-400">({vendor.reviewCount} revs)</span>
+                          </div>
+                        </td>
+                        <td className="py-2 pr-4 text-[#2B4EFF] space-x-2 whitespace-nowrap">
+                          <Button variant="link" className="p-0 h-auto text-xs">Edit</Button>
+                          <Button variant="link" className="p-0 h-auto text-xs" asChild>
                             <Link href={`/vendorprofile/${vendor._id}`}>View</Link>
                           </Button>
                         </td>
