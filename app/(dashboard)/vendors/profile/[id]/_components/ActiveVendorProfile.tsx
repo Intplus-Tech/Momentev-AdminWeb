@@ -1,12 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
 import { VendorProfile, VendorService } from "@/lib/actions/vendors";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Copy, MapPin, Mail, Phone, Calendar, ArrowUpRight, Star } from "lucide-react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { FileText, Image as ImageIcon, Star } from "lucide-react";
 
 interface Props {
   vendor: VendorProfile;
@@ -15,354 +10,231 @@ interface Props {
 }
 
 export default function ActiveVendorProfile({ vendor, services, specialties }: Props) {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const profile = vendor.businessProfile as any;
+  const user = vendor.userId as any;
+  const vendorAny = vendor as any;
 
-  const profile = vendor.businessProfile;
-  const businessName = profile?.businessName || "Unnamed Business";
-  const contactName = profile?.contactInfo?.primaryContactName || vendor.userId?.firstName || "Unknown Vendor";
-  const email = profile?.contactInfo?.emailAddress || vendor.userId?.email || "Unknown Email";
-  const phone = profile?.contactInfo?.phoneNumber || "Unknown Phone";
-  const regType = profile?.businessRegType ? profile.businessRegType.replace(/_/g, " ") : "Not Specified";
-  const logoUrl = vendor.profilePhoto?.url || "https://placehold.co/400x400/png?text=No+Logo";
-  const vendorId = vendor.id;
+  const contactName = profile?.contactInfo?.primaryContactName || user?.firstName || "Unknown";
+  const email = profile?.contactInfo?.emailAddress || user?.email || "—";
+  const phone = profile?.contactInfo?.phoneNumber || "—";
   
-  const joinedDateRaw = (vendor as any).createdAt || new Date().toISOString();
-  const joinedDate = new Date(joinedDateRaw).toLocaleDateString("en-US", { year: "numeric", month: "long" });
+  const joinedDate = new Date(vendorAny.createdAt || Date.now()).toLocaleDateString("en-US", {
+    year: "numeric", month: "short", day: "numeric"
+  });
 
-  let commissionDisplay = "N/A";
+  const regType = profile?.businessRegType?.replace(/_/g, " ") || 'N/A';
+  const yearsInBusiness = profile?.yearInBusiness?.replace(/_/g, " ") || 'N/A';
+
+  const address = profile?.contactInfo?.addressId;
+  const formatAddress = () => {
+    if (!address) return "Address missing";
+    return [address.street, address.city, address.state, address.postalCode, address.country]
+      .filter(Boolean).join(", ");
+  };
+
+  const serviceArea = profile?.serviceArea;
+  const serviceAreaNames: { city: string; state?: string; country?: string }[] = serviceArea?.areaNames || [];
+  const serviceAreaString = serviceAreaNames.length > 0 
+    ? serviceAreaNames.map(a => a.city).join(", ") 
+    : "Not specified";
+
+  let commissionDisplay = "10%";
   if (vendor.commissionAgreement?.accepted && vendor.commissionAgreement.commissionAmount) {
     const amt = vendor.commissionAgreement.commissionAmount;
     const type = vendor.commissionAgreement.commissionType;
-    commissionDisplay = type === 'percentage' ? `${amt}%` : `${amt} ${vendor.commissionAgreement.currency || 'GBP'}`;
+    commissionDisplay = type === "percentage" ? `${amt}%` : `${amt} ${vendor.commissionAgreement.currency || "GBP"}`;
   }
 
-  // Gather available media for the grid
-  const coverPhotos: string[] = [];
-  const galleryPhotos: string[] = [];
-  const documentImages: string[] = [];
+  // Media arrays
   const documentsList: { name: string; url: string }[] = [];
+  const portfolioList: { name: string; url: string }[] = [];
 
-  const vendorData = vendor as any;
-  const profileDataBlock = profile as any;
-  
-  if (vendor.coverPhoto?.url) coverPhotos.push(vendor.coverPhoto.url);
-  if (vendor.profilePhoto?.url && vendor.profilePhoto.url !== vendor.coverPhoto?.url) coverPhotos.push(vendor.profilePhoto.url);
-
-  // Portfolio Gallery — lives at vendor ROOT level
-  const gallery = vendorData?.portfolioGallery || vendorData?.portfolioImages || [];
-  if (Array.isArray(gallery)) {
-    gallery.forEach((img: any) => {
-      const url = img?.url || (typeof img === 'string' ? img : null);
-      if (url && !galleryPhotos.includes(url)) galleryPhotos.push(url);
-    });
-  }
-  
-  // Business Documents — each doc is { docName, file: { url } }
-  const docs = profileDataBlock?.businessDocuments || profileDataBlock?.documents || [];
+  const docs = profile?.businessDocuments || profile?.documents || [];
   if (Array.isArray(docs)) {
     docs.forEach((doc: any, i: number) => {
-       const url = doc?.file?.url || doc?.url || (typeof doc === 'string' ? doc : null);
-       const name = doc?.docName || doc?.name || doc?.title || doc?.documentType || `Document_${i + 1}`;
-       
-       if (typeof url === 'string' && url.trim()) {
-         if (url.match(/\.(jpeg|jpg|gif|png|webp)$/i) && !documentImages.includes(url)) {
-            documentImages.push(url);
-         } else {
-            documentsList.push({ name, url });
-         }
-       }
+      const url = doc?.file?.url || doc?.url || (typeof doc === "string" ? doc : null);
+      const name = doc?.docName || doc?.name || doc?.title || `Document_${i + 1}`;
+      if (typeof url === "string" && url.trim()) {
+        documentsList.push({ name, url });
+      }
     });
   }
 
-  const totalImagesCount = coverPhotos.length + galleryPhotos.length + documentImages.length;
+  const gallery = vendorAny?.portfolioGallery || vendorAny?.portfolioImages || [];
+  if (Array.isArray(gallery)) {
+    gallery.forEach((img: any, i: number) => {
+      const url = img?.url || (typeof img === "string" ? img : null);
+      const name = img?.originalName || `img_${String(i + 1).padStart(5, '0')}.jpg`;
+      if (url) portfolioList.push({ name, url });
+    });
+  }
+  if (vendor?.profilePhoto?.url) portfolioList.unshift({ name: "Business Logo", url: vendor.profilePhoto.url });
+  if (vendor?.coverPhoto?.url) portfolioList.unshift({ name: "Profile Cover", url: vendor.coverPhoto.url });
+
+  const CheckSquare = () => (
+    <div className="w-[14px] h-[14px] rounded-sm bg-green-500 flex items-center justify-center shrink-0">
+      <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+      </svg>
+    </div>
+  );
 
   return (
-    <div className="space-y-6">
-      {/* Lightbox Dialog */}
-      <Dialog open={!!selectedImage} onOpenChange={(open) => !open && setSelectedImage(null)}>
-        <DialogContent className="max-w-[90vw] max-h-[90vh] p-1 border-none bg-black overflow-hidden flex items-center justify-center">
-          <DialogTitle className="sr-only">Image Viewer</DialogTitle>
-          {selectedImage && (
-            <div className="relative w-full h-full flex items-center justify-center min-h-[50vh] min-w-[50vw]">
-              <img 
-                src={selectedImage} 
-                alt="Enlarged Portfolio View" 
-                className="max-w-full max-h-[85vh] object-contain rounded-md"
-              />
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+    <div className="bg-white p-10">
+      {/* TABS */}
+      <div className="flex gap-8 px-1 pt-2 border-b">
+        <button className="pb-3 border-b-2 border-red-500 font-semibold text-gray-900">Overview</button>
+        <button className="pb-3 font-medium text-gray-400 hover:text-gray-600">Bookings</button>
+        <button className="pb-3 font-medium text-gray-400 hover:text-gray-600">Earnings</button>
+        <button className="pb-3 font-medium text-gray-400 hover:text-gray-600">Reviews</button>
+      </div>
 
-      {/* HERO SECTION */}
-      <Card className="rounded-xl border shadow-sm overflow-hidden">
-        {/* Cover Photo Mock */}
-        <div className="h-32 bg-linear-to-r from-blue-600 to-indigo-700 w-full relative">
-          {vendor.coverPhoto && (
-            <Image src={vendor.coverPhoto.url} alt="Cover" fill className="object-cover opacity-60 mix-blend-overlay" />
-          )}
-        </div>
+      <div className="flex flex-col">
         
-        <CardContent className="p-6 pt-0 relative">
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* Logo overlaps cover photo */}
-            <div className="w-24 h-24 sm:w-32 sm:h-32 shrink-0 border-4 border-white rounded-xl overflow-hidden relative bg-white -mt-12 shadow-sm">
-              <Image src={logoUrl} alt={`${businessName} Logo`} fill className="object-contain p-2" unoptimized />
-            </div>
-            
-            <div className="flex-1 mt-4 md:mt-6 flex flex-col sm:flex-row justify-between items-start">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">{businessName}</h2>
-                <p>{vendorId}</p>
-                <div className="flex items-center gap-2 mt-1 mb-2">
-                  <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-100 border-green-200 uppercase tracking-wider text-[10px]">
-                    Active Vendor
-                  </Badge>
-                  <span className="flex items-center text-yellow-500 text-sm font-medium ml-2">
-                    <Star className="w-4 h-4 mr-1 fill-current" />
-                    {vendor.rate > 0 ? vendor.rate.toFixed(1) : "New"}
-                    <span className="text-gray-400 ml-1 font-normal">({vendor.reviewCount} reviews)</span>
-                  </span>
-                </div>
-                <p className="text-sm text-gray-500 max-w-lg mt-3">
-                  <span className="capitalize">{regType}</span> active on the platform since {joinedDate}. 
-                  Provides {services.length} services across {specialties.length} specialty categories.
+        {/* Quick Actions */}
+        {/* <section className="py-8 border-b border-gray-100">
+          <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+             <h3 className="font-semibold text-[15px] text-gray-900">Quick Actions</h3>
+             <div className="flex items-center gap-3">
+               <div className="w-8 h-[18px] bg-green-500 rounded-full relative cursor-pointer hover:bg-green-600 transition-colors">
+                 <div className="w-3.5 h-3.5 bg-white rounded-full absolute right-[2px] top-[2px] shadow-sm"></div>
+               </div>
+               <span className="text-[11px] text-gray-600 font-medium">Temporarily Suspend Account</span>
+             </div>
+          </div>
+          <ul className="list-disc pl-5 space-y-2 text-gray-700 text-[13px]">
+            <li>Adjust Commission Rate (Current: <span className="font-medium text-gray-900">{commissionDisplay}</span>)</li>
+            <li>Send Warning Notification</li>
+          </ul>
+        </section> */}
+
+        {/* Performance metrics - only show if backend actually returns these later on. Right now, hiding static data */}
+        {vendor.reviewCount !== undefined && (
+          <section className="py-8 border-b border-gray-100">
+            <h3 className="font-semibold text-[15px] text-gray-900 mb-5">Performance Metrics</h3>
+            <div className="flex gap-4">
+              <div className="p-4 border rounded-xl border-gray-100 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] min-w-[150px]">
+                <p className="text-[11px] font-semibold text-gray-500 mb-1 uppercase tracking-wider">Rating</p>
+                <p className="text-2xl font-bold text-gray-900 flex items-center gap-1.5">
+                  {vendor.rate > 0 ? vendor.rate.toFixed(1) : "N/A"} <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                 </p>
+                <p className="text-[10px] text-gray-400 mt-2">Reviews: {vendor.reviewCount}</p>
               </div>
-              
-              <div className="mt-4 sm:mt-0 flex gap-2">
-                <button className="flex items-center gap-2 px-3 py-1.5 border rounded-lg text-sm font-medium hover:bg-gray-50 text-gray-600 transition-colors">
-                  <ArrowUpRight className="w-4 h-4" /> View Storefront
-                </button>
+            </div>
+          </section>
+        )}
+
+        {/* Business Details */}
+        <section className="py-8 border-b border-gray-100">
+          <h3 className="font-semibold text-[15px] text-gray-900 mb-5">Business Details</h3>
+          <div className="grid grid-cols-[140px_1fr] md:grid-cols-[160px_1fr] gap-y-4 items-start text-[13px]">
+            <span className="text-gray-500 font-medium">Owner:</span>
+            <span className="text-gray-900">{contactName} <span className="text-gray-400 mx-1">•</span> Joined: {joinedDate}</span>
+
+            <span className="text-gray-500 font-medium">Business Type:</span>
+            <span className="capitalize text-gray-900">{regType} <span className="text-gray-400 mx-1">•</span> {yearsInBusiness} experience</span>
+
+            <span className="text-gray-500 font-medium">Service Area:</span>
+            <span className="capitalize text-gray-900">{serviceAreaString} {serviceArea?.travelDistance ? `+ ${serviceArea.travelDistance} radius` : ""}</span>
+
+            <span className="text-gray-500 font-medium pt-0.5">Registration:</span>
+            <div className="space-y-2.5">
+              {docs.length > 0 ? (
+                docs.map((d: any, i: number) => (
+                  <div key={i} className="flex items-center gap-2.5 text-gray-900">
+                    <CheckSquare />
+                    <span>{d.docName || `Document ${i+1}`}</span>
+                  </div>
+                ))
+              ) : (
+                <span className="text-gray-400 italic">No registration documents uploaded</span>
+              )}
+            </div>
+
+            <span className="text-gray-500 font-medium">Payment Model:</span>
+            <span className="capitalize text-gray-900">{vendorAny.paymentModel?.replace(/_/g, " ") || "Split Payout (50% deposit)"}</span>
+
+            <span className="text-gray-500 font-medium pt-0.5">Stripe Account:</span>
+            <div className="flex items-center gap-2.5 text-gray-900">
+              <CheckSquare />
+              <span className="capitalize">{vendorAny.paymentAccountProvider || "Not Connected"}</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Services & Contact */}
+        <section className="py-8 border-b border-gray-100">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div>
+              <h3 className="font-semibold text-[15px] text-gray-900 mb-5">Services Categories</h3>
+              <ul className="list-disc pl-5 space-y-3 text-[13px] text-gray-800">
+                {services.length > 0 ? (
+                   services.map((svc) => (
+                     <li key={svc._id} className="capitalize">{svc.serviceCategory?.name || "Unknown"}</li>
+                   ))
+                ) : (
+                  <span className="text-gray-400 italic block -ml-5">No services listed yet</span>
+                )}
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-[15px] text-gray-900 mb-5">Contact Information</h3>
+              <div className="space-y-3 text-[13px] text-gray-800">
+                <div className="flex"><span className="w-24 text-gray-500 font-medium shrink-0">Email:</span> <span>{email}</span></div>
+                <div className="flex"><span className="w-24 text-gray-500 font-medium shrink-0">Phone:</span> <span>{phone}</span></div>
+                <div className="flex"><span className="w-24 text-gray-500 font-medium shrink-0">Mobile:</span> <span>{phone}</span></div>
+                <div className="flex items-start"><span className="w-24 text-gray-500 font-medium shrink-0 mt-[1px]">Address:</span> <span className="leading-snug">{formatAddress()}</span></div>
+                <div className="flex"><span className="w-24 text-gray-500 font-medium shrink-0">City:</span> <span className="capitalize">{address?.city || "London, UK"}</span></div>
+                {vendorAny.socialMediaLinks?.map((s:any, i:number) => {
+                   if (s.name === 'website') return <div key={i} className="flex"><span className="w-24 text-gray-500 font-medium shrink-0">Website:</span> <a href={s.link} className="text-blue-600 hover:underline" target="_blank" rel="noreferrer">{s.link.replace(/^https?:\/\//, '')}</a></div>;
+                   return null;
+                })}
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </section>
 
-      <div className="grid grid-col-1 lg:grid-cols-3 gap-6">
-        
-        {/* LEFT COLUMN */}
-        <div className="space-y-6 lg:col-span-1">
-          {/* Contact Details */}
-          <Card className="rounded-xl border shadow-sm h-full">
-            <CardHeader className="pb-3 border-b">
-              <CardTitle className="text-[15px] text-gray-700">Contact Details</CardTitle>
-            </CardHeader>
-            <CardContent className="p-5 space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                  <span className="font-semibold text-sm">{contactName.charAt(0).toUpperCase()}</span>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{contactName}</p>
-                  <p className="text-xs text-gray-500">Primary Contact</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3 text-sm text-gray-600 pt-2 border-t">
-                <Mail className="w-4 h-4 text-gray-400" />
-                <span className="truncate">{email}</span>
-                <Copy className="w-3 h-3 text-gray-300 ml-auto cursor-pointer hover:text-gray-500" />
-              </div>
-
-              <div className="flex items-center gap-3 text-sm text-gray-600">
-                <Phone className="w-4 h-4 text-gray-400" />
-                <span>{phone}</span>
-                <Copy className="w-3 h-3 text-gray-300 ml-auto cursor-pointer hover:text-gray-500" />
-              </div>
-              
-              <div className="flex gap-3 text-sm text-gray-600">
-                <MapPin className="top-1 relative w-4 h-4 text-gray-400 shrink-0" />
-                <span className="leading-snug">
-                  {profile?.contactInfo?.primaryContactName ? "London, UK (Vendor address pending API)" : "Address missing"}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* RIGHT COLUMN */}
-        <div className="lg:col-span-2 space-y-6 w-full">
-          
-          {/* Services & Specialties */}
-          <Card className="rounded-xl border shadow-sm">
-            <CardHeader className="pb-3 border-b flex flex-row items-center justify-between">
-              <CardTitle className="text-[15px] text-gray-700">Services & Categories</CardTitle>
-              <Badge variant="secondary" className="font-mono text-[10px]">{services.length} Listed</Badge>
-            </CardHeader>
-            <CardContent className="p-0 text-sm">
-              {services.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">
-                  This vendor hasn't set up any services yet.
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {services.map((svc) => {
-                    // Specialties have a serviceSpecialty.serviceCategoryId which matches svc.serviceCategory._id
-                    const svcSpec = specialties.filter((s:any) => s.serviceSpecialty?.serviceCategoryId === svc.serviceCategory?._id);
-                    return (
-                      <div key={svc._id} className="p-5 hover:bg-gray-50 transition-colors">
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-semibold text-gray-900 capitalize">
-                            {svc.serviceCategory?.name || "Unknown Category"}
-                          </h4>
-                          <span className="text-xs text-gray-500 font-mono">ID: {svc._id?.slice(-6)}</span>
-                        </div>
-                        <p className="text-gray-600 text-[13px] mb-3">
-                          Min booking: {svc.minimumBookingDuration?.replace(/_/g, " ") || 'N/A'} • 
-                          Lead Time: {svc.leadTimeRequired?.replace(/_/g, " ") || 'N/A'}
-                        </p>
-                        
-                        <div className="flex flex-col gap-2">
-                          {svcSpec.length === 0 ? (
-                            <span className="text-xs text-gray-400 italic">No specialties</span>
-                          ) : (
-                            svcSpec.map((s, idx) => (
-                              <div key={idx} className="flex justify-between items-center text-sm px-3 py-2 bg-gray-50 rounded border">
-                                <div>
-                                  <div className="font-medium text-gray-800 capitalize">
-                                    {s.serviceSpecialty?.name || "Unnamed"}
-                                  </div>
-                                  {s.serviceSpecialty?.description && (
-                                    <div className="text-xs text-gray-500 mt-0.5 max-w-sm truncate">
-                                      {s.serviceSpecialty.description}
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="text-right">
-                                  <Badge variant="outline" className="font-mono text-[11px] uppercase tracking-wide bg-white">
-                                    {s.priceCharge?.replace(/_/g, " ")}: £{s.price}
-                                  </Badge>
-                                </div>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Account Details */}
-          <Card className="rounded-xl border shadow-sm">
-            <CardHeader className="pb-3 border-b">
-              <CardTitle className="text-[15px] text-gray-700">Agreements & Verification</CardTitle>
-            </CardHeader>
-            <CardContent className="p-5 flex flex-col md:flex-row gap-8">
-              <div className="flex-1 space-y-4">
-                <div>
-                  <h5 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Platform Commission</h5>
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-gray-900">{commissionDisplay}</span>
-                    {vendor.commissionAgreement?.accepted && <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">Accepted</Badge>}
-                  </div>
-                </div>
-              </div>
-              <div className="flex-1 space-y-4">
-                <div>
-                  <h5 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Company Reg Number</h5>
-                  <span className="text-lg font-mono text-gray-800">{profile?.companyRegNo || "—"}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* PORTFOLIO & DOCUMENTS */}
-          {(totalImagesCount > 0 || documentsList.length > 0) && (
-            <Card className="rounded-xl border shadow-sm mt-6">
-              <CardHeader className="pb-3 border-b flex flex-row items-center justify-between">
-                <CardTitle className="text-[15px] text-gray-700">Portfolio & Documents</CardTitle>
-                <Badge variant="secondary" className="font-mono text-[10px]">{totalImagesCount} Media</Badge>
-              </CardHeader>
-              <CardContent className="p-6 space-y-6">
-                
-                {/* BUSINESS DOCUMENTS (FILES & IMAGES) */}
-                {(documentsList.length > 0 || documentImages.length > 0) && (
-                  <div>
-                    <h3 className="text-xs font-semibold tracking-wider uppercase text-gray-500 mb-3 border-b pb-2">Business Documents</h3>
-                    
-                    {documentsList.length > 0 && (
-                      <div className="flex flex-wrap items-center gap-3 mb-4">
-                        {documentsList.map((doc, idx) => (
-                          <a 
-                            key={idx} 
-                            href={doc.url} 
-                            target="_blank" 
-                            rel="noreferrer"
-                            className="px-4 py-2 hover:text-[#2B4EFF] bg-gray-50 hover:bg-blue-50 transition-colors cursor-pointer rounded-md border border-gray-200 hover:border-blue-200 flex items-center gap-2"
-                          >
-                            <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                            <span className="capitalize text-sm font-medium text-gray-700">{doc.name.replace(/_/g, ' ')}</span>
-                          </a>
-                        ))}
-                      </div>
-                    )}
-
-                    {documentImages.length > 0 && (
-                      <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3 mt-3">
-                        {documentImages.map((url, i) => (
-                          <div 
-                            key={i} 
-                            onClick={() => setSelectedImage(url)}
-                            className="aspect-[4/3] relative rounded border bg-gray-100 cursor-pointer group overflow-hidden"
-                          >
-                            <Image src={url} alt={`Doc Img ${i}`} fill className="object-cover group-hover:scale-105 transition-transform" unoptimized />
-                            <div className="absolute inset-x-0 bottom-0 py-1 bg-black/60 text-white text-[10px] text-center">View Image</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+        {/* Documents & Portfolio */}
+        <section className="py-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div>
+              <h3 className="font-semibold text-[15px] text-gray-900 mb-5">Documents</h3>
+              <div className="space-y-3 text-[13px] text-gray-800">
+                {documentsList.length > 0 ? (
+                   documentsList.map((doc, i) => (
+                     <div key={i} className="flex items-center gap-3">
+                       <FileText className="w-4 h-4 text-red-500 shrink-0" strokeWidth={2} />
+                       <a href={doc.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline truncate capitalize font-medium">
+                         {doc.name.replace(/_/g, " ")}.pdf
+                       </a>
+                     </div>
+                   ))
+                ) : (
+                   <span className="text-gray-400 italic">No documents available</span>
                 )}
+              </div>
+            </div>
 
-                {/* PORTFOLIO GALLERY */}
-                {galleryPhotos.length > 0 && (
-                  <div>
-                    <h3 className="text-xs font-semibold tracking-wider uppercase text-gray-500 mb-3 border-b pb-2">Portfolio Gallery</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                      {galleryPhotos.map((url, i) => (
-                        <div 
-                          key={i} 
-                          onClick={() => setSelectedImage(url)}
-                          className="aspect-square relative rounded border overflow-hidden bg-gray-50 cursor-pointer group hover:opacity-90 hover:ring-2 hover:ring-[#2B4EFF] transition-all"
-                        >
-                          <Image src={url} alt={`Portfolio ${i}`} fill className="object-cover group-hover:scale-105 transition-transform duration-300" unoptimized />
-                          <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                            View
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+            <div>
+              <h3 className="font-semibold text-[15px] text-gray-900 mb-5">Portfolio</h3>
+              <div className="space-y-3 text-[13px] text-gray-800">
+                {portfolioList.length > 0 ? (
+                   portfolioList.map((port, i) => (
+                     <div key={i} className="flex items-center gap-3">
+                       <ImageIcon className="w-4 h-4 text-blue-500 shrink-0" strokeWidth={2} />
+                       <a href={port.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline truncate font-medium">
+                         {port.name}
+                       </a>
+                     </div>
+                   ))
+                ) : (
+                   <span className="text-gray-400 italic">No portfolio media uploaded</span>
                 )}
-
-                {/* PLATFORM PHOTOS */}
-                {coverPhotos.length > 0 && (
-                  <div>
-                    <h3 className="text-xs font-semibold tracking-wider uppercase text-gray-500 mb-3 border-b pb-2">Cover & Profile Photos</h3>
-                    <div className="flex gap-4">
-                      {coverPhotos.map((url, i) => (
-                        <div 
-                          key={i} 
-                          onClick={() => setSelectedImage(url)}
-                          className="w-24 h-24 lg:w-32 lg:h-32 relative rounded border overflow-hidden bg-gray-100 cursor-pointer group"
-                        >
-                          <Image src={url} alt={`Cover/Profile ${i}`} fill className="object-cover group-hover:scale-105 transition-transform" unoptimized />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-              </CardContent>
-            </Card>
-          )}
-
-        </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );

@@ -69,7 +69,7 @@ export default async function VendorProfilePage({ params }: PageProps) {
         
         <div className="flex-1 text-center">
           <h1 className="text-xl sm:text-2xl font-semibold tracking-wide uppercase">
-            {isPendingReview ? "Vendor Application Review" : "Vendor Profile"}
+            {isPendingReview ? "Vendor Application Review" : "Vendor Profile Management"}
           </h1>
           <p className="text-sm text-gray-500 font-mono mt-1">
             #{vendor._id.slice(-6).toUpperCase()}
