@@ -141,3 +141,188 @@ export async function getAdminVendors(
     };
   }
 }
+
+export async function getAdminVendorById(id: string): Promise<ActionResult<VendorProfile>> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      return { success: false, error: "Unauthorized: No access token" };
+    }
+
+    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/admin/vendors/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    // Single vendor profiles are usually wrapped in body.data from Momentev API
+    return { success: true, data: body.data };
+  } catch (error) {
+    console.error("Get Admin Vendor By ID Error:", error);
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
+
+export interface VendorService {
+  _id: string;
+  vendorId: string;
+  serviceCategory: {
+    _id: string;
+    name: string;
+    icon: string;
+    suggestedTags: string[];
+  };
+  tags: string[];
+  minimumBookingDuration?: string;
+  leadTimeRequired?: string;
+  maximumEventSize?: string;
+  additionalFees?: {
+    _id: string;
+    name: string;
+    price: string | number;
+    feeCategory: string;
+  }[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VendorSpecialty {
+  _id: string;
+  vendorId: string;
+  serviceSpecialty: {
+    _id: string;
+    name: string;
+    description: string;
+    serviceCategoryId: string;
+    commissionId: string;
+  };
+  priceCharge: string;
+  price: string | number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getAdminVendorServices(vendorId: string): Promise<ActionResult<VendorService[]>> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      return { success: false, error: "Unauthorized: No access token" };
+    }
+
+    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/admin/vendors/${vendorId}/services`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    return { success: true, data: body.data?.data || [] }; 
+  } catch (error) {
+    console.error("Get Admin Vendor Services Error:", error);
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
+
+export async function getAdminVendorSpecialties(vendorId: string): Promise<ActionResult<VendorSpecialty[]>> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      return { success: false, error: "Unauthorized: No access token" };
+    }
+
+    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/admin/vendors/${vendorId}/specialties`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    return { success: true, data: body.data?.data || [] };
+  } catch (error) {
+    console.error("Get Admin Vendor Specialties Error:", error);
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
+
+export async function updateVendor(vendorId: string, data: Partial<VendorProfile>): Promise<ActionResult<any>> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      return { success: false, error: "Unauthorized: No access token" };
+    }
+
+    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/vendors/${vendorId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+      cache: "no-store",
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    return { success: true, data: body.data };
+  } catch (error) {
+    console.error("Update Vendor Error:", error);
+    return {
+      success: false,
+      error: "An unexpected network error occurred during vendor update.",
+    };
+  }
+}
+
+export async function approveVendor(vendorId: string): Promise<ActionResult<any>> {
+  return updateVendor(vendorId, { isActive: true });
+}

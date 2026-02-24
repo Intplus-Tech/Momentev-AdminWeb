@@ -1,125 +1,82 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { ClientProfile } from "@/lib/actions/clients";
+import { Button } from "@/components/ui/button";
 
-export default function CustomersTable() {
+interface Props {
+  clients: ClientProfile[];
+}
+
+export default function CustomersTable({ clients }: Props) {
   const router = useRouter();
 
-  const rows = [
-    {
-      id: "C-8921",
-      name: "Sarah Johnson",
-      location: "London",
-      status: "Active",
-      type: "Individual",
-      orders: 3,
-      amount: "£4,830",
-      date: "Today 10:30",
-    },
-    {
-      id: "C-8920",
-      name: "James Wilson",
-      location: "Manchester",
-      status: "Active",
-      type: "Business",
-      orders: 7,
-      amount: "£4,830",
-      date: "Oct 16",
-    },
-    {
-      id: "C-8919",
-      name: "Maria Garcia",
-      location: "Birmingham",
-      status: "Inactive",
-      type: "Individual",
-      orders: 0,
-      amount: "£4,830",
-      date: "Yesterday",
-    },
-    {
-      id: "C-8918",
-      name: "Tech Startup",
-      location: "Reading",
-      status: "Suspended",
-      type: "Business",
-      orders: 1,
-      amount: "£4,830",
-      date: "Oct 30",
-    },
-    {
-      id: "C-8917",
-      name: "Robert Chen",
-      location: "Oxford",
-      status: "Active",
-      type: "Individual",
-      orders: 2,
-      amount: "£4,830",
-      date: "Oct 25",
-    },
-  ];
-
   const statusStyles: Record<string, string> = {
-    Active: "bg-green-100 text-green-700",
-    Inactive: "bg-yellow-100 text-yellow-700",
-    Suspended: "bg-red-500 text-white",
+    active: "bg-green-100 text-green-700 border border-green-200",
+    inactive: "bg-gray-100 text-gray-700 border border-gray-200",
+    banned: "bg-red-50 text-red-700 border border-red-200",
+    pending_verification: "bg-amber-50 text-amber-700 border border-amber-200",
   };
 
   /* ================= HANDLER ================= */
 
-  const handleView = (id: string, status: string) => {
-    if (status === "Active") {
-      router.push(`/clientprofile/${id}`);
-    }
+  const handleView = (id: string) => {
+    router.push(`/clients/profile/${id}`);
   };
 
   return (
-    <div className="bg-white rounded-xl overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
       <div className="overflow-x-auto">
         <table className="min-w-[1000px] w-full text-sm">
-          <thead className="border-b">
-            <tr className="text-left text-gray-500">
-              <th className="p-4">ID</th>
-              <th>Name</th>
-              <th>Location</th>
-              <th>Status</th>
-              <th>Type</th>
-              <th>Orders</th>
-              <th>Amount</th>
-              <th>Date</th>
-              <th className="text-right pr-6">Actions</th>
+          <thead className="border-b bg-gray-50/50">
+            <tr className="text-left text-gray-500 text-[13px] uppercase tracking-wider">
+              <th className="p-4 font-medium">Client ID</th>
+              <th className="font-medium p-3">Name</th>
+              <th className="font-medium p-3">Email</th>
+              <th className="font-medium p-3">Account Status</th>
+              <th className="font-medium p-3">Role</th>
+              <th className="font-medium p-3 text-right">Last Login</th>
+              <th className="w-16 p-3"></th>
             </tr>
           </thead>
 
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50 transition">
-                <td className="p-4 text-gray-600">{row.id}</td>
-                <td className="font-medium text-gray-900">{row.name}</td>
-                <td className="text-gray-600">{row.location}</td>
-                <td>
-                  <span
-                    className={`px-4 py-1 rounded-full text-xs font-medium ${statusStyles[row.status]}`}
-                  >
-                    {row.status}
-                  </span>
-                </td>
-                <td className="text-gray-600">{row.type}</td>
-                <td className="text-gray-600">{row.orders}</td>
-                <td className="text-gray-600">{row.amount}</td>
-                <td className="text-gray-600">{row.date}</td>
-                <td className="text-right pr-6 space-x-4">
-                  <button
-                    onClick={() => handleView(row.id, row.status)}
-                    className="text-blue-600 hover:underline"
-                  >
-                    View
-                  </button>
-                  <button className="text-blue-600 hover:underline">
-                    Actions
-                  </button>
+          <tbody className="divide-y">
+            {clients.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="p-8 text-center text-gray-400">
+                  No clients found matching criteria.
                 </td>
               </tr>
-            ))}
+            ) : (
+              clients.map((client) => {
+                const style = statusStyles[client.status] || "bg-gray-50 text-gray-600 border border-gray-200";
+                const lastLogin = client.lastLoginAt 
+                  ? new Date(client.lastLoginAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                  : "Never";
+
+                return (
+                  <tr key={client._id} className="hover:bg-gray-50/80 transition-colors">
+                    <td className="p-4 text-gray-500 font-mono text-xs">#{client._id.slice(-6).toUpperCase()}</td>
+                    <td className="font-medium text-gray-900 p-3">
+                      {client.firstName} {client.lastName}
+                    </td>
+                    <td className="text-gray-600 truncate max-w-[200px] p-3">{client.email}</td>
+                    <td className="p-3">
+                      <span className={`px-2.5 py-0.5 rounded-sm text-[11px] font-medium uppercase tracking-wider ${style}`}>
+                        {client.status.replace(/_/g, " ")}
+                      </span>
+                    </td>
+                    <td className="text-gray-600 capitalize p-3">{client.role}</td>
+                    <td className="text-gray-500 text-right p-3">{lastLogin}</td>
+                    <td className="p-3 text-right">
+                      <Button onClick={() => handleView(client._id)} variant="ghost" size="sm" className="h-8 text-blue-600 hover:text-blue-700 bg-blue-50/50 hover:bg-blue-100">
+                        View
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>

@@ -20,9 +20,7 @@ interface PageProps {
   };
 }
 
-/* ================= PAGE ================= */
 export default async function VendorPage({ searchParams }: PageProps) {
-  // Await searchParams as required in Next 15+
   const resolvedParams = await searchParams;
   const currentPage = Number(resolvedParams.page) || 1;
   const currentFilter = resolvedParams.filter || "All";
@@ -163,7 +161,7 @@ export default async function VendorPage({ searchParams }: PageProps) {
                         <td className="py-2 pr-4 text-[#2B4EFF] space-x-2 whitespace-nowrap">
                           <Button variant="link" className="p-0 h-auto text-xs">Edit</Button>
                           <Button variant="link" className="p-0 h-auto text-xs" asChild>
-                            <Link href={`/vendorprofile/${vendor._id}`}>View</Link>
+                            <Link href={`/vendors/profile/${vendor._id}`}>View</Link>
                           </Button>
                         </td>
                       </tr>
