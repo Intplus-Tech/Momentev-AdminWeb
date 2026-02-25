@@ -1,3 +1,1 @@
-﻿app/(dashboard)/vendors/profile/[id]/_components/ActiveVendorProfile.tsx(83,6): error TS17008: JSX element 'div' has no corresponding closing tag.
-app/(dashboard)/vendors/profile/[id]/_components/ActiveVendorProfile.tsx(294,1): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
-app/(dashboard)/vendors/profile/[id]/_components/ActiveVendorProfile.tsx(295,1): error TS1005: '</' expected.
+﻿app/(dashboard)/vendors/profile/[id]/_components/ActiveVendorProfile.tsx(117,12): error TS17008: JSX element 'div' has no corresponding closing tag.
