@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { EarningResponse } from "@/lib/actions/earnings";
+import EarningDetailsModal from "./earning-details-modal";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -43,6 +45,8 @@ export function EarningsDataTable<TData, TValue>({
     { id: "created", desc: true }, // Default sort by newest First
   ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [selectedEarning, setSelectedEarning] = useState<EarningResponse | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const table = useReactTable({
     data,
@@ -55,6 +59,12 @@ export function EarningsDataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
     initialState: {
       pagination: { pageSize: 10 },
+    },
+    meta: {
+      onViewDetails: (earning: EarningResponse) => {
+        setSelectedEarning(earning);
+        setModalOpen(true);
+      },
     },
     state: { sorting, columnFilters },
   });
@@ -223,6 +233,13 @@ export function EarningsDataTable<TData, TValue>({
           </div>
         </div>
       )}
+
+      {/* Details Modal */}
+      <EarningDetailsModal
+        earning={selectedEarning}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+      />
     </div>
   );
 }

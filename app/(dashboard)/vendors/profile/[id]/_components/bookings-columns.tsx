@@ -4,6 +4,8 @@ import { ColumnDef } from "@tanstack/react-table";
 import { BookingResponse } from "@/lib/actions/bookings";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Eye } from "lucide-react";
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   pending: { label: "Pending", color: "bg-yellow-100 text-yellow-800" },
@@ -104,4 +106,25 @@ export const columns: ColumnDef<BookingResponse>[] = [
       return <span className="text-gray-500 whitespace-nowrap">{format(new Date(created), "MMM d, yyyy")}</span>;
     },
   },
+  {
+    id: "actions",
+    header: "",
+    cell: ({ row, table }) => {
+      const booking = row.original;
+      const meta = table.options.meta as any;
+
+      return (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-gray-400 hover:text-gray-900"
+          onClick={() => meta?.onViewDetails?.(booking)}
+          title="View booking details"
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
+      );
+    },
+  },
 ];
+

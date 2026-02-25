@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { BookingResponse } from "@/lib/actions/bookings";
+import BookingDetailsModal from "./booking-details-modal";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -43,6 +45,8 @@ export function DataTable<TData, TValue>({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
+  const [selectedBooking, setSelectedBooking] = useState<BookingResponse | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const table = useReactTable({
     data,
@@ -69,6 +73,12 @@ export function DataTable<TData, TValue>({
         original.location?.addressText?.toLowerCase().includes(search) ||
         false
       );
+    },
+    meta: {
+      onViewDetails: (booking: BookingResponse) => {
+        setSelectedBooking(booking);
+        setModalOpen(true);
+      },
     },
     state: { sorting, columnFilters, globalFilter },
   });
@@ -206,6 +216,13 @@ export function DataTable<TData, TValue>({
           </div>
         </div>
       )}
+
+      {/* Booking Details Modal */}
+      <BookingDetailsModal
+        booking={selectedBooking}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+      />
     </div>
   );
 }

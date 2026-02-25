@@ -4,6 +4,8 @@ import { ColumnDef } from "@tanstack/react-table";
 import { EarningResponse } from "@/lib/actions/earnings";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Eye } from "lucide-react";
 
 // Helper to format stripe amounts (which are in cents)
 const formatAmount = (amount: number, currency: string) => {
@@ -136,5 +138,25 @@ export const columns: ColumnDef<EarningResponse>[] = [
       );
     },
     sortingFn: "basic",
+  },
+  {
+    id: "actions",
+    header: "",
+    cell: ({ row, table }) => {
+      const earning = row.original;
+      const meta = table.options.meta as any;
+
+      return (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-gray-400 hover:text-gray-900"
+          onClick={() => meta?.onViewDetails?.(earning)}
+          title="View earning details"
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
+      );
+    },
   },
 ];
