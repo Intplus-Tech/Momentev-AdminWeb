@@ -157,3 +157,180 @@ export async function getAdminClientById(id: string): Promise<ActionResult<Clien
     };
   }
 }
+
+export async function updateClientStatus(
+  clientId: string,
+  action: "suspend" | "reactivate",
+  reason?: string
+): Promise<ActionResult<ClientProfile>> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      return { success: false, error: "Unauthorized: No access token" };
+    }
+
+    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/admin/clients/${clientId}/status`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ action, reason }),
+      cache: "no-store",
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/clients");
+    revalidatePath(`/clients/profile/${clientId}`);
+
+    return { success: true, data: body.data };
+  } catch (error) {
+    console.error("Update Admin Client Status Error:", error);
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
+
+export interface SpendingSummary {
+  totalLifetimeValueMinor: number;
+  averageMonthlySpendMinor: number;
+  projected12MonthValueMinor: number;
+  platformCommissionEarnedMinor: number;
+}
+
+export interface PaymentMethodDetails {
+  id: string;
+  brand: string;
+  last4: string;
+  expMonth: number;
+  expYear: number;
+  isDefault: boolean;
+  label: string;
+}
+
+export interface PaymentMethodsSummary {
+  primary: PaymentMethodDetails | null;
+  backup: PaymentMethodDetails | null;
+  successRatePct: number;
+  failedPayments: number;
+  averageTransactionMinor: number;
+}
+
+export interface CustomerPaymentDashboard {
+  customerId: string;
+  currency: string;
+  spendingSummary: SpendingSummary;
+  paymentMethods: PaymentMethodsSummary;
+}
+
+export async function getClientPaymentDashboard(
+  customerId: string
+): Promise<ActionResult<CustomerPaymentDashboard>> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      return { success: false, error: "Unauthorized: No access token" };
+    }
+
+    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/customer-profile-management/${customerId}/payment-dashboard`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    return { success: true, data: body.data };
+  } catch (error) {
+    console.error("Get Client Payment Dashboard Error:", error);
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
+
+export interface CustomerPerformanceMetrics {
+  totalBookings: number;
+  totalSpendMinor: number;
+  averageBookingValueMinor: number;
+  repeatRatePct: number;
+  disputes: number;
+}
+
+export interface CustomerBasicInformation {
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  location: string;
+  signupDate: string;
+  lastLoginAt: string;
+  lastActiveAt: string;
+  accountStatus: string;
+}
+
+export interface CustomerProfileOverview {
+  customerId: string;
+  clientId: string;
+  currency: string;
+  performanceMetrics: CustomerPerformanceMetrics;
+  basicInformation: CustomerBasicInformation;
+}
+
+export async function getClientOverview(
+  customerId: string
+): Promise<ActionResult<CustomerProfileOverview>> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      return { success: false, error: "Unauthorized: No access token" };
+    }
+
+    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/customer-profile-management/${customerId}/overview`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    return { success: true, data: body.data };
+  } catch (error) {
+    console.error("Get Client Overview Error:", error);
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
