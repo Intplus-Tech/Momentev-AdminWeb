@@ -21,7 +21,10 @@ import {
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   pending: { label: "Pending", color: "bg-yellow-100 text-yellow-800" },
-  pending_payment: { label: "Pending Payment", color: "bg-orange-100 text-orange-800" },
+  pending_payment: {
+    label: "Pending Payment",
+    color: "bg-orange-100 text-orange-800",
+  },
   paid: { label: "Paid", color: "bg-blue-100 text-blue-800" },
   confirmed: { label: "Confirmed", color: "bg-green-100 text-green-800" },
   completed: { label: "Completed", color: "bg-emerald-100 text-emerald-800" },
@@ -78,9 +81,7 @@ export default function BookingDetailsModal({
                 >
                   {config.label}
                 </Badge>
-                <span className="text-xs text-gray-400">
-                  ID: {booking._id.slice(-8)}
-                </span>
+                <span className="text-xs text-gray-400">ID: {booking._id}</span>
               </div>
             </div>
           </div>
@@ -97,7 +98,10 @@ export default function BookingDetailsModal({
                 </h4>
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={customer?.avatar} alt={customer?.firstName} />
+                    <AvatarImage
+                      src={customer?.avatar}
+                      alt={customer?.firstName}
+                    />
                     <AvatarFallback className="text-sm bg-gray-200 text-gray-600">
                       {initials}
                     </AvatarFallback>
@@ -106,7 +110,9 @@ export default function BookingDetailsModal({
                     <span className="font-medium text-gray-900 capitalize">
                       {customer?.firstName} {customer?.lastName}
                     </span>
-                    <span className="text-sm text-gray-500">{customer?.email}</span>
+                    <span className="text-sm text-gray-500">
+                      {customer?.email}
+                    </span>
                   </div>
                 </div>
               </section>
@@ -207,12 +213,22 @@ export default function BookingDetailsModal({
                     <InfoItem
                       icon={<CreditCard className="h-4 w-4" />}
                       label="Provider"
-                      value={payment.provider ? payment.provider.charAt(0).toUpperCase() + payment.provider.slice(1) : "—"}
+                      value={
+                        payment.provider
+                          ? payment.provider.charAt(0).toUpperCase() +
+                            payment.provider.slice(1)
+                          : "—"
+                      }
                     />
                     <InfoItem
                       icon={<Clock className="h-4 w-4" />}
                       label="Payment Status"
-                      value={payment.status ? payment.status.charAt(0).toUpperCase() + payment.status.slice(1).replace(/_/g, " ") : "—"}
+                      value={
+                        payment.status
+                          ? payment.status.charAt(0).toUpperCase() +
+                            payment.status.slice(1).replace(/_/g, " ")
+                          : "—"
+                      }
                     />
                   </div>
                   {payment.paymentIntentId && (
@@ -229,10 +245,12 @@ export default function BookingDetailsModal({
           <section className="mt-6 pt-4 border-t">
             <div className="flex items-center justify-between text-xs text-gray-400">
               <span>
-                Created: {format(new Date(booking.createdAt), "MMM d, yyyy 'at' h:mm a")}
+                Created:{" "}
+                {format(new Date(booking.createdAt), "MMM d, yyyy 'at' h:mm a")}
               </span>
               <span>
-                Updated: {format(new Date(booking.updatedAt), "MMM d, yyyy 'at' h:mm a")}
+                Updated:{" "}
+                {format(new Date(booking.updatedAt), "MMM d, yyyy 'at' h:mm a")}
               </span>
             </div>
           </section>
@@ -280,7 +298,9 @@ function FinancialRow({
   muted?: boolean;
 }) {
   return (
-    <div className={`flex items-center justify-between px-4 py-2.5 ${bold ? "bg-gray-50" : ""}`}>
+    <div
+      className={`flex items-center justify-between px-4 py-2.5 ${bold ? "bg-gray-50" : ""}`}
+    >
       <span
         className={`text-sm ${bold ? "font-semibold text-gray-900" : muted ? "text-gray-500" : "text-gray-700"}`}
       >

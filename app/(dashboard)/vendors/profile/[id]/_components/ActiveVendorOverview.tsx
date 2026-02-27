@@ -17,6 +17,7 @@ export default function ActiveVendorOverview({ vendor, services, specialties }: 
   const contactName = profile?.contactInfo?.primaryContactName || user?.firstName || "Unknown";
   const email = profile?.contactInfo?.emailAddress || user?.email || "—";
   const phone = profile?.contactInfo?.phoneNumber || "—";
+  const businessName = profile?.businessName || "—";
   
   const joinedDate = new Date(vendorAny.createdAt || Date.now()).toLocaleDateString("en-US", {
     year: "numeric", month: "short", day: "numeric"
@@ -117,8 +118,12 @@ export default function ActiveVendorOverview({ vendor, services, specialties }: 
         {/* Business Details */}
         <section className="py-8 border-b border-gray-100">
           <h3 className="font-semibold text-[15px] text-gray-900 mb-5">Business Details</h3>
-          <p>vendor Id: {vendor.id}</p>
+         
           <div className="grid grid-cols-[140px_1fr] md:grid-cols-[160px_1fr] gap-y-4 items-start text-[13px]">
+            <span className="text-gray-500 font-medium">Vendor ID:</span>
+            <span className="text-gray-900">{vendor.id}</span>
+            <span className="text-gray-500 font-medium">Business Name:</span>
+            <span className="text-gray-900">{businessName}</span>
             <span className="text-gray-500 font-medium">Owner:</span>
             <span className="text-gray-900">{contactName} <span className="text-gray-400 mx-1">•</span> Joined: {joinedDate}</span>
 
