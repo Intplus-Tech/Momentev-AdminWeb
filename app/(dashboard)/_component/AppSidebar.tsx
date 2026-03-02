@@ -10,6 +10,7 @@ import {
   Wallet,
   AlertTriangle,
   Settings,
+  FileText,
 } from "lucide-react";
 import { useLayout } from "@/context/layout-context";
 
@@ -26,6 +27,7 @@ const menu = [
   },
   { label: "Settings", icon: Settings, href: "/settings" },
   { label: "Categories", icon: Settings, href: "/categories" },
+  { label: "Customer Requests", icon: FileText, href: "/customer-requests" },
 ];
 
 // Profile fallback component
