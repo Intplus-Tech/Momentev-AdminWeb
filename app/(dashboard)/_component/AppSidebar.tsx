@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   Settings,
   FileText,
+  CalendarDays,
 } from "lucide-react";
 import { useLayout } from "@/context/layout-context";
 
@@ -19,6 +20,7 @@ const menu = [
   { label: "Vendors", icon: Users, href: "/vendors" },
   { label: "Clients", icon: User, href: "/clients" },
   { label: "Financial", icon: Wallet, href: "/financial" },
+  { label: "Bookings", icon: CalendarDays, href: "/bookings" },
   {
     label: "Disputes",
     icon: AlertTriangle,
