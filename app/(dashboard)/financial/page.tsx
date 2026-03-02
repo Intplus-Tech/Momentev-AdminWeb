@@ -2,6 +2,7 @@ import { getAnalyticsOverview } from "@/lib/actions/admin-analytics";
 import OverviewCard from "../_component/OverviewCards";
 import RevenueReport from "./_components/RevenueReport";
 import PendingPayoutsTable from "./_components/PendingPayoutsTable";
+import CommissionsTable from "./_components/CommissionsTable";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, List } from "lucide-react";
@@ -44,6 +45,9 @@ export default async function FinancePage() {
 
       {/* New specific GET /payouts/pending layout */}
       <PendingPayoutsTable />
+
+      {/* New specific GET /commissions layout */}
+      <CommissionsTable />
     </section>
   );
 }

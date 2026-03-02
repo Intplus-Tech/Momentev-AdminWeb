@@ -12,6 +12,7 @@ import {
   Settings,
   FileText,
   CalendarDays,
+  LayersPlus,
 } from "lucide-react";
 import { useLayout } from "@/context/layout-context";
 
@@ -28,7 +29,7 @@ const menu = [
     badge: 23,
   },
   { label: "Settings", icon: Settings, href: "/settings" },
-  { label: "Categories", icon: Settings, href: "/categories" },
+  { label: "Services", icon: LayersPlus, href: "/services" },
   { label: "Customer Requests", icon: FileText, href: "/customer-requests" },
 ];
 

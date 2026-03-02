@@ -14,7 +14,7 @@ interface PageProps {
   };
 }
 
-export default async function CategoriesPage({ searchParams }: PageProps) {
+export default async function ServicesPage({ searchParams }: PageProps) {
   const resolvedParams = await searchParams;
   const currentPage = Number(resolvedParams.page) || 1;
   const limit = 10;
