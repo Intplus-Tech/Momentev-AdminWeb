@@ -1,7 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { setAuthCookies, clearAuthCookies, getRefreshToken, refreshAccessToken } from '@/lib/session';
+import { setAuthCookies, clearAuthCookies, getRefreshToken, refreshAccessToken, getAccessToken } from '@/lib/session';
 import type { LoginResponse } from '@/types/auth';
 
 export interface LoginInput {
@@ -84,4 +84,47 @@ export async function tryRefreshToken() {
   }
 
   return refreshAccessToken(refreshTokenValue);
+}
+
+export interface ChangePasswordInput {
+  currentPassword?: string;
+  newPassword?: string;
+}
+
+/**
+ * Change the password for the logged-in user
+ */
+export async function changePassword(input: ChangePasswordInput): Promise<ActionResult> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      return { success: false, error: 'Unauthorized: No access token' };
+    }
+
+    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/auth/change-password`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(input),
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    return { success: true, data: body.data };
+  } catch (error) {
+    console.error("Change Password Error:", error);
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
 }
