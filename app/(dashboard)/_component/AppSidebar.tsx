@@ -22,24 +22,26 @@ const menu = [
   { label: "Clients", icon: User, href: "/clients" },
   { label: "Financial", icon: Wallet, href: "/financial" },
   { label: "Bookings", icon: CalendarDays, href: "/bookings" },
+  { label: "Requests", icon: FileText, href: "/customer-requests" },
   {
     label: "Disputes",
     icon: AlertTriangle,
     href: "/disputes",
     badge: 23,
   },
-  { label: "Settings", icon: Settings, href: "/settings" },
   { label: "Services", icon: LayersPlus, href: "/services" },
-  { label: "Customer Requests", icon: FileText, href: "/customer-requests" },
+  { label: "Settings", icon: Settings, href: "/settings" },
 ];
 
-// Profile fallback component
+// Profile header component
 function ProfileAvatar({
   name,
-  subdomain,
+  email,
+  role,
 }: {
   name?: string;
-  subdomain?: string;
+  email?: string;
+  role?: string;
 }) {
   const initials = name
     ? name
@@ -51,29 +53,38 @@ function ProfileAvatar({
     : "AD";
 
   return (
-    <div className="flex items-center gap-3 mb-6">
-      <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-medium text-sm">
+    <Link
+      href="/profile"
+      className="flex items-center gap-3 mb-6 p-2 -mx-2 rounded-lg hover:bg-gray-50 transition-colors group"
+    >
+      <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-sm shrink-0">
         {initials}
       </div>
-      <div>
-        <p className="font-medium text-sm">{name || "Admin User"}</p>
-        <p className="text-[10px] text-muted-foreground">
-          {subdomain || "admin.momentev.com"}
+      <div className="min-w-0">
+        <p className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
+          {name || "Admin User"}
+        </p>
+        <p className="text-[11px] text-muted-foreground truncate">
+          {role ? role.charAt(0).toUpperCase() + role.slice(1) : "Admin"}
+          {email && ` · ${email}`}
         </p>
       </div>
-    </div>
+    </Link>
   );
 }
 
-export default function AppSidebar() {
+interface AppSidebarProps {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  role?: string;
+}
+
+export default function AppSidebar({ firstName, lastName, email, role }: AppSidebarProps) {
   const pathname = usePathname();
   const { state, dispatch } = useLayout();
 
-  // TODO: Replace with real user data from auth context
-  const user = {
-    name: "Michelle Adeyemi",
-    subdomain: "thelusyfashion.momentev.com",
-  };
+  const fullName = firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || "Admin User";
 
   return (
     <>
@@ -103,7 +114,7 @@ export default function AppSidebar() {
         aria-label="Main navigation"
       >
         {/* PROFILE */}
-        <ProfileAvatar name={user.name} subdomain={user.subdomain} />
+        <ProfileAvatar name={fullName} email={email} role={role} />
 
         {/* MENU */}
         <nav className="space-y-1" role="navigation">

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Bell, Search, Menu, User, LogOut } from "lucide-react";
+import { Bell, Search, Menu, User, LogOut, UserCircle } from "lucide-react";
+import Link from "next/link";
 
 import { useLayout } from "@/context/layout-context";
 import Logo from "@/components/brand/logo";
@@ -100,6 +101,14 @@ export default function AdminNavbar() {
 
           {isDropdownOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border py-1 z-50">
+              <Link
+                href="/profile"
+                onClick={() => setIsDropdownOpen(false)}
+                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                <UserCircle className="h-4 w-4" />
+                View Profile
+              </Link>
               <button
                 onClick={handleLogout}
                 disabled={isLoggingOut}

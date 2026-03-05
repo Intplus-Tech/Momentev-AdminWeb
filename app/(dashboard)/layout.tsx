@@ -1,12 +1,16 @@
 import { LayoutProvider } from "@/context/layout-context";
 import AdminNavbar from "./_component/AdminNavbar";
 import AppSidebar from "./_component/AppSidebar";
+import { getMyProfile } from "@/lib/actions/profile";
 
-export default function dashboardLayout({
+export default async function dashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const profileResult = await getMyProfile();
+  const profile = profileResult.success ? profileResult.data : null;
+
   return (
     <div>
       <LayoutProvider>
@@ -19,7 +23,12 @@ export default function dashboardLayout({
           {/* BODY */}
           <div className="flex pt-[72px] h-full">
             {/* FIXED SIDEBAR */}
-            <AppSidebar />
+            <AppSidebar
+              firstName={profile?.firstName}
+              lastName={profile?.lastName}
+              email={profile?.email}
+              role={profile?.role}
+            />
 
             {/* SCROLLABLE CONTENT */}
             <div
