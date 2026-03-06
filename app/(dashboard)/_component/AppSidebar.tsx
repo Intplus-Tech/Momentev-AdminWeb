@@ -27,7 +27,6 @@ const menu = [
     label: "Disputes",
     icon: AlertTriangle,
     href: "/disputes",
-    badge: 23,
   },
   { label: "Services", icon: LayersPlus, href: "/services" },
   { label: "Settings", icon: Settings, href: "/settings" },
@@ -80,11 +79,19 @@ interface AppSidebarProps {
   role?: string;
 }
 
-export default function AppSidebar({ firstName, lastName, email, role }: AppSidebarProps) {
+export default function AppSidebar({
+  firstName,
+  lastName,
+  email,
+  role,
+}: AppSidebarProps) {
   const pathname = usePathname();
   const { state, dispatch } = useLayout();
 
-  const fullName = firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || "Admin User";
+  const fullName =
+    firstName && lastName
+      ? `${firstName} ${lastName}`
+      : firstName || lastName || "Admin User";
 
   return (
     <>
