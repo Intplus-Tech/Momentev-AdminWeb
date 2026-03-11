@@ -27,6 +27,7 @@ export default function CommissionsTable() {
   const [isPending, startTransition] = useTransition();
   const [data, setData] = useState<PaginatedCommissionsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const commissions = Array.isArray(data?.data) ? data.data : [];
 
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -143,13 +144,31 @@ export default function CommissionsTable() {
     }
   };
 
+  const toSafeNumber = (value: unknown) => {
+    const parsed = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  const normalizeCurrency = (value?: string) => {
+    const normalized = (value || "NGN").trim().toUpperCase();
+    if (normalized === "ANY") return "NGN";
+    return /^[A-Z]{3}$/.test(normalized) ? normalized : "NGN";
+  };
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return "-";
+    const date = new Date(dateStr);
+    return Number.isNaN(date.getTime()) ? "-" : format(date, "MMM dd, yyyy");
+  };
+
   const formatAmount = (commission: Commission) => {
+      const safeAmount = toSafeNumber(commission.amount);
       if (commission.type === "percentage") {
-          return `${commission.amount}%`;
+          return `${safeAmount}%`;
       }
-      return commission.amount.toLocaleString("en-US", {
+      return safeAmount.toLocaleString("en-US", {
           style: "currency",
-          currency: commission.currency || "NGN",
+          currency: normalizeCurrency(commission.currency),
       });
   };
 
@@ -181,7 +200,7 @@ export default function CommissionsTable() {
              <AlertCircle className="h-5 w-5" />
              <span>{error}</span>
            </div>
-        ) : data && data.data.length > 0 ? (
+        ) : commissions.length > 0 ? (
           <table className="w-full text-sm text-left">
             <thead className="bg-gray-50 text-gray-500 font-medium">
               <tr>
@@ -193,7 +212,7 @@ export default function CommissionsTable() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {data.data.map((commission) => (
+              {commissions.map((commission) => (
                 <tr key={commission._id} className="hover:bg-gray-50/50 transition-colors bg-white">
                   <td className="px-6 py-4 font-medium text-gray-900 capitalize">
                     {commission.type.replace(/_/g, " ")}
@@ -202,10 +221,10 @@ export default function CommissionsTable() {
                     {formatAmount(commission)}
                   </td>
                   <td className="px-6 py-4 text-gray-500">
-                    {commission.currency}
+                    {normalizeCurrency(commission.currency)}
                   </td>
                   <td className="px-6 py-4 text-gray-500">
-                    {format(new Date(commission.createdAt), "MMM dd, yyyy")}
+                    {formatDate(commission.createdAt)}
                   </td>
                   <td className="px-6 py-4 text-right flex justify-end gap-2">
                     <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(commission)} className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50">

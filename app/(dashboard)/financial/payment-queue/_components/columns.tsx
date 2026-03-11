@@ -5,6 +5,29 @@ import { PaymentQueueItem } from "@/lib/actions/finance";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 
+const toSafeNumber = (value: unknown) => {
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const normalizeCurrency = (value?: string) => {
+  const normalized = (value || "GBP").trim().toUpperCase();
+  if (normalized === "ANY") return "GBP";
+  return /^[A-Z]{3}$/.test(normalized) ? normalized : "GBP";
+};
+
+const formatSafeDate = (value?: string) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "-" : format(date, "MMM dd, yyyy");
+};
+
+const formatSafeTime = (value?: string) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "-" : format(date, "h:mm a");
+};
+
 export const columns: ColumnDef<PaymentQueueItem>[] = [
   {
     accessorKey: "createdAt",
@@ -14,10 +37,10 @@ export const columns: ColumnDef<PaymentQueueItem>[] = [
       return (
         <div className="flex flex-col">
           <span className="font-medium text-gray-900">
-            {format(new Date(dateStr), "MMM dd, yyyy")}
+            {formatSafeDate(dateStr)}
           </span>
           <span className="text-xs text-gray-500">
-            {format(new Date(dateStr), "h:mm a")}
+            {formatSafeTime(dateStr)}
           </span>
         </div>
       );
@@ -63,8 +86,8 @@ export const columns: ColumnDef<PaymentQueueItem>[] = [
     accessorKey: "amountMinor",
     header: "Amount",
     cell: ({ row }) => {
-      const minor = row.getValue("amountMinor") as number;
-      const currency = row.original.currency || "GBP";
+      const minor = toSafeNumber(row.getValue("amountMinor"));
+      const currency = normalizeCurrency(row.original.currency);
       const formatted = (minor / 100).toLocaleString("en-GB", {
         style: "currency",
         currency: currency,

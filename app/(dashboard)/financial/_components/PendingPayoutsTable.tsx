@@ -8,13 +8,29 @@ export default function PendingPayoutsTable() {
   const [isPending, startTransition] = useTransition();
   const [data, setData] = useState<PendingPayoutsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const payouts = Array.isArray(data?.payouts) ? data.payouts : [];
+
+  const toSafeNumber = (value: unknown) => {
+    const parsed = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  const normalizeCurrency = (value?: string) => {
+    const normalized = (value || "GBP").trim().toUpperCase();
+    if (normalized === "ANY") return "GBP";
+    return /^[A-Z]{3}$/.test(normalized) ? normalized : "GBP";
+  };
 
   useEffect(() => {
     startTransition(async () => {
       setError(null);
       const result = await getPendingPayouts();
       if (result.success && result.data) {
-        setData(result.data);
+        const safePayouts = Array.isArray(result.data.payouts) ? result.data.payouts : [];
+        setData({
+          payouts: safePayouts,
+          total: typeof result.data.total === "number" ? result.data.total : safePayouts.length,
+        });
       } else {
         setError(result.error || "Failed to load pending payouts");
       }
@@ -22,15 +38,17 @@ export default function PendingPayoutsTable() {
   }, []);
 
   const formatMoney = (minor: number, currency: string = "GBP") => {
-    return (minor / 100).toLocaleString("en-GB", {
+    return (toSafeNumber(minor) / 100).toLocaleString("en-GB", {
       style: "currency",
-      currency: currency,
+      currency: normalizeCurrency(currency),
       maximumFractionDigits: 2,
     });
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("en-US", {
+    const parsedDate = new Date(dateStr);
+    if (Number.isNaN(parsedDate.getTime())) return "-";
+    return parsedDate.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -59,7 +77,7 @@ export default function PendingPayoutsTable() {
              <AlertCircle className="h-5 w-5" />
              <span>{error}</span>
            </div>
-        ) : data && data.payouts.length > 0 ? (
+        ) : payouts.length > 0 ? (
           <table className="w-full text-sm text-left">
             <thead className="bg-gray-50 text-gray-500 font-medium">
               <tr>
@@ -70,7 +88,7 @@ export default function PendingPayoutsTable() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {data.payouts.map((payout) => (
+              {payouts.map((payout) => (
                 <tr key={payout._id} className="hover:bg-gray-50/50 transition-colors bg-white">
                   <td className="px-6 py-4 font-medium text-gray-900">
                     {payout.vendorId?.businessName || "Unknown Vendor"}

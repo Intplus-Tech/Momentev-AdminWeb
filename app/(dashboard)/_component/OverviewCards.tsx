@@ -8,10 +8,23 @@ interface OverviewCardsProps {
 }
 
 export default function OverviewCard({ performance, todaysPayments, currency = "GBP" }: OverviewCardsProps) {
+  const toSafeNumber = (value: unknown) => {
+    const parsed = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  const normalizeCurrency = (value?: string) => {
+    const normalized = (value || "GBP").trim().toUpperCase();
+    if (normalized === "ANY") return "GBP";
+    return /^[A-Z]{3}$/.test(normalized) ? normalized : "GBP";
+  };
+
   const formatMoney = (minor: number) => {
-    return (minor / 100).toLocaleString("en-GB", {
+    const safeCurrency = normalizeCurrency(currency);
+    const safeAmount = toSafeNumber(minor) / 100;
+    return safeAmount.toLocaleString("en-GB", {
       style: "currency",
-      currency: currency,
+      currency: safeCurrency,
       maximumFractionDigits: 0,
     });
   };

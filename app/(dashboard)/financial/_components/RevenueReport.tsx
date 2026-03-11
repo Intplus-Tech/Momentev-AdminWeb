@@ -2,21 +2,45 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { getPlatformRevenue, PlatformRevenueResponse } from "@/lib/actions/finance";
-import { DollarSign, Loader2, Calendar } from "lucide-react";
+import { DollarSign, Loader2 } from "lucide-react";
+
+type RevenueMetrics = {
+  totalRevenue: number;
+  commission: number;
+};
 
 export default function RevenueReport() {
   const [isPending, startTransition] = useTransition();
-  const [data, setData] = useState<PlatformRevenueResponse | null>(null);
+  const [data, setData] = useState<RevenueMetrics | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<"day" | "week" | "month" | "year" | "all-time">("month");
+
+  const toSafeNumber = (value: unknown) => {
+    const parsed = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  const normalizeRevenueData = (payload?: PlatformRevenueResponse | null): RevenueMetrics | null => {
+    if (!payload || typeof payload !== "object") return null;
+
+    const hasRevenue = payload.totalRevenue !== undefined && payload.totalRevenue !== null;
+    const hasCommission = payload.commission !== undefined && payload.commission !== null;
+    if (!hasRevenue && !hasCommission) return null;
+
+    return {
+      totalRevenue: toSafeNumber(payload.totalRevenue),
+      commission: toSafeNumber(payload.commission),
+    };
+  };
 
   useEffect(() => {
     startTransition(async () => {
       setError(null);
       const result = await getPlatformRevenue(period);
       if (result.success && result.data) {
-        setData(result.data);
+        setData(normalizeRevenueData(result.data));
       } else {
+        setData(null);
         setError(result.error || "Failed to load revenue data");
       }
     });
@@ -75,7 +99,7 @@ export default function RevenueReport() {
               </div>
           </div>
       ) : (
-          <div className="text-sm text-gray-500 text-center py-8">No data available</div>
+          <div className="text-sm text-gray-500 text-center py-8">No revenue data available for this period.</div>
       )}
     </div>
   );
