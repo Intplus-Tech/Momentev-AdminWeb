@@ -16,7 +16,14 @@ import {
 } from "lucide-react";
 import { useLayout } from "@/context/layout-context";
 
-const menu = [
+type MenuItem = {
+  label: string;
+  icon: React.ElementType;
+  href: string;
+  badge?: string | number;
+};
+
+const menu: MenuItem[] = [
   { label: "Overview", icon: Home, href: "/overview" },
   { label: "Vendors", icon: Users, href: "/vendors" },
   { label: "Clients", icon: User, href: "/clients" },
