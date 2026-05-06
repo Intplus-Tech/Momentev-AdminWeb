@@ -10,27 +10,27 @@ export interface ActionResult<T = any> {
 }
 
 export interface PlatformRevenueResponse {
-    totalRevenue: number;
-    commission: number;
-    period: string; // "day" | "week" | "month" | "year" | "all-time"
+  totalRevenue: number;
+  commission: number;
+  period: string; // "day" | "week" | "month" | "year" | "all-time"
 }
 
 export interface PendingPayout {
+  _id: string;
+  // Assuming structure based on typical Momentev API patterns. We can refine this if needed.
+  vendorId: {
     _id: string;
-    // Assuming structure based on typical Momentev API patterns. We can refine this if needed.
-    vendorId: {
-      _id: string;
-      businessName: string;
-    };
-    amountMinor: number;
-    status: string;
-    currency: string;
-    createdAt: string;
+    businessName: string;
+  };
+  amountMinor: number;
+  status: string;
+  currency: string;
+  createdAt: string;
 }
 
 export interface PendingPayoutsResponse {
-    payouts: PendingPayout[];
-    total: number;
+  payouts: PendingPayout[];
+  total: number;
 }
 
 export async function getPlatformRevenue(
@@ -100,6 +100,9 @@ export async function getPendingPayouts(): Promise<ActionResult<PendingPayoutsRe
         error: body.message || `Error: ${response.statusText}`,
       };
     }
+
+
+    console.log("Pending Payouts Response:", body); // Debug log to inspect the response structure
 
     return { success: true, data: body.data };
   } catch (error) {
@@ -184,7 +187,7 @@ export async function getPaymentQueue(params?: {
     if (params?.paymentStatus && params.paymentStatus !== "--") query.append("paymentStatus", params.paymentStatus);
     if (params?.from) query.append("from", params.from);
     if (params?.to) query.append("to", params.to);
-    
+
     const queryString = query.toString() ? `?${query.toString()}` : "";
 
     const response = await fetch(

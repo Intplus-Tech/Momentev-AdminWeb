@@ -12,10 +12,10 @@ interface SearchParamsProps {
 
 export default async function PaymentQueuePage({ searchParams }: SearchParamsProps) {
   const params = await searchParams;
-  
+
   const page = typeof params?.page === "string" ? parseInt(params.page, 10) : 1;
   const limit = typeof params?.limit === "string" ? parseInt(params.limit, 10) : 10;
-  
+
   const status = typeof params?.status === "string" ? params.status : "all";
   const vendorId = typeof params?.vendorId === "string" ? params.vendorId : "";
   const customerId = typeof params?.customerId === "string" ? params.customerId : "";
@@ -37,6 +37,9 @@ export default async function PaymentQueuePage({ searchParams }: SearchParamsPro
   });
 
   const queueItems = data?.data || [];
+
+  console.log("Payment Queue Data:", data, "Error:", error); // Debug log to inspect the data and error
+
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / limit);
 
@@ -54,7 +57,7 @@ export default async function PaymentQueuePage({ searchParams }: SearchParamsPro
             <h1 className="text-xl sm:text-2xl font-semibold">Payment Queue</h1>
           </div>
           <p className="text-muted-foreground text-sm ml-0 sm:ml-12">
-             {total.toLocaleString()} transactions in queue
+            {total.toLocaleString()} transactions in queue
           </p>
         </div>
       </div>
@@ -68,7 +71,7 @@ export default async function PaymentQueuePage({ searchParams }: SearchParamsPro
 
       {/* TABLE */}
       <DataTable columns={columns} data={queueItems} />
-      
+
       {totalPages > 0 && (
         <ActivePagination currentPage={page} totalPages={totalPages} />
       )}

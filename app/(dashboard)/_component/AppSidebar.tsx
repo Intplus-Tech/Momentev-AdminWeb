@@ -44,10 +44,12 @@ function ProfileAvatar({
   name,
   email,
   role,
+  avatarUrl,
 }: {
   name?: string;
   email?: string;
   role?: string;
+  avatarUrl?: string | null;
 }) {
   const initials = name
     ? name
@@ -63,8 +65,17 @@ function ProfileAvatar({
       href="/profile"
       className="flex items-center gap-3 mb-6 p-2 -mx-2 rounded-lg hover:bg-gray-50 transition-colors group"
     >
-      <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-sm shrink-0">
-        {initials}
+      <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-sm shrink-0 overflow-hidden">
+        {avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={avatarUrl}
+            alt={name || "Profile photo"}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          initials
+        )}
       </div>
       <div className="min-w-0">
         <p className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
@@ -84,6 +95,7 @@ interface AppSidebarProps {
   lastName?: string;
   email?: string;
   role?: string;
+  avatarUrl?: string | null;
 }
 
 export default function AppSidebar({
@@ -91,6 +103,7 @@ export default function AppSidebar({
   lastName,
   email,
   role,
+  avatarUrl,
 }: AppSidebarProps) {
   const pathname = usePathname();
   const { state, dispatch } = useLayout();
@@ -128,7 +141,7 @@ export default function AppSidebar({
         aria-label="Main navigation"
       >
         {/* PROFILE */}
-        <ProfileAvatar name={fullName} email={email} role={role} />
+        <ProfileAvatar name={fullName} email={email} role={role} avatarUrl={avatarUrl} />
 
         {/* MENU */}
         <nav className="space-y-1" role="navigation">

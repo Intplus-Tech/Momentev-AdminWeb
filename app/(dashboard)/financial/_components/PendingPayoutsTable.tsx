@@ -25,6 +25,8 @@ export default function PendingPayoutsTable() {
     startTransition(async () => {
       setError(null);
       const result = await getPendingPayouts();
+
+      console.log("Pending Payouts Result:", result); // Debug log to inspect the result structure
       if (result.success && result.data) {
         const safePayouts = Array.isArray(result.data.payouts) ? result.data.payouts : [];
         setData({
@@ -55,6 +57,8 @@ export default function PendingPayoutsTable() {
     });
   };
 
+  console.log("Rendering PendingPayoutsTable with data:", data, "and error:", error); // Debug log to trace rendering
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-6">
       <div className="p-6 border-b border-gray-100">
@@ -70,13 +74,13 @@ export default function PendingPayoutsTable() {
       <div className="overflow-x-auto">
         {isPending ? (
           <div className="flex justify-center items-center py-12">
-             <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
           </div>
         ) : error ? (
-           <div className="flex items-center gap-2 p-6 text-red-600 bg-red-50">
-             <AlertCircle className="h-5 w-5" />
-             <span>{error}</span>
-           </div>
+          <div className="flex items-center gap-2 p-6 text-red-600 bg-red-50">
+            <AlertCircle className="h-5 w-5" />
+            <span>{error}</span>
+          </div>
         ) : payouts.length > 0 ? (
           <table className="w-full text-sm text-left">
             <thead className="bg-gray-50 text-gray-500 font-medium">

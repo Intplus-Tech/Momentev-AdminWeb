@@ -28,6 +28,7 @@ export default async function dashboardLayout({
               lastName={profile?.lastName}
               email={profile?.email}
               role={profile?.role}
+              avatarUrl={profile?.avatar?.url ?? null}
             />
 
             {/* SCROLLABLE CONTENT */}

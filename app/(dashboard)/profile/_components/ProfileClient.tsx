@@ -15,9 +15,10 @@ import {
   Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ProfileUser, UpdateProfileData, updateMyProfile } from "@/lib/actions/profile";
+import { ProfileUser, updateMyAvatar } from "@/lib/actions/profile";
 import { toast } from "sonner";
 import EditProfileModal from "./EditProfileModal";
+import ImageUploader from "@/components/ui/image-uploader";
 
 interface Props {
   profile: ProfileUser;
@@ -26,6 +27,7 @@ interface Props {
 export default function ProfileClient({ profile }: Props) {
   const [showEdit, setShowEdit] = useState(false);
   const [user, setUser] = useState<ProfileUser>(profile);
+  const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
 
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return "—";
@@ -53,13 +55,58 @@ export default function ProfileClient({ profile }: Props) {
     toast.success("Profile updated successfully!");
   };
 
+  /** Called by ImageUploader once the file is in Cloudinary */
+  const handleAvatarUploaded = async ({ id }: { id: string; url: string }) => {
+    setIsUpdatingAvatar(true);
+    try {
+      const result = await updateMyAvatar(id);
+      if (result.success && result.data) {
+        setUser(result.data);
+        toast.success("Profile photo updated!");
+      } else {
+        toast.error(result.error ?? "Failed to save profile photo.");
+      }
+    } catch {
+      toast.error("An unexpected error occurred.");
+    } finally {
+      setIsUpdatingAvatar(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* HEADER CARD */}
       <div className="bg-white rounded-2xl p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
-        {/* Avatar */}
-        <div className="flex-shrink-0 h-24 w-24 rounded-full bg-blue-600 flex items-center justify-center shadow-md">
-          <span className="text-white text-3xl font-semibold tracking-wide">{initials}</span>
+        {/* Avatar — click to change */}
+        <div className="flex-shrink-0 relative">
+          {user.avatar ? (
+            <ImageUploader
+              variant="avatar"
+              currentImageUrl={user.avatar.url}
+              altText={`${user.firstName} ${user.lastName}`}
+              folder="profile-avatars"
+              onUploadSuccess={handleAvatarUploaded}
+              onUploadError={(err) => toast.error(err)}
+              disabled={isUpdatingAvatar}
+            />
+          ) : (
+            <div className="relative group">
+              {/* Initials circle */}
+              <div className="h-24 w-24 rounded-full bg-blue-600 flex items-center justify-center shadow-md">
+                <span className="text-white text-3xl font-semibold tracking-wide">{initials}</span>
+              </div>
+              {/* Upload overlay on hover */}
+              <ImageUploader
+                variant="avatar"
+                currentImageUrl={null}
+                folder="profile-avatars"
+                onUploadSuccess={handleAvatarUploaded}
+                onUploadError={(err) => toast.error(err)}
+                disabled={isUpdatingAvatar}
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              />
+            </div>
+          )}
         </div>
 
         {/* Name + Meta */}
@@ -68,6 +115,7 @@ export default function ProfileClient({ profile }: Props) {
             <h1 className="text-2xl font-bold text-gray-900 truncate">
               {user.firstName} {user.lastName}
             </h1>
+            <p>{user.id}</p>
             {user.rootAdmin && (
               <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">
                 Root Admin
@@ -88,16 +136,14 @@ export default function ProfileClient({ profile }: Props) {
           </p>
           <div className="flex items-center gap-2 mt-2">
             <span
-              className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium ${
-                user.status === "active"
+              className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium ${user.status === "active"
                   ? "bg-green-100 text-green-700"
                   : "bg-yellow-100 text-yellow-700"
-              }`}
+                }`}
             >
               <span
-                className={`w-1.5 h-1.5 rounded-full ${
-                  user.status === "active" ? "bg-green-500" : "bg-yellow-500"
-                }`}
+                className={`w-1.5 h-1.5 rounded-full ${user.status === "active" ? "bg-green-500" : "bg-yellow-500"
+                  }`}
               />
               {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
             </span>
