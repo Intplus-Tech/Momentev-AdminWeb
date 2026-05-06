@@ -58,11 +58,14 @@ export async function getVendorReviews(
 
     return {
       success: true,
-      data: body.data,
-      total: body.total,
-      page: body.page,
-      limit: body.limit,
+      data: body.data?.data || [],
+      total: body.data?.total || 0,
+      page: body.data?.page || 1,
+      limit: body.data?.limit || 100,
     };
+
+
+    
   } catch (error) {
     console.error("Get Vendor Reviews Error:", error);
     return {

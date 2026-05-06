@@ -22,25 +22,25 @@ export default function ActiveVendorProfile({ vendor, services, specialties }: P
           <TabsList className="bg-transparent h-auto p-0 flex justify-start gap-8 w-full border-0 rounded-none overflow-x-auto">
             <TabsTrigger 
               value="overview" 
-              className="relative -mb-[1px] pb-3 pt-2 px-1 rounded-none bg-transparent shadow-none border-b-2 border-transparent data-[state=active]:border-b-red-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-[15px] font-medium text-gray-500 data-[state=active]:text-gray-900 data-[state=active]:font-semibold hover:text-gray-900 transition-colors focus-visible:ring-0 after:hidden"
+              className="relative -mb-px pb-3 pt-2 px-1 rounded-none bg-transparent shadow-none border-b-2 border-transparent data-[state=active]:border-b-red-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-[15px] font-medium text-gray-500 data-[state=active]:text-gray-900 data-[state=active]:font-semibold hover:text-gray-900 transition-colors focus-visible:ring-0 after:hidden"
             >
               Overview
             </TabsTrigger>
             <TabsTrigger 
               value="bookings" 
-              className="relative -mb-[1px] pb-3 pt-2 px-1 rounded-none bg-transparent shadow-none border-b-2 border-transparent data-[state=active]:border-b-red-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-[15px] font-medium text-gray-500 data-[state=active]:text-gray-900 data-[state=active]:font-semibold hover:text-gray-900 transition-colors focus-visible:ring-0 after:hidden"
+              className="relative -mb-px pb-3 pt-2 px-1 rounded-none bg-transparent shadow-none border-b-2 border-transparent data-[state=active]:border-b-red-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-[15px] font-medium text-gray-500 data-[state=active]:text-gray-900 data-[state=active]:font-semibold hover:text-gray-900 transition-colors focus-visible:ring-0 after:hidden"
             >
               Bookings
             </TabsTrigger>
             <TabsTrigger 
               value="earnings" 
-              className="relative -mb-[1px] pb-3 pt-2 px-1 rounded-none bg-transparent shadow-none border-b-2 border-transparent data-[state=active]:border-b-red-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-[15px] font-medium text-gray-500 data-[state=active]:text-gray-900 data-[state=active]:font-semibold hover:text-gray-900 transition-colors focus-visible:ring-0 after:hidden"
+              className="relative -mb-px pb-3 pt-2 px-1 rounded-none bg-transparent shadow-none border-b-2 border-transparent data-[state=active]:border-b-red-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-[15px] font-medium text-gray-500 data-[state=active]:text-gray-900 data-[state=active]:font-semibold hover:text-gray-900 transition-colors focus-visible:ring-0 after:hidden"
             >
               Earnings
             </TabsTrigger>
             <TabsTrigger 
               value="reviews" 
-              className="relative -mb-[1px] pb-3 pt-2 px-1 rounded-none bg-transparent shadow-none border-b-2 border-transparent data-[state=active]:border-b-red-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-[15px] font-medium text-gray-500 data-[state=active]:text-gray-900 data-[state=active]:font-semibold hover:text-gray-900 transition-colors focus-visible:ring-0 after:hidden"
+              className="relative -mb-px pb-3 pt-2 px-1 rounded-none bg-transparent shadow-none border-b-2 border-transparent data-[state=active]:border-b-red-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-[15px] font-medium text-gray-500 data-[state=active]:text-gray-900 data-[state=active]:font-semibold hover:text-gray-900 transition-colors focus-visible:ring-0 after:hidden"
             >
               Reviews
             </TabsTrigger>

@@ -100,20 +100,23 @@ export default function ActiveVendorOverview({ vendor, services, specialties }: 
         </section> */}
 
         {/* Performance metrics - only show if backend actually returns these later on. Right now, hiding static data */}
-        {vendor.reviewCount !== undefined && (
+        {/* {vendor.reviewCount !== undefined && (
           <section className="py-8 border-b border-gray-100">
             <h3 className="font-semibold text-[15px] text-gray-900 mb-5">Performance Metrics</h3>
             <div className="flex gap-4">
               <div className="p-4 border rounded-xl border-gray-100 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] min-w-[150px]">
                 <p className="text-[11px] font-semibold text-gray-500 mb-1 uppercase tracking-wider">Rating</p>
                 <p className="text-2xl font-bold text-gray-900 flex items-center gap-1.5">
-                  {vendor.rate > 0 ? vendor.rate.toFixed(1) : "N/A"} <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                  {Number(vendorAny.rate || vendorAny.rating || vendorAny.averageRating || 0) > 0 
+                    ? Number(vendorAny.rate || vendorAny.rating || vendorAny.averageRating || 0).toFixed(1) 
+                    : "N/A"} 
+                  <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                 </p>
-                <p className="text-[10px] text-gray-400 mt-2">Reviews: {vendor.reviewCount}</p>
+                <p className="text-[10px] text-gray-400 mt-2">Reviews: {vendor.reviewCount || vendorAny.reviewsCount || 0}</p>
               </div>
             </div>
           </section>
-        )}
+        )} */}
 
         {/* Business Details */}
         <section className="py-8 border-b border-gray-100">

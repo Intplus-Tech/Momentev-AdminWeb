@@ -29,7 +29,7 @@ const menu: MenuItem[] = [
   { label: "Clients", icon: User, href: "/clients" },
   { label: "Financial", icon: Wallet, href: "/financial" },
   { label: "Bookings", icon: CalendarDays, href: "/bookings" },
-  { label: "Requests", icon: FileText, href: "/customer-requests" },
+  { label: "Client Requests", icon: FileText, href: "/customer-requests" },
   {
     label: "Disputes",
     icon: AlertTriangle,
