@@ -210,7 +210,10 @@ export interface AdminBookingItem {
     provider: string;
     status: string;
     paymentIntentId?: string;
+    paidAt?: string;
+    transferId?: string;
   };
+  budgetAllocations?: any[];
 }
 
 export interface AdminBookingsResponse {
