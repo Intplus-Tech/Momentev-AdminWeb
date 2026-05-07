@@ -28,7 +28,7 @@ export default function PendingPayoutsTable() {
 
       console.log("Pending Payouts Result:", result); // Debug log to inspect the result structure
       if (result.success && result.data) {
-        const safePayouts = Array.isArray(result.data.payouts) ? result.data.payouts : [];
+        const safePayouts = Array.isArray((result.data as any).data) ? (result.data as any).data : [];
         setData({
           payouts: safePayouts,
           total: typeof result.data.total === "number" ? result.data.total : safePayouts.length,
@@ -105,7 +105,7 @@ export default function PendingPayoutsTable() {
                   </td>
                   <td className="px-6 py-4">
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 capitalize">
-                      {payout.status.replace(/_/g, " ")}
+                      {(payout.status || "pending").replace(/_/g, " ")}
                     </span>
                   </td>
                 </tr>

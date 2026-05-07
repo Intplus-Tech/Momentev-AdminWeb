@@ -50,7 +50,7 @@ export default function PaymentBreakdownChart({ paymentModels = [], currency = "
 
       <div className="flex-1 min-h-[250px]">
         {data.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
             <PieChart>
               <Pie
                 data={data}

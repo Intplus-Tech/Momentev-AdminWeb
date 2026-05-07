@@ -7,8 +7,15 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, List } from "lucide-react";
 
-export default async function FinancePage() {
-  const result = await getAnalyticsOverview();
+export default async function FinancePage(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const searchParams = await props.searchParams;
+  const currency = (searchParams?.currency as string) || undefined;
+  const from = (searchParams?.from as string) || undefined;
+  const to = (searchParams?.to as string) || undefined;
+
+  const result = await getAnalyticsOverview({ from, to, currency });
   const analytics = result.success ? result.data : null;
 
   return (

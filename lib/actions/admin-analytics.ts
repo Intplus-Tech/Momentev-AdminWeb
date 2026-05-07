@@ -96,7 +96,7 @@ export async function getAnalyticsOverview(
 
     const body = await response.json();
 
-    console.log("Admin Overview Body: ", JSON.stringify(body, null, 2));
+    // console.log("Admin Overview Body: ", JSON.stringify(body, null, 2));
 
     if (!response.ok) {
       return {
@@ -109,6 +109,70 @@ export async function getAnalyticsOverview(
     return { success: true, data: body.data };
   } catch (error) {
     console.error("Get Analytics Overview Error:", error);
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
+
+export interface BookingTrendsResponse {
+  period: string;
+  currency: string;
+  range: {
+    from: string;
+    to: string;
+  };
+  series: Array<{
+    periodStart: string;
+    bookingsCount: number;
+    revenueMinor: number;
+    commissionMinor: number;
+  }>;
+}
+
+export async function getBookingTrends(
+  params?: {
+    from?: string;
+    to?: string;
+    period?: string;
+    currency?: string;
+  }
+): Promise<ActionResult<BookingTrendsResponse>> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      return { success: false, error: "Unauthorized: No access token found" };
+    }
+
+    const query = new URLSearchParams();
+    if (params?.from) query.append("from", params.from);
+    if (params?.to) query.append("to", params.to);
+    if (params?.period) query.append("period", params.period);
+    if (params?.currency) query.append("currency", params.currency);
+    
+    const queryString = query.toString() ? `?${query.toString()}` : "";
+
+    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/admin/analytics/booking-trends${queryString}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    return { success: true, data: body.data };
+  } catch (error) {
+    console.error("Get Booking Trends Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
