@@ -14,10 +14,9 @@ import { useMemo } from "react";
 
 interface TrendsChartProps {
   chartData?: Array<{
-    date: string;
-    revenueMinor: number;
-    commissionMinor: number;
-    paymentCount: number;
+    name: string;
+    amountMinor: number;
+    pct: number;
   }>;
 }
 
@@ -26,15 +25,11 @@ export default function TrendsChart({ chartData = [] }: TrendsChartProps) {
     if (!chartData || chartData.length === 0) return [];
     
     return chartData.map(item => {
-      // Parse the ISO date string backwards for a simple formatted day or month
-      const d = new Date(item.date);
-      const label = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
       return {
-        label,
-        value: item.revenueMinor / 100, // Convert to major units
-        fullDate: item.date
+        label: item.name,
+        value: item.amountMinor / 100, // Convert to major units
       };
-    }).reverse(); // The API might return newest first, we usually want oldest left to newest right for line charts
+    });
   }, [chartData]);
 
   return (

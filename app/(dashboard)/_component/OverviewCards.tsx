@@ -38,11 +38,18 @@ export default function OverviewCard({ performance, todaysPayments, currency = "
       trendNeutral: true,
     },
     {
-      title: "Today's Volume",
-      value: todaysPayments ? formatMoney(todaysPayments.successful.amountMinor) : "£0",
-      trend: todaysPayments ? `${todaysPayments.successful.count} payments` : "0 payments",
+      title: "Platform Commission",
+      value: performance ? formatMoney(performance.platformCommissionMinor) : "£0",
+      trend: "Our Cut",
       trendUp: true,
       trendNeutral: true,
+    },
+    {
+      title: "Today's Volume",
+      value: todaysPayments ? formatMoney(todaysPayments.successful.amountMinor) : "£0",
+      trend: todaysPayments ? `${todaysPayments.successRatePct}% success rate` : "0 payments",
+      trendUp: todaysPayments ? todaysPayments.successRatePct >= 90 : true,
+      trendNeutral: !todaysPayments || todaysPayments.successRatePct === 0,
     },
     {
       title: "Pending Payouts",
@@ -70,14 +77,13 @@ export default function OverviewCard({ performance, todaysPayments, currency = "
   return (
     <div
       className="
-       grid grid-cols-2 lg:grid-cols-5 gap-4"
+       grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4"
     >
       {cards.map((card, i) => (
         <div
           key={i}
           className="
             bg-white rounded-xl
-           last:col-span-2 lg:last:col-span-1
             p-3 sm:p-4
             space-y-3
           "

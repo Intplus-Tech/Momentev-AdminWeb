@@ -1,4 +1,5 @@
 import { AnalyticsOverviewResponse } from "@/lib/actions/admin-analytics";
+import { TrendingUp, TrendingDown } from "lucide-react";
 
 interface TopVendorsProps {
   vendors?: AnalyticsOverviewResponse["topVendors"];
@@ -6,10 +7,16 @@ interface TopVendorsProps {
 }
 
 export default function TopVendorsList({ vendors = [], currency = "GBP" }: TopVendorsProps) {
+  const normalizeCurrency = (val?: string) => {
+    const n = (val || "GBP").trim().toUpperCase();
+    if (n === "ANY") return "GBP";
+    return /^[A-Z]{3}$/.test(n) ? n : "GBP";
+  };
+
   const formatMoney = (minor: number) => {
     return (minor / 100).toLocaleString("en-GB", {
       style: "currency",
-      currency: currency,
+      currency: normalizeCurrency(currency),
       maximumFractionDigits: 0,
     });
   };
@@ -30,12 +37,18 @@ export default function TopVendorsList({ vendors = [], currency = "GBP" }: TopVe
                   #{index + 1}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">{vendor.businessName}</p>
-                  <p className="text-xs text-gray-500">{vendor.bookingCount} bookings completed</p>
+                  <p className="font-semibold text-gray-900">{vendor.vendorName}</p>
+                  <p className="text-xs text-gray-500">{vendor.bookings} bookings completed</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-gray-900">{formatMoney(vendor.revenueMinor)}</p>
+                <p className="font-semibold text-gray-900">{formatMoney(vendor.amountMinor)}</p>
+                {vendor.growthPct !== undefined && (
+                  <p className={`text-[10px] sm:text-xs flex items-center justify-end gap-1 mt-1 ${vendor.growthPct >= 0 ? "text-[#6DD58C]" : "text-red-500"}`}>
+                    {vendor.growthPct >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                    {Math.abs(vendor.growthPct)}%
+                  </p>
+                )}
               </div>
             </div>
           ))

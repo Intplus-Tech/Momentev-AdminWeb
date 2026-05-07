@@ -18,22 +18,26 @@ export interface AnalyticsOverviewResponse {
     disputedCases: number;
   };
   revenueAnalytics: Array<{
-    date: string;
-    revenueMinor: number;
-    commissionMinor: number;
-    paymentCount: number;
+    name: string;
+    amountMinor: number;
+    pct: number;
   }>;
   byPaymentModel: Array<{
-    _id: string; // The payment model (e.g., "split_payout")
-    revenueMinor: number;
-    count: number;
+    model: string;
+    amountMinor: number;
+    pct: number;
   }>;
-  revenueByRegion: any[];
+  revenueByRegion: Array<{
+    region: string;
+    amountMinor: number;
+    pct: number;
+  }>;
   topVendors: Array<{
     vendorId: string;
-    businessName: string;
-    revenueMinor: number;
-    bookingCount: number;
+    vendorName: string;
+    amountMinor: number;
+    bookings: number;
+    growthPct: number;
   }>;
   todaysPayments: {
     successful: { count: number; amountMinor: number };
@@ -91,6 +95,8 @@ export async function getAnalyticsOverview(
     });
 
     const body = await response.json();
+
+    console.log("Admin Overview Body: ", JSON.stringify(body, null, 2));
 
     if (!response.ok) {
       return {

@@ -1,4 +1,3 @@
-import ActionRequiredCard from "../_component/ActionRequiredCard";
 import OverviewCard from "../_component/OverviewCards";
 import TrendsChart from "../_component/TrendChart";
 import TopVendorsList from "../_component/TopVendorsList";
@@ -46,9 +45,6 @@ export default async function AdminOverviewPage() {
           <p className="text-sm">{result.error}</p>
         </div>
       )}
-      <div className="">
-        <ActionRequiredCard />
-      </div>
     </div>
   );
 }

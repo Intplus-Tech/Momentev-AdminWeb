@@ -22,18 +22,18 @@ const statusStyles: Record<string, string> = {
 };
 
 export const columns: ColumnDef<CustomerRequest>[] = [
-  {
-    accessorKey: "_id",
-    header: "ID",
-    cell: ({ row }) => {
-      const id = row.getValue("_id") as string;
-      return (
-        <span className="font-mono text-xs text-gray-500">
-          #{id}
-        </span>
-      );
-    },
-  },
+  // {
+  //   accessorKey: "_id",
+  //   header: "ID",
+  //   cell: ({ row }) => {
+  //     const id = row.getValue("_id") as string;
+  //     return (
+  //       <span className="font-mono text-xs text-gray-500">
+  //         #{id}
+  //       </span>
+  //     );
+  //   },
+  // },
   {
     id: "eventTitle",
     header: ({ column }) => (

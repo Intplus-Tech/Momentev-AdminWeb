@@ -17,22 +17,27 @@ export default function PaymentBreakdownChart({ paymentModels = [], currency = "
 
     return paymentModels.map((model) => {
       // Format the key to be human readable ("split_payout" -> "Split Payout")
-      const formattedName = model._id
-        ? model._id.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
+      const formattedName = model.model
+        ? model.model.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
         : "Unknown";
       
       return {
         name: formattedName,
-        value: model.revenueMinor / 100,
-        count: model.count,
+        value: model.amountMinor / 100,
       };
     });
   }, [paymentModels]);
 
+  const normalizeCurrency = (val?: string) => {
+    const n = (val || "GBP").trim().toUpperCase();
+    if (n === "ANY") return "GBP";
+    return /^[A-Z]{3}$/.test(n) ? n : "GBP";
+  };
+
   const formatMoney = (val: number) => {
     return val.toLocaleString("en-GB", {
       style: "currency",
-      currency: currency,
+      currency: normalizeCurrency(currency),
       maximumFractionDigits: 0,
     });
   };
@@ -54,6 +59,7 @@ export default function PaymentBreakdownChart({ paymentModels = [], currency = "
                 innerRadius={60}
                 outerRadius={80}
                 paddingAngle={5}
+                minAngle={15}
                 dataKey="value"
               >
                 {data.map((entry, index) => (

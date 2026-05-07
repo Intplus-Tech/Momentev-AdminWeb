@@ -17,7 +17,11 @@ export default async function dashboardLayout({
         <div className="h-screen bg-[#F5F5F7] overflow-hidden">
           {/* FIXED NAVBAR */}
           <div className="fixed top-0 left-0 right-0 z-50">
-            <AdminNavbar />
+            <AdminNavbar
+              firstName={profile?.firstName}
+              lastName={profile?.lastName}
+              avatarUrl={profile?.avatar?.url ?? null}
+            />
           </div>
 
           {/* BODY */}

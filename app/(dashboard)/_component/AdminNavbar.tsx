@@ -1,15 +1,39 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Bell, Search, Menu, User, LogOut, UserCircle } from "lucide-react";
+import { Bell, Search, Menu, User, LogOut, UserCircle, ChevronDown } from "lucide-react";
 import Link from "next/link";
 
 import { useLayout } from "@/context/layout-context";
 import Logo from "@/components/brand/logo";
 import { logout } from "@/lib/actions/auth";
 
-export default function AdminNavbar() {
+interface AdminNavbarProps {
+  firstName?: string;
+  lastName?: string;
+  avatarUrl?: string | null;
+}
+
+export default function AdminNavbar({
+  firstName,
+  lastName,
+  avatarUrl,
+}: AdminNavbarProps) {
   const { dispatch } = useLayout();
+
+  const fullName =
+    firstName && lastName
+      ? `${firstName} ${lastName}`
+      : firstName || lastName || "";
+
+  const initials = fullName
+    ? fullName
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "AD";
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -90,13 +114,27 @@ export default function AdminNavbar() {
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 transition-colors focus:outline-none  focus:ring-2 focus:ring-primary/50"
+            className="flex items-center gap-1.5 p-1 pr-2 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50"
             aria-label="User menu"
             aria-expanded={isDropdownOpen}
           >
-            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-              <User className="h-5 w-5 text-white" />
+            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center overflow-hidden shrink-0">
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={avatarUrl}
+                  alt={fullName || "Profile photo"}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-white text-xs font-semibold">{initials}</span>
+              )}
             </div>
+            <ChevronDown
+              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
+                isDropdownOpen ? "rotate-180" : ""
+              }`}
+            />
           </button>
 
           {isDropdownOpen && (
