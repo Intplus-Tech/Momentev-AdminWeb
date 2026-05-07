@@ -26,6 +26,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { parseISO, format } from "date-fns";
+import BookingDetailsModal from "./BookingDetailsModal";
+import { AdminBookingItem } from "@/lib/actions/bookings";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -45,6 +47,10 @@ export function DataTable<TData, TValue>({
   const currentFrom = searchParams.get("from") || "";
   const currentTo = searchParams.get("to") || "";
 
+  // Modal state
+  const [selectedBooking, setSelectedBooking] = React.useState<AdminBookingItem | null>(null);
+  const [modalOpen, setModalOpen] = React.useState(false);
+
   const table = useReactTable({
     data,
     columns,
@@ -63,6 +69,11 @@ export function DataTable<TData, TValue>({
       
       router.push(`${pathname}?${params.toString()}`);
     });
+  };
+
+  const handleRowClick = (row: TData) => {
+    setSelectedBooking(row as unknown as AdminBookingItem);
+    setModalOpen(true);
   };
 
   return (
@@ -95,7 +106,7 @@ export function DataTable<TData, TValue>({
 
           {/* Date Filters (Basic HTML Date inputs pointing to 'from' and 'to') */}
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-600 hidden sm:inline">From:</span>
+            <span className="text-sm font-medium text-gray-600 hidden sm:inline">From: (Start Date)</span>
             <Input 
                 type="date" 
                 className="h-9 w-auto bg-white"
@@ -108,7 +119,7 @@ export function DataTable<TData, TValue>({
             />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-600 hidden sm:inline">To:</span>
+            <span className="text-sm font-medium text-gray-600 hidden sm:inline">To: (End Date)</span>
             <Input 
                 type="date" 
                 className="h-9 w-auto bg-white"
@@ -152,7 +163,8 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-gray-50/50"
+                  className="hover:bg-gray-50/50 cursor-pointer"
+                  onClick={() => handleRowClick(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="py-4">
@@ -177,6 +189,12 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
+
+      <BookingDetailsModal
+        booking={selectedBooking}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+      />
     </div>
   );
 }

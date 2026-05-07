@@ -261,6 +261,8 @@ export async function getAdminBookings(
 
     const body = await response.json();
 
+    console.log("Admin Bookings Response:", JSON.stringify(body, null, 2));
+
     if (!response.ok) {
       return {
         success: false,
@@ -271,6 +273,98 @@ export async function getAdminBookings(
     return { success: true, data: body.data };
   } catch (error) {
     console.error("Get Admin Bookings Error:", error);
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
+
+export async function releaseBookingPayout(
+  bookingId: string
+): Promise<ActionResult<{ message: string; data?: any }>> {
+  try {
+    const token = await getAccessToken();
+
+    if (!token) {
+      return { success: false, error: "Unauthorized: No access token found" };
+    }
+
+    const response = await fetch(
+      `${process.env.BACKEND_URL}/api/v1/admin/bookings/${bookingId}/release-payout`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      }
+    );
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/bookings");
+
+    return { success: true, data: body };
+  } catch (error) {
+    console.error("Release Booking Payout Error:", error);
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
+
+export async function refundBookingPayment(
+  bookingId: string,
+  amount?: number
+): Promise<ActionResult<{ message: string; data?: any }>> {
+  try {
+    const token = await getAccessToken();
+
+    if (!token) {
+      return { success: false, error: "Unauthorized: No access token found" };
+    }
+
+    const bodyPayload = amount !== undefined ? JSON.stringify({ amount }) : JSON.stringify({});
+
+    const response = await fetch(
+      `${process.env.BACKEND_URL}/api/v1/admin/bookings/${bookingId}/refund`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: bodyPayload,
+        cache: "no-store",
+      }
+    );
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/bookings");
+
+    return { success: true, data: body };
+  } catch (error) {
+    console.error("Refund Booking Payment Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
