@@ -16,21 +16,38 @@ export interface PlatformRevenueResponse {
 }
 
 export interface PendingPayout {
-  _id: string;
-  // Assuming structure based on typical Momentev API patterns. We can refine this if needed.
-  vendorId: {
+  bookingId: string;
+  paymentIntentId: string;
+  paidAt: string;
+  bookingStatus: string;
+  amountMinor: number;
+  commissionMinor: number;
+  vendorPayoutMinor: number;
+  currency: string;
+  customer: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  vendor: {
     _id: string;
     businessName: string;
+    hasPayoutAccount: boolean;
+    owner: {
+      _id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
   };
-  amountMinor: number;
-  status: string;
-  currency: string;
-  createdAt: string;
 }
 
 export interface PendingPayoutsResponse {
-  payouts: PendingPayout[];
+  data: PendingPayout[];
   total: number;
+  page: number;
+  limit: number;
 }
 
 export async function getPlatformRevenue(
@@ -73,7 +90,10 @@ export async function getPlatformRevenue(
   }
 }
 
-export async function getPendingPayouts(): Promise<ActionResult<PendingPayoutsResponse>> {
+export async function getPendingPayouts(
+  page: number = 1,
+  limit: number = 20
+): Promise<ActionResult<PendingPayoutsResponse>> {
   try {
     const token = await getAccessToken();
     if (!token) {
@@ -81,7 +101,7 @@ export async function getPendingPayouts(): Promise<ActionResult<PendingPayoutsRe
     }
 
     const response = await fetch(
-      `${process.env.BACKEND_URL}/api/v1/admin/payouts/pending`,
+      `${process.env.BACKEND_URL}/api/v1/admin/payouts/pending?page=${page}&limit=${limit}`,
       {
         method: "GET",
         headers: {
@@ -94,6 +114,7 @@ export async function getPendingPayouts(): Promise<ActionResult<PendingPayoutsRe
 
     const body = await response.json();
 
+
     if (!response.ok) {
       return {
         success: false,
@@ -102,7 +123,7 @@ export async function getPendingPayouts(): Promise<ActionResult<PendingPayoutsRe
     }
 
 
-    console.log("Pending Payouts Response:", body); // Debug log to inspect the response structure
+
 
     return { success: true, data: body.data };
   } catch (error) {

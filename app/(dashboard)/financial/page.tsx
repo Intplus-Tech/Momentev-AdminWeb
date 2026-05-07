@@ -48,7 +48,7 @@ export default async function FinancePage(props: {
       )}
 
       {/* New specific GET /revenue layout */}
-      <RevenueReport />
+      {/* <RevenueReport /> */}
 
       {/* New specific GET /payouts/pending layout */}
       <PendingPayoutsTable />

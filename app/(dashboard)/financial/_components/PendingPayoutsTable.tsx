@@ -2,13 +2,18 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { getPendingPayouts, PendingPayoutsResponse } from "@/lib/actions/finance";
-import { Loader2, AlertCircle, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, AlertCircle, Clock, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function PendingPayoutsTable() {
   const [isPending, startTransition] = useTransition();
   const [data, setData] = useState<PendingPayoutsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const payouts = Array.isArray(data?.payouts) ? data.payouts : [];
+  const [page, setPage] = useState(1);
+  const limit = 5;
+
+  const payouts = Array.isArray(data?.data) ? data.data : [];
+  const totalPages = data ? Math.ceil(data.total / limit) : 1;
 
   const toSafeNumber = (value: unknown) => {
     const parsed = typeof value === "number" ? value : Number(value);
@@ -24,20 +29,15 @@ export default function PendingPayoutsTable() {
   useEffect(() => {
     startTransition(async () => {
       setError(null);
-      const result = await getPendingPayouts();
+      const result = await getPendingPayouts(page, limit);
 
-      console.log("Pending Payouts Result:", result); // Debug log to inspect the result structure
       if (result.success && result.data) {
-        const safePayouts = Array.isArray((result.data as any).data) ? (result.data as any).data : [];
-        setData({
-          payouts: safePayouts,
-          total: typeof result.data.total === "number" ? result.data.total : safePayouts.length,
-        });
+        setData(result.data);
       } else {
         setError(result.error || "Failed to load pending payouts");
       }
     });
-  }, []);
+  }, [page]);
 
   const formatMoney = (minor: number, currency: string = "GBP") => {
     return (toSafeNumber(minor) / 100).toLocaleString("en-GB", {
@@ -57,7 +57,7 @@ export default function PendingPayoutsTable() {
     });
   };
 
-  console.log("Rendering PendingPayoutsTable with data:", data, "and error:", error); // Debug log to trace rendering
+
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-6">
@@ -93,19 +93,19 @@ export default function PendingPayoutsTable() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {payouts.map((payout) => (
-                <tr key={payout._id} className="hover:bg-gray-50/50 transition-colors bg-white">
+                <tr key={payout.bookingId} className="hover:bg-gray-50/50 transition-colors bg-white">
                   <td className="px-6 py-4 font-medium text-gray-900">
-                    {payout.vendorId?.businessName || "Unknown Vendor"}
+                    {payout.vendor?.businessName || "Unknown Vendor"}
                   </td>
                   <td className="px-6 py-4 font-semibold text-emerald-600">
-                    {formatMoney(payout.amountMinor, payout.currency)}
+                    {formatMoney(payout.vendorPayoutMinor, payout.currency)}
                   </td>
                   <td className="px-6 py-4 text-gray-500">
-                    {formatDate(payout.createdAt)}
+                    {formatDate(payout.paidAt)}
                   </td>
                   <td className="px-6 py-4">
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 capitalize">
-                      {(payout.status || "pending").replace(/_/g, " ")}
+                      {(payout.bookingStatus || "pending").replace(/_/g, " ")}
                     </span>
                   </td>
                 </tr>
@@ -118,6 +118,36 @@ export default function PendingPayoutsTable() {
           </div>
         )}
       </div>
+
+      {data && data.total > limit && (
+        <div className="p-4 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500 bg-gray-50/50">
+          <div>
+            Showing <span className="font-medium">{(page - 1) * limit + 1}</span> to{" "}
+            <span className="font-medium">
+              {Math.min(page * limit, data.total)}
+            </span>{" "}
+            of <span className="font-medium">{data.total}</span> results
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1 || isPending}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages || isPending}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
