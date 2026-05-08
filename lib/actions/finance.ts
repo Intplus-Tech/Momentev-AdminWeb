@@ -241,3 +241,41 @@ export async function getPaymentQueue(params?: {
     };
   }
 }
+
+export async function syncStripePaymentStatuses(): Promise<ActionResult> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      return { success: false, error: "Unauthorized: No access token found" };
+    }
+
+    const response = await fetch(
+      `${process.env.BACKEND_URL}/api/v1/admin/payment-queue/sync-stripe`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      }
+    );
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    return { success: true, data: body };
+  } catch (error) {
+    console.error("Sync Stripe Payment Statuses Error:", error);
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}

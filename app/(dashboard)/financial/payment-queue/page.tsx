@@ -5,6 +5,7 @@ import { getPaymentQueue } from "@/lib/actions/finance";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { SyncStripeButton } from "./_components/SyncStripeButton";
 
 interface SearchParamsProps {
   searchParams: { [key: string]: string | string[] | undefined };
@@ -38,7 +39,7 @@ export default async function PaymentQueuePage({ searchParams }: SearchParamsPro
 
   const queueItems = data?.data || [];
 
-  console.log("Payment Queue Data:", data, "Error:", error); // Debug log to inspect the data and error
+  // console.log("Payment Queue Data:", data, "Error:", error); // Debug log to inspect the data and error
 
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / limit);
@@ -59,6 +60,9 @@ export default async function PaymentQueuePage({ searchParams }: SearchParamsPro
           <p className="text-muted-foreground text-sm ml-0 sm:ml-12">
             {total.toLocaleString()} transactions in queue
           </p>
+        </div>
+        <div>
+          <SyncStripeButton />
         </div>
       </div>
 
