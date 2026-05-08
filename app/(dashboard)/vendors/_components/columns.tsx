@@ -105,7 +105,6 @@ export const columns: ColumnDef<VendorProfile>[] = [
       const vendor = row.original;
       return (
         <div className="flex space-x-2 whitespace-nowrap">
-          <Button variant="link" className="p-0 h-auto text-xs text-[#2B4EFF]">Edit</Button>
           <Button variant="link" className="p-0 h-auto text-xs text-[#2B4EFF]" asChild>
             <Link href={`/vendors/profile/${vendor._id}`}>View</Link>
           </Button>

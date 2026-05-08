@@ -16,8 +16,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -51,6 +52,15 @@ export function DataTable<TData, TValue>({
   const [selectedBooking, setSelectedBooking] = React.useState<AdminBookingItem | null>(null);
   const [modalOpen, setModalOpen] = React.useState(false);
 
+  // Local state for dates
+  const [localFrom, setLocalFrom] = React.useState(currentFrom ? format(parseISO(currentFrom), 'yyyy-MM-dd') : "");
+  const [localTo, setLocalTo] = React.useState(currentTo ? format(parseISO(currentTo), 'yyyy-MM-dd') : "");
+
+  React.useEffect(() => {
+    setLocalFrom(currentFrom ? format(parseISO(currentFrom), 'yyyy-MM-dd') : "");
+    setLocalTo(currentTo ? format(parseISO(currentTo), 'yyyy-MM-dd') : "");
+  }, [currentFrom, currentTo]);
+
   const table = useReactTable({
     data,
     columns,
@@ -71,9 +81,37 @@ export function DataTable<TData, TValue>({
     });
   };
 
+  const applyDateFilter = () => {
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (localFrom) {
+        params.set("from", new Date(localFrom).toISOString());
+      } else {
+        params.delete("from");
+      }
+      if (localTo) {
+        params.set("to", new Date(localTo).toISOString());
+      } else {
+        params.delete("to");
+      }
+      params.set("page", "1");
+      router.push(`${pathname}?${params.toString()}`);
+    });
+  };
+
   const handleRowClick = (row: TData) => {
     setSelectedBooking(row as unknown as AdminBookingItem);
     setModalOpen(true);
+  };
+
+  const hasActiveFilters = currentStatus !== "all" || currentFrom || currentTo;
+
+  const clearAllFilters = () => {
+    startTransition(() => {
+      const params = new URLSearchParams();
+      params.set("page", "1");
+      router.push(`${pathname}?${params.toString()}`);
+    });
   };
 
   return (
@@ -110,12 +148,9 @@ export function DataTable<TData, TValue>({
             <Input 
                 type="date" 
                 className="h-9 w-auto bg-white"
-                value={currentFrom ? format(parseISO(currentFrom), 'yyyy-MM-dd') : ''}
+                value={localFrom}
                 disabled={isPending}
-                onChange={(e) => {
-                    const val = e.target.value;
-                    handleFilterChange("from", val ? new Date(val).toISOString() : "");
-                }}
+                onChange={(e) => setLocalFrom(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-2">
@@ -124,13 +159,32 @@ export function DataTable<TData, TValue>({
                 type="date" 
                 className="h-9 w-auto bg-white"
                 disabled={isPending}
-                value={currentTo ? format(parseISO(currentTo), 'yyyy-MM-dd') : ''}
-                onChange={(e) => {
-                    const val = e.target.value;
-                    handleFilterChange("to", val ? new Date(val).toISOString() : "");
-                }}
+                value={localTo}
+                onChange={(e) => setLocalTo(e.target.value)}
             />
           </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={applyDateFilter}
+            disabled={isPending}
+            className="h-9"
+          >
+            Apply
+          </Button>
+
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearAllFilters}
+              disabled={isPending}
+              className="text-gray-500 hover:text-red-600 ml-2"
+            >
+              <X className="h-4 w-4 mr-1" />
+              Clear Filters
+            </Button>
+          )}
         </div>
       </div>
 

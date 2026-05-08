@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { AdminBookingItem } from "@/lib/actions/bookings";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
 
 export const columns: ColumnDef<AdminBookingItem>[] = [
   {
@@ -106,6 +107,19 @@ export const columns: ColumnDef<AdminBookingItem>[] = [
         <span className="text-sm text-gray-600 capitalize">
             {model.replace(/_/g, " ")}
         </span>
+      );
+    },
+  },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: () => {
+      return (
+        <div className="flex space-x-2 whitespace-nowrap">
+          <Button variant="link" className="p-0 h-auto text-xs text-[#2B4EFF]">
+            View
+          </Button>
+        </div>
       );
     },
   }

@@ -52,7 +52,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, X } from "lucide-react";
 
 const RESOLUTION_FILTER_OPTIONS = [
   "all",
@@ -224,6 +224,8 @@ export default function DisputesAdminClient() {
     loadResolutions(1);
   };
 
+  const hasActiveFilters = resolutionFilter !== "all" || vendorId || fromDate || toDate;
+
   const openEscalateModal = (record: DisputeResolutionRecord) => {
     setSelectedRecord(record);
     setEscalateFeedback(null);
@@ -319,18 +321,19 @@ export default function DisputesAdminClient() {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Dispute Resolutions</CardTitle>
-          <CardDescription>
-            Open any dispute record and take escalation or resolution action
-            from the dispute modal.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
-            <div className="space-y-2">
-              <Label>Resolution Filter</Label>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold text-gray-900">Dispute Resolutions</h2>
+        <p className="text-sm text-gray-500">
+          Open any dispute record and take escalation or resolution action from the dispute modal.
+        </p>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative">
+        <div className="p-4 border-b border-gray-100 flex flex-col lg:flex-row gap-4 justify-between bg-gray-50/50">
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+            {/* Resolution Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-600 hidden sm:inline">Status:</span>
               <Select
                 value={resolutionFilter}
                 onValueChange={(value: ResolutionFilterValue) => {
@@ -338,7 +341,7 @@ export default function DisputesAdminClient() {
                   setPage(1);
                 }}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-[160px] h-9 bg-white">
                   <SelectValue placeholder="Select filter" />
                 </SelectTrigger>
                 <SelectContent>
@@ -351,44 +354,55 @@ export default function DisputesAdminClient() {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="vendor-id-filter">vendorId</Label>
+            {/* Vendor ID Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-600 hidden sm:inline">Vendor ID:</span>
               <Input
                 id="vendor-id-filter"
                 placeholder="Vendor ObjectId"
                 value={vendorId}
                 onChange={(event) => setVendorId(event.target.value)}
+                className="h-9 w-[160px] bg-white"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="from-filter">from</Label>
+            {/* Date Filters */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-600 hidden sm:inline">From:</span>
               <Input
-                id="from-filter"
-                type="datetime-local"
-                value={fromDate}
+                type="date"
+                value={fromDate ? fromDate.split('T')[0] : ""}
                 onChange={(event) => setFromDate(event.target.value)}
+                className="h-9 w-auto bg-white"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="to-filter">to</Label>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-600 hidden sm:inline">To:</span>
               <Input
-                id="to-filter"
-                type="datetime-local"
-                value={toDate}
+                type="date"
+                value={toDate ? toDate.split('T')[0] : ""}
                 onChange={(event) => setToDate(event.target.value)}
+                className="h-9 w-auto bg-white"
               />
             </div>
 
-            <div className="flex items-end gap-2">
-              <Button onClick={applyFilters} disabled={isTablePending}>
-                Apply
-              </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-9"
+              onClick={applyFilters}
+              disabled={isTablePending}
+            >
+              Apply
+            </Button>
+
+            {hasActiveFilters && (
               <Button
-                type="button"
-                variant="outline"
+                variant="ghost"
+                size="sm"
                 onClick={() => {
+                  setResolutionFilter("all");
                   setVendorId("");
                   setFromDate("");
                   setToDate("");
@@ -396,26 +410,30 @@ export default function DisputesAdminClient() {
                   loadResolutions(1);
                 }}
                 disabled={isTablePending}
+                className="text-gray-500 hover:text-red-600 ml-2"
               >
-                Clear
+                <X className="h-4 w-4 mr-1" />
+                Clear Filters
               </Button>
-            </div>
+            )}
           </div>
+        </div>
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
+        {error && <div className="p-4"><p className="text-sm text-destructive">{error}</p></div>}
 
+        <div className="overflow-x-auto relative min-h-[400px]">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Case ID</TableHead>
-                <TableHead>Dispute Status</TableHead>
-                <TableHead>Resolution</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Vendor</TableHead>
-                <TableHead>Resolved By</TableHead>
-                <TableHead>Resolved At</TableHead>
-                <TableHead>Action</TableHead>
+              <TableRow className="bg-gray-50/50">
+                <TableHead className="font-medium text-gray-500 whitespace-nowrap">Case ID</TableHead>
+                <TableHead className="font-medium text-gray-500 whitespace-nowrap">Dispute Status</TableHead>
+                <TableHead className="font-medium text-gray-500 whitespace-nowrap">Resolution</TableHead>
+                <TableHead className="font-medium text-gray-500 whitespace-nowrap">Amount</TableHead>
+                <TableHead className="font-medium text-gray-500 whitespace-nowrap">Client</TableHead>
+                <TableHead className="font-medium text-gray-500 whitespace-nowrap">Vendor</TableHead>
+                <TableHead className="font-medium text-gray-500 whitespace-nowrap">Resolved By</TableHead>
+                <TableHead className="font-medium text-gray-500 whitespace-nowrap">Resolved At</TableHead>
+                <TableHead className="font-medium text-gray-500 whitespace-nowrap">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -468,13 +486,12 @@ export default function DisputesAdminClient() {
                           <DropdownMenuTrigger asChild>
                             <Button
                               type="button"
-                              variant="outline"
-                              size="icon-sm"
+                              variant="link"
                               disabled={isActionDisabled}
                               aria-label="More actions"
-                              className="disabled:pointer-events-auto disabled:cursor-not-allowed"
+                              className="p-0 h-auto text-xs text-[#2B4EFF] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:text-gray-400"
                             >
-                              <MoreHorizontal className="size-4" />
+                              View
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
@@ -497,32 +514,40 @@ export default function DisputesAdminClient() {
               )}
             </TableBody>
           </Table>
-
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              Total: {resolutionsPage.total} | Page {page} of {totalPages}
-            </p>
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                disabled={page <= 1 || isTablePending}
-                onClick={() => setPage((previous) => Math.max(1, previous - 1))}
-              >
-                Previous
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={page >= totalPages || isTablePending}
-                onClick={() => setPage((previous) => previous + 1)}
-              >
-                Next
-              </Button>
-            </div>
+        </div>
+        <div className="p-4 border-t border-gray-100 flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            Total: {resolutionsPage.totalCount} | Page {resolutionsPage.page} of{" "}
+            {resolutionsPage.totalPages}
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const newPage = Math.max(1, page - 1);
+                setPage(newPage);
+                loadResolutions(newPage);
+              }}
+              disabled={page <= 1 || isTablePending}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const newPage = Math.min(resolutionsPage.totalPages, page + 1);
+                setPage(newPage);
+                loadResolutions(newPage);
+              }}
+              disabled={page >= resolutionsPage.totalPages || isTablePending}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      </div>
 
       <Dialog open={isEscalateModalOpen} onOpenChange={setIsEscalateModalOpen}>
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">

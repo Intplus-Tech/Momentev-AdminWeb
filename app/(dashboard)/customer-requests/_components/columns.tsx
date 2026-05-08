@@ -143,31 +143,10 @@ export const columns: ColumnDef<CustomerRequest>[] = [
     cell: ({ row }) => {
       const request = row.original;
       return (
-        <div onClick={(e) => e.stopPropagation()}>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(request._id)}
-              >
-                Copy request ID
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() =>
-                  navigator.clipboard.writeText(request.customerId?._id || "")
-                }
-              >
-                Copy customer ID
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="flex space-x-2 whitespace-nowrap">
+          <Button variant="link" className="p-0 h-auto text-xs text-[#2B4EFF]">
+            View
+          </Button>
         </div>
       );
     },

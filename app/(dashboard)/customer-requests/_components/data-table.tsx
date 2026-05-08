@@ -127,18 +127,17 @@ export function DataTable<TData, TValue>({
   };
 
   const handleDateFromChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setDateFrom(value);
-    const isoValue = value ? new Date(value).toISOString() : null;
-    const query = buildQuery({ dateFrom: isoValue, page: "1" });
-    router.push(`${pathname}?${query}`);
+    setDateFrom(e.target.value);
   };
 
   const handleDateToChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setDateTo(value);
-    const isoValue = value ? new Date(value).toISOString() : null;
-    const query = buildQuery({ dateTo: isoValue, page: "1" });
+    setDateTo(e.target.value);
+  };
+
+  const applyDateFilter = () => {
+    const isoFrom = dateFrom ? new Date(dateFrom).toISOString() : null;
+    const isoTo = dateTo ? new Date(dateTo).toISOString() : null;
+    const query = buildQuery({ dateFrom: isoFrom, dateTo: isoTo, page: "1" });
     router.push(`${pathname}?${query}`);
   };
 
@@ -173,19 +172,19 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="space-y-4">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative">
       {/* Toolbar */}
-      <div className="flex flex-col gap-4">
+      <div className="p-4 border-b border-gray-100 flex flex-col gap-4 bg-gray-50/50">
         {/* Row 1: Search + Status + Category */}
         <div className="flex flex-wrap items-center gap-3">
           <Input
             placeholder="Search by title, location, description..."
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
-            className="max-w-sm"
+            className="max-w-sm h-9 bg-white"
           />
           <Select value={statusValue} onValueChange={handleStatusFilter}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px] h-9 bg-white">
               <SelectValue placeholder="Filter Status" />
             </SelectTrigger>
             <SelectContent>
@@ -199,7 +198,7 @@ export function DataTable<TData, TValue>({
 
           {categories.length > 0 && (
             <Select value={categoryValue} onValueChange={handleCategoryFilter}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-[200px] h-9 bg-white">
                 <SelectValue placeholder="Filter Category" />
               </SelectTrigger>
               <SelectContent>
@@ -217,27 +216,31 @@ export function DataTable<TData, TValue>({
         {/* Row 2: Date Range + Clear */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-500 whitespace-nowrap">
-              From
-            </label>
+            <span className="text-sm font-medium text-gray-600 hidden sm:inline">From:</span>
             <Input
               type="date"
               value={dateFrom}
               onChange={handleDateFromChange}
-              className="w-[160px]"
+              className="w-[160px] h-9 bg-white"
             />
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-500 whitespace-nowrap">
-              To
-            </label>
+            <span className="text-sm font-medium text-gray-600 hidden sm:inline">To:</span>
             <Input
               type="date"
               value={dateTo}
               onChange={handleDateToChange}
-              className="w-[160px]"
+              className="w-[160px] h-9 bg-white"
             />
           </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={applyDateFilter}
+            className="h-9"
+          >
+            Apply
+          </Button>
 
           {hasActiveFilters && (
             <Button
@@ -254,7 +257,7 @@ export function DataTable<TData, TValue>({
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border shadow-sm bg-white overflow-hidden">
+      <div className="overflow-x-auto relative min-h-[400px]">
         <Table>
           <TableHeader className="bg-gray-50/50">
             {table.getHeaderGroups().map((headerGroup) => (
