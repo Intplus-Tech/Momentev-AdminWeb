@@ -16,9 +16,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Search, Loader2, X } from "lucide-react";
+import { Search, Loader2, X, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { downloadCsv } from "@/lib/exportCsv";
 import {
   Select,
   SelectContent,
@@ -60,6 +61,20 @@ export function DataTable<TData, TValue>({
     setLocalFrom(currentFrom ? format(parseISO(currentFrom), 'yyyy-MM-dd') : "");
     setLocalTo(currentTo ? format(parseISO(currentTo), 'yyyy-MM-dd') : "");
   }, [currentFrom, currentTo]);
+
+  const handleExportCsv = () => {
+    const formattedData = data.map((item: any) => ({
+      "Booking ID": item._id,
+      "Title": item.eventDetails?.title || "",
+      "Status": item.status,
+      "Customer": item.customer?.nameSnapshot || "",
+      "Vendor": item.vendor?.nameSnapshot || "",
+      "Amount Minor": item.amounts?.total || 0,
+      "Currency": item.currency || "GBP",
+      "Start Date": item.eventDetails?.startDate || "",
+    }));
+    downloadCsv(formattedData, `bookings_${new Date().toISOString().split("T")[0]}`);
+  };
 
   const table = useReactTable({
     data,
@@ -185,6 +200,18 @@ export function DataTable<TData, TValue>({
               Clear Filters
             </Button>
           )}
+
+          <div className="flex-1" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCsv}
+            disabled={isPending || data.length === 0}
+            className="ml-auto"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Download CSV
+          </Button>
         </div>
       </div>
 

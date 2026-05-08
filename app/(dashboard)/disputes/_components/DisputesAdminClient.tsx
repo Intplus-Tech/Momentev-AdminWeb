@@ -2,12 +2,12 @@
 
 import { FormEvent, useEffect, useMemo, useState, useTransition } from "react";
 import {
-  DisputeResolutionRecord,
+  DisputeSnapshot,
   EscalationLevelOption,
   EscalationReasonOption,
-  PaginatedDisputeResolutions,
+  PaginatedDisputes,
   escalateDispute,
-  getDisputeResolutions,
+  getDisputes,
   getEscalationLevels,
   getEscalationReasons,
   resolveDispute,
@@ -52,7 +52,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, X } from "lucide-react";
+import { MoreHorizontal, X, Download } from "lucide-react";
+import { downloadCsv } from "@/lib/exportCsv";
 
 const RESOLUTION_FILTER_OPTIONS = [
   "all",
@@ -102,8 +103,8 @@ function titleize(value: string) {
 export default function DisputesAdminClient() {
   const [levels, setLevels] = useState<EscalationLevelOption[]>([]);
   const [reasons, setReasons] = useState<EscalationReasonOption[]>([]);
-  const [resolutionsPage, setResolutionsPage] =
-    useState<PaginatedDisputeResolutions>({
+  const [disputesPage, setDisputesPage] =
+    useState<PaginatedDisputes>({
       data: [],
       total: 0,
       page: 1,
@@ -119,7 +120,8 @@ export default function DisputesAdminClient() {
   const [toDate, setToDate] = useState("");
 
   const [selectedRecord, setSelectedRecord] =
-    useState<DisputeResolutionRecord | null>(null);
+    useState<DisputeSnapshot | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isEscalateModalOpen, setIsEscalateModalOpen] = useState(false);
   const [isResolveModalOpen, setIsResolveModalOpen] = useState(false);
 
@@ -149,11 +151,11 @@ export default function DisputesAdminClient() {
     [reasons, escalationReason],
   );
 
-  const selectedDisputeId = selectedRecord?.disputeId?._id || "";
+  const selectedDisputeId = selectedRecord?._id || "";
 
   const totalPages = Math.max(
     1,
-    Math.ceil((resolutionsPage.total || 0) / (resolutionsPage.limit || limit)),
+    Math.ceil((disputesPage.total || 0) / (disputesPage.limit || limit)),
   );
 
   const loadBootData = () => {
@@ -188,26 +190,26 @@ export default function DisputesAdminClient() {
     });
   };
 
-  const loadResolutions = (targetPage?: number) => {
+  const loadDisputes = (targetPage?: number) => {
     const requestedPage = targetPage ?? page;
 
     startTableTransition(async () => {
       setError(null);
-      const result = await getDisputeResolutions({
+      const result = await getDisputes({
         page: requestedPage,
         limit,
-        resolution: resolutionFilter,
+        status: resolutionFilter,
         vendorId,
         from: fromDate || undefined,
         to: toDate || undefined,
       });
 
       if (!result.success || !result.data) {
-        setError(result.error || "Failed to load dispute resolutions");
+        setError(result.error || "Failed to load disputes");
         return;
       }
 
-      setResolutionsPage(result.data);
+      setDisputesPage(result.data);
     });
   };
 
@@ -216,30 +218,52 @@ export default function DisputesAdminClient() {
   }, []);
 
   useEffect(() => {
-    loadResolutions();
+    loadDisputes();
   }, [page, resolutionFilter]);
 
   const applyFilters = () => {
     setPage(1);
-    loadResolutions(1);
+    loadDisputes(1);
   };
 
   const hasActiveFilters = resolutionFilter !== "all" || vendorId || fromDate || toDate;
 
-  const openEscalateModal = (record: DisputeResolutionRecord) => {
+  const handleExportCsv = () => {
+    const formattedData = disputesPage.data.map(item => ({
+      "Case ID": item.caseId,
+      "Status": item.status,
+      "Priority": item.priority || "normal",
+      "Amount Minor": item.amountInDisputeMinor,
+      "Currency": item.currency,
+      "Filed At": item.filedAt,
+      "Client Name": item.client?.nameSnapshot,
+      "Vendor Name": item.vendor?.nameSnapshot,
+      "Reason / Claim": item.reason?.clientClaim || "",
+    }));
+    downloadCsv(formattedData, `disputes_${new Date().toISOString().split("T")[0]}`);
+  };
+
+  const openDetailsModal = (record: DisputeSnapshot) => {
+    setSelectedRecord(record);
+    setIsDetailsModalOpen(true);
+  };
+
+  const openEscalateModal = (record: DisputeSnapshot) => {
     setSelectedRecord(record);
     setEscalateFeedback(null);
     setAdditionalContext("");
     setOtherReason("");
     setIsEscalateModalOpen(true);
+    setIsDetailsModalOpen(false);
   };
 
-  const openResolveModal = (record: DisputeResolutionRecord) => {
+  const openResolveModal = (record: DisputeSnapshot) => {
     setSelectedRecord(record);
     setResolveFeedback(null);
     setAmountMinor("");
     setResolutionNotes("");
     setIsResolveModalOpen(true);
+    setIsDetailsModalOpen(false);
   };
 
   const handleEscalate = (event: FormEvent<HTMLFormElement>) => {
@@ -281,7 +305,7 @@ export default function DisputesAdminClient() {
       }
 
       setEscalateFeedback("Dispute escalated successfully.");
-      loadResolutions();
+      loadDisputes();
     });
   };
 
@@ -315,19 +339,12 @@ export default function DisputesAdminClient() {
       }
 
       setResolveFeedback("Dispute resolved successfully.");
-      loadResolutions();
+      loadDisputes();
     });
   };
 
   return (
     <div className="space-y-6">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Dispute Resolutions</h2>
-        <p className="text-sm text-gray-500">
-          Open any dispute record and take escalation or resolution action from the dispute modal.
-        </p>
-      </div>
-
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative">
         <div className="p-4 border-b border-gray-100 flex flex-col lg:flex-row gap-4 justify-between bg-gray-50/50">
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
@@ -407,7 +424,7 @@ export default function DisputesAdminClient() {
                   setFromDate("");
                   setToDate("");
                   setPage(1);
-                  loadResolutions(1);
+                  loadDisputes(1);
                 }}
                 disabled={isTablePending}
                 className="text-gray-500 hover:text-red-600 ml-2"
@@ -416,6 +433,18 @@ export default function DisputesAdminClient() {
                 Clear Filters
               </Button>
             )}
+
+            <div className="flex-1" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCsv}
+              disabled={isTablePending || disputesPage.data.length === 0}
+              className="ml-auto"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download CSV
+            </Button>
           </div>
         </div>
 
@@ -426,87 +455,66 @@ export default function DisputesAdminClient() {
             <TableHeader>
               <TableRow className="bg-gray-50/50">
                 <TableHead className="font-medium text-gray-500 whitespace-nowrap">Case ID</TableHead>
-                <TableHead className="font-medium text-gray-500 whitespace-nowrap">Dispute Status</TableHead>
-                <TableHead className="font-medium text-gray-500 whitespace-nowrap">Resolution</TableHead>
+                <TableHead className="font-medium text-gray-500 whitespace-nowrap">Status</TableHead>
+                <TableHead className="font-medium text-gray-500 whitespace-nowrap">Priority</TableHead>
                 <TableHead className="font-medium text-gray-500 whitespace-nowrap">Amount</TableHead>
                 <TableHead className="font-medium text-gray-500 whitespace-nowrap">Client</TableHead>
                 <TableHead className="font-medium text-gray-500 whitespace-nowrap">Vendor</TableHead>
-                <TableHead className="font-medium text-gray-500 whitespace-nowrap">Resolved By</TableHead>
-                <TableHead className="font-medium text-gray-500 whitespace-nowrap">Resolved At</TableHead>
+                <TableHead className="font-medium text-gray-500 whitespace-nowrap">Filed At</TableHead>
                 <TableHead className="font-medium text-gray-500 whitespace-nowrap">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isTablePending || isBootPending ? (
                 <TableRow>
-                  <TableCell colSpan={9}>
-                    Loading dispute resolutions...
+                  <TableCell colSpan={8} className="text-center py-6 text-gray-500">
+                    Loading disputes...
                   </TableCell>
                 </TableRow>
-              ) : resolutionsPage.data.length === 0 ? (
+              ) : disputesPage.data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9}>
-                    No dispute resolutions found.
+                  <TableCell colSpan={8} className="text-center py-6 text-gray-500">
+                    No disputes found.
                   </TableCell>
                 </TableRow>
               ) : (
-                resolutionsPage.data.map((item: DisputeResolutionRecord) => {
-                  const adminName =
-                    `${item.resolvedByAdminId?.firstName || ""} ${item.resolvedByAdminId?.lastName || ""}`.trim();
-                  const isActionDisabled =
-                    !item.disputeId?._id ||
-                    item.disputeId?.status?.toLowerCase() === "closed";
+                disputesPage.data.map((item: DisputeSnapshot) => {
                   return (
-                    <TableRow key={item._id}>
+                    <TableRow key={item._id} className="hover:bg-gray-50/50 cursor-pointer">
                       <TableCell>
-                        {item.caseId || item.disputeId?.caseId || "-"}
+                        {item.caseId || "-"}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">
-                          {item.disputeId?.status || "-"}
+                        <Badge variant="outline" className="uppercase text-[10px] tracking-wider font-bold">
+                          {item.status ? titleize(item.status) : "-"}
                         </Badge>
                       </TableCell>
-                      <TableCell>{titleize(item.resolution || "-")}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="capitalize text-[10px]">
+                          {item.priority || "normal"}
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         {formatCurrency(
-                          item.amountMinor || 0,
+                          item.amountInDisputeMinor || 0,
                           item.currency || "GBP",
                         )}
                       </TableCell>
                       <TableCell>
-                        {item.disputeId?.client?.nameSnapshot || "-"}
+                        {item.client?.nameSnapshot || "-"}
                       </TableCell>
                       <TableCell>
-                        {item.disputeId?.vendor?.nameSnapshot || "-"}
+                        {item.vendor?.nameSnapshot || "-"}
                       </TableCell>
-                      <TableCell>{adminName || "-"}</TableCell>
-                      <TableCell>{formatDate(item.resolvedAt)}</TableCell>
+                      <TableCell>{formatDate(item.filedAt || item.createdAt)}</TableCell>
                       <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="link"
-                              disabled={isActionDisabled}
-                              aria-label="More actions"
-                              className="p-0 h-auto text-xs text-[#2B4EFF] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:text-gray-400"
-                            >
-                              View
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => openEscalateModal(item)}
-                            >
-                              Escalate
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => openResolveModal(item)}
-                            >
-                              Resolve
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <Button
+                          variant="link"
+                          onClick={() => openDetailsModal(item)}
+                          className="p-0 h-auto text-xs text-[#2B4EFF]"
+                        >
+                          View
+                        </Button>
                       </TableCell>
                     </TableRow>
                   );
@@ -517,8 +525,8 @@ export default function DisputesAdminClient() {
         </div>
         <div className="p-4 border-t border-gray-100 flex items-center justify-between">
           <div className="text-sm text-gray-500">
-            Total: {resolutionsPage.totalCount} | Page {resolutionsPage.page} of{" "}
-            {resolutionsPage.totalPages}
+            Total: {disputesPage.total} | Page {page} of{" "}
+            {Math.max(1, Math.ceil(disputesPage.total / disputesPage.limit))}
           </div>
           <div className="flex space-x-2">
             <Button
@@ -527,27 +535,131 @@ export default function DisputesAdminClient() {
               onClick={() => {
                 const newPage = Math.max(1, page - 1);
                 setPage(newPage);
-                loadResolutions(newPage);
+                loadDisputes(newPage);
               }}
               disabled={page <= 1 || isTablePending}
             >
               Previous
             </Button>
-            <Button
+              <Button
               variant="outline"
               size="sm"
               onClick={() => {
-                const newPage = Math.min(resolutionsPage.totalPages, page + 1);
+                const totalPages = Math.max(1, Math.ceil(disputesPage.total / disputesPage.limit));
+                const newPage = Math.min(totalPages, page + 1);
                 setPage(newPage);
-                loadResolutions(newPage);
+                loadDisputes(newPage);
               }}
-              disabled={page >= resolutionsPage.totalPages || isTablePending}
+              disabled={page >= Math.max(1, Math.ceil(disputesPage.total / disputesPage.limit)) || isTablePending}
             >
               Next
             </Button>
           </div>
         </div>
       </div>
+
+      <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Dispute Details</DialogTitle>
+            <DialogDescription>
+              View the details of this dispute and take appropriate actions.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedRecord && (
+            <div className="space-y-4 py-4 text-sm">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-gray-500 font-medium">Case ID</span>
+                  <p>{selectedRecord.caseId || "-"}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500 font-medium">Status</span>
+                  <p className="capitalize">{selectedRecord.status || "-"}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500 font-medium">Amount</span>
+                  <p>
+                    {formatCurrency(
+                      selectedRecord.amountInDisputeMinor || 0,
+                      selectedRecord.currency || "GBP",
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-gray-500 font-medium">Priority</span>
+                  <p className="capitalize">{selectedRecord.priority || "normal"}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500 font-medium">Client</span>
+                  <p>{selectedRecord.client?.nameSnapshot || "-"}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500 font-medium">Vendor</span>
+                  <p>{selectedRecord.vendor?.nameSnapshot || "-"}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500 font-medium">Filed At</span>
+                  <p>{formatDate(selectedRecord.filedAt || selectedRecord.createdAt)}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500 font-medium">Window Ends At</span>
+                  <p>{formatDate(selectedRecord.windowEndsAt)}</p>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t">
+                <div className="flex justify-between items-start mb-1">
+                  <span className="text-gray-500 font-medium block">Reason / Client Claim</span>
+                  {selectedRecord.reason?.requestedRefundPercent !== undefined && (
+                    <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50">
+                      Requests {selectedRecord.reason.requestedRefundPercent}% Refund
+                    </Badge>
+                  )}
+                </div>
+                <p className="bg-gray-50 p-3 rounded-md text-gray-700 whitespace-pre-wrap">
+                  {selectedRecord.reason?.clientClaim || "No claim details provided."}
+                </p>
+                {((selectedRecord.reason?.clientAttachments?.length ?? 0) > 0 || 
+                  (selectedRecord.reason?.vendorAttachments?.length ?? 0) > 0) && (
+                  <div className="mt-3 flex gap-4 text-xs text-gray-500">
+                    {selectedRecord.reason?.clientAttachments && selectedRecord.reason.clientAttachments.length > 0 && (
+                      <div className="flex items-center gap-1">
+                        <span className="font-semibold text-gray-700">{selectedRecord.reason.clientAttachments.length}</span> Client Attachment(s)
+                      </div>
+                    )}
+                    {selectedRecord.reason?.vendorAttachments && selectedRecord.reason.vendorAttachments.length > 0 && (
+                      <div className="flex items-center gap-1">
+                        <span className="font-semibold text-gray-700">{selectedRecord.reason.vendorAttachments.length}</span> Vendor Attachment(s)
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-4 border-t flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setIsDetailsModalOpen(false)}>
+                  Close
+                </Button>
+                <Button
+                  variant="secondary"
+                  disabled={selectedRecord.status?.toLowerCase() === "closed"}
+                  onClick={() => openEscalateModal(selectedRecord)}
+                >
+                  Escalate
+                </Button>
+                <Button
+                  disabled={selectedRecord.status?.toLowerCase() === "closed"}
+                  onClick={() => openResolveModal(selectedRecord)}
+                >
+                  Resolve
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isEscalateModalOpen} onOpenChange={setIsEscalateModalOpen}>
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
@@ -562,9 +674,7 @@ export default function DisputesAdminClient() {
           <div className="space-y-1 rounded-md border p-3 text-sm">
             <p>
               <span className="font-medium">Case ID:</span>{" "}
-              {selectedRecord?.caseId ||
-                selectedRecord?.disputeId?.caseId ||
-                "-"}
+              {selectedRecord?.caseId || "-"}
             </p>
             <p>
               <span className="font-medium">Dispute ID:</span>{" "}
@@ -572,7 +682,7 @@ export default function DisputesAdminClient() {
             </p>
             <p>
               <span className="font-medium">Status:</span>{" "}
-              {selectedRecord?.disputeId?.status || "-"}
+              {selectedRecord?.status || "-"}
             </p>
           </div>
           <form className="space-y-3" onSubmit={handleEscalate}>
@@ -685,9 +795,7 @@ export default function DisputesAdminClient() {
           <div className="space-y-1 rounded-md border p-3 text-sm">
             <p>
               <span className="font-medium">Case ID:</span>{" "}
-              {selectedRecord?.caseId ||
-                selectedRecord?.disputeId?.caseId ||
-                "-"}
+              {selectedRecord?.caseId || "-"}
             </p>
             <p>
               <span className="font-medium">Dispute ID:</span>{" "}
@@ -695,7 +803,7 @@ export default function DisputesAdminClient() {
             </p>
             <p>
               <span className="font-medium">Status:</span>{" "}
-              {selectedRecord?.disputeId?.status || "-"}
+              {selectedRecord?.status || "-"}
             </p>
           </div>
 

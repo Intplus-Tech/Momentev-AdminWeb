@@ -27,6 +27,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useDebounce } from "@/hooks/use-debounce";
+import { FileDown } from "lucide-react";
+import { downloadCsv } from "@/lib/exportCsv";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -83,11 +85,23 @@ export function DataTable<TData, TValue>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]); // Intentionally exclude router/pathname/buildQuery to avoid loops
 
-  // Handle status filter
   const handleStatusFilter = (value: string) => {
     setStatusValue(value);
     const query = buildQuery({ status: value === "all" ? null : value, page: "1" });
     router.push(`${pathname}?${query}`);
+  };
+
+  const handleExportCsv = () => {
+    const formattedData = data.map((item: any) => ({
+      "Client ID": item.id || item._id,
+      "Name": item.name,
+      "Email": item.email,
+      "Phone": item.phone || "",
+      "Status": item.status,
+      "Joined": item.joinedAt,
+      "Bookings": item.bookingsCount || 0,
+    }));
+    downloadCsv(formattedData, `clients_${new Date().toISOString().split("T")[0]}`);
   };
 
   const table = useReactTable({
@@ -109,18 +123,28 @@ export function DataTable<TData, TValue>({
           onChange={(e) => setSearchValue(e.target.value)}
           className="max-w-sm"
         />
-        <Select value={statusValue} onValueChange={handleStatusFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-            <SelectItem value="pending_verification">Pending</SelectItem>
-            <SelectItem value="banned">Banned</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+          <Select value={statusValue} onValueChange={handleStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="pending_verification">Pending</SelectItem>
+              <SelectItem value="banned">Banned</SelectItem>
+            </SelectContent>
+          </Select>
+          <button 
+            onClick={handleExportCsv}
+            disabled={data.length === 0}
+            className="w-full sm:w-auto px-4 py-2 rounded-lg bg-[#D9D9D9] text-[#718096] text-sm flex items-center justify-center gap-2 hover:bg-gray-300 transition-colors whitespace-nowrap h-10 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <FileDown className="text-[#A0AEC0] w-4 h-4" />
+            Download
+          </button>
+        </div>
       </div>
 
       {/* Table */}

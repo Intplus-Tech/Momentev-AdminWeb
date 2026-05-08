@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { useDebounce } from "@/hooks/use-debounce";
 import { FileDown } from "lucide-react";
+import { downloadCsv } from "@/lib/exportCsv";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -84,11 +85,23 @@ export function DataTable<TData, TValue>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]); // Intentionally exclude router/pathname/buildQuery to avoid loops
 
-  // Handle filter
   const handleFilter = (value: string) => {
     setFilterValue(value);
     const query = buildQuery({ filter: value === "All" ? null : value, page: "1" });
     router.push(`${pathname}?${query}`);
+  };
+
+  const handleExportCsv = () => {
+    const formattedData = data.map((item: any) => ({
+      "Vendor ID": item.id || item._id,
+      "Name": item.name,
+      "Email": item.email,
+      "Phone": item.phone || "",
+      "Status": item.status,
+      "Onboarding Step": item.onboardingStep,
+      "Joined": item.joinedAt,
+    }));
+    downloadCsv(formattedData, `vendors_${new Date().toISOString().split("T")[0]}`);
   };
 
   const table = useReactTable({
@@ -121,7 +134,11 @@ export function DataTable<TData, TValue>({
               <SelectItem value="Inactive">Inactive</SelectItem>
             </SelectContent>
           </Select>
-          <button className="w-full sm:w-auto px-4 py-2 rounded-lg bg-[#D9D9D9] text-[#718096] text-sm flex items-center justify-center gap-2 hover:bg-gray-300 transition-colors whitespace-nowrap h-10">
+          <button 
+            onClick={handleExportCsv}
+            disabled={data.length === 0}
+            className="w-full sm:w-auto px-4 py-2 rounded-lg bg-[#D9D9D9] text-[#718096] text-sm flex items-center justify-center gap-2 hover:bg-gray-300 transition-colors whitespace-nowrap h-10 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             <FileDown className="text-[#A0AEC0] w-4 h-4" />
             Download
           </button>

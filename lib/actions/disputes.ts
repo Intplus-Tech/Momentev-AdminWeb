@@ -36,14 +36,42 @@ export interface DisputeSnapshot {
   filedAt: string;
   closedAt?: string;
   client?: {
-    userId: string;
+    userId: Record<string, any> | string;
     nameSnapshot: string;
+    memberSince?: string;
+    previousDisputes?: number;
   };
   vendor?: {
-    vendorId: string;
+    vendorId: Record<string, any> | string;
     nameSnapshot: string;
+    ratingSnapshot?: number;
+    previousDisputes?: number;
   };
+  booking?: {
+    bookingId: Record<string, any> | string;
+    dateSnapshot?: string;
+    locationSnapshot?: string;
+    paymentModelSnapshot?: string;
+  };
+  priority?: string;
+  windowEndsAt?: string;
+  reason?: {
+    clientClaim?: string;
+    vendorResponse?: string;
+    requestedRefundPercent?: number;
+    clientAttachments?: string[];
+    vendorAttachments?: string[];
+  };
+  createdAt?: string;
+  updatedAt?: string;
   timeline?: DisputeTimelineItem[];
+}
+
+export interface PaginatedDisputes {
+  data: DisputeSnapshot[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
 export interface AdminSnapshot {
@@ -108,6 +136,18 @@ export interface GetDisputeResolutionsParams {
   limit?: number;
   resolution?: "all" | "partial_refund" | "vendor_credit" | "full_refund" | "denied" | "mediated";
   vendorId?: string;
+  from?: string;
+  to?: string;
+}
+
+export interface GetDisputesParams {
+  page?: number;
+  limit?: number;
+  status?: string;
+  priority?: string;
+  vendorId?: string;
+  customerId?: string;
+  bookingId?: string;
   from?: string;
   to?: string;
 }
@@ -223,6 +263,30 @@ export async function getDisputeResolutions(
   const queryString = query.toString();
   return authorizedRequest<PaginatedDisputeResolutions>(
     `/api/v1/admin/dispute-resolutions${queryString ? `?${queryString}` : ""}`,
+    {
+      method: "GET",
+    },
+  );
+}
+
+export async function getDisputes(
+  params: GetDisputesParams = {},
+): Promise<ActionResult<PaginatedDisputes>> {
+  const query = new URLSearchParams();
+
+  if (params.page) query.set("page", String(params.page));
+  if (params.limit) query.set("limit", String(params.limit));
+  if (params.status && params.status !== "all") query.set("status", params.status);
+  if (params.priority && params.priority !== "all") query.set("priority", params.priority);
+  if (params.vendorId?.trim()) query.set("vendorId", params.vendorId.trim());
+  if (params.customerId?.trim()) query.set("customerId", params.customerId.trim());
+  if (params.bookingId?.trim()) query.set("bookingId", params.bookingId.trim());
+  if (params.from?.trim()) query.set("from", params.from.trim());
+  if (params.to?.trim()) query.set("to", params.to.trim());
+
+  const queryString = query.toString();
+  return authorizedRequest<PaginatedDisputes>(
+    `/api/v1/admin/disputes${queryString ? `?${queryString}` : ""}`,
     {
       method: "GET",
     },

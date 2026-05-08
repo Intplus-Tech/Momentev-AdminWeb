@@ -27,9 +27,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useDebounce } from "@/hooks/use-debounce";
-import { X } from "lucide-react";
+import { X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CustomerRequest } from "@/lib/actions/customer-requests";
+import { downloadCsv } from "@/lib/exportCsv";
 import RequestDetailsModal from "./RequestDetailsModal";
 
 interface CategoryOption {
@@ -162,6 +163,20 @@ export function DataTable<TData, TValue>({
     setModalOpen(true);
   };
 
+  const handleExportCsv = () => {
+    const formattedData = data.map((item: any) => ({
+      "Request ID": item._id,
+      "Customer": item.customer?.nameSnapshot || "",
+      "Event Title": item.eventDetails?.title || "",
+      "Event Date": item.eventDetails?.startDate || "",
+      "Status": item.status,
+      "Category": item.serviceCategory?.name || "",
+      "Location": item.location?.addressText || "",
+      "Created At": item.createdAt,
+    }));
+    downloadCsv(formattedData, `customer_requests_${new Date().toISOString().split("T")[0]}`);
+  };
+
   const table = useReactTable({
     data,
     columns,
@@ -253,19 +268,31 @@ export function DataTable<TData, TValue>({
               Clear Filters
             </Button>
           )}
+
+          <div className="flex-1" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCsv}
+            disabled={data.length === 0}
+            className="ml-auto"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Download CSV
+          </Button>
         </div>
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto relative min-h-[400px]">
         <Table>
-          <TableHeader className="bg-gray-50/50">
+          <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="bg-gray-50/50">
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
-                    className="text-xs uppercase tracking-wider h-11"
+                    className="font-medium text-gray-500 whitespace-nowrap"
                   >
                     {header.isPlaceholder
                       ? null
