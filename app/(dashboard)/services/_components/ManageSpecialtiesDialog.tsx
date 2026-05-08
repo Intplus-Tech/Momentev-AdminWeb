@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { Edit2, Trash2, Check, X, Tags } from "lucide-react";
+import { z } from "zod";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Field, FieldError } from "@/components/ui/field";
 import { ServiceCategory } from "@/lib/actions/categories";
 import { Commission } from "@/lib/actions/commissions";
 import { 
@@ -37,6 +41,13 @@ import {
   deleteServiceSpecialty,
   createServiceSpecialty
 } from "@/lib/actions/specialties";
+
+const specialtySchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  commissionId: z.string().min(1, "Commission is required").refine(val => val !== "none", "Commission selection is required"),
+});
+type SpecialtyFormValues = z.infer<typeof specialtySchema>;
 
 interface ManageSpecialtiesDialogProps {
   category: ServiceCategory;
@@ -48,15 +59,7 @@ export function ManageSpecialtiesDialog({ category, initialSpecialties, commissi
   const [isOpen, setIsOpen] = useState(false);
   const [specialties, setSpecialties] = useState<ServiceSpecialty[]>(initialSpecialties);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editDescription, setEditDescription] = useState("");
-  const [editCommissionId, setEditCommissionId] = useState<string | undefined>();
   const [isProcessing, setIsProcessing] = useState(false);
-
-  // Create state
-  const [newName, setNewName] = useState("");
-  const [newDescription, setNewDescription] = useState("");
-  const [newCommissionId, setNewCommissionId] = useState<string | undefined>();
 
   // Delete state
   const [specialtyToDelete, setSpecialtyToDelete] = useState<{ id: string, name: string } | null>(null);
@@ -66,46 +69,27 @@ export function ManageSpecialtiesDialog({ category, initialSpecialties, commissi
     setSpecialties(initialSpecialties);
   }, [initialSpecialties]);
 
-  const startEdit = (specialty: ServiceSpecialty) => {
-    setEditingId(specialty._id);
-    setEditName(specialty.name);
-    setEditDescription(specialty.description || "");
-    setEditCommissionId(specialty.commissionId);
-  };
-
   const cancelEdit = () => {
     setEditingId(null);
-    setEditName("");
-    setEditDescription("");
-    setEditCommissionId(undefined);
   };
 
-  const handleUpdate = async (id: string) => {
-    if (!editName.trim()) return;
+  const handleUpdate = async (id: string, values: SpecialtyFormValues) => {
     setIsProcessing(true);
     
-    // Optimistic UI update
-    const previousState = [...specialties];
-    setSpecialties(prev => prev.map(s => s._id === id ? { 
-      ...s, 
-      name: editName.trim(), 
-      description: editDescription.trim(),
-      commissionId: editCommissionId
-    } : s));
-    
     const result = await updateServiceSpecialty(id, { 
-      name: editName.trim(),
-      description: editDescription.trim(),
-      commissionId: editCommissionId 
+      name: values.name.trim(),
+      description: values.description.trim(),
+      commissionId: values.commissionId 
     });
     
     setIsProcessing(false);
     if (result.success && result.data) {
       setEditingId(null);
+      return { success: true };
     } else {
       // Revert optimism
       setSpecialties(previousState);
-      alert(`Failed to update specialty: ${result.error}`);
+      return { success: false, error: result.error };
     }
   };
 
@@ -128,25 +112,24 @@ export function ManageSpecialtiesDialog({ category, initialSpecialties, commissi
     }
   };
 
-  const handleCreate = async () => {
-    if (!newName.trim()) return;
+  const handleCreate = async (values: SpecialtyFormValues) => {
     setIsProcessing(true);
 
     const result = await createServiceSpecialty({
       serviceCategoryId: category._id,
-      name: newName.trim(),
-      description: newDescription.trim(),
-      commissionId: newCommissionId,
+      name: values.name.trim(),
+      description: values.description.trim(),
+      commissionId: values.commissionId,
     });
+
+    console.log('Create Specialty Response:', result);
 
     setIsProcessing(false);
     if (result.success && result.data) {
       setSpecialties(prev => [...prev, result.data!]);
-      setNewName("");
-      setNewDescription("");
-      setNewCommissionId(undefined);
+      return { success: true };
     } else {
-      alert(`Failed to create specialty: ${result.error}`);
+      return { success: false, error: result.error };
     }
   };
 
@@ -179,61 +162,13 @@ export function ManageSpecialtiesDialog({ category, initialSpecialties, commissi
                 >
                   {editingId === spec._id ? (
                     // EDIT MODE
-                    <div className="flex-1 flex flex-col gap-2 pr-2">
-                      <div className="flex gap-2">
-                        <Input 
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          className="h-8 text-sm flex-1"
-                          placeholder="Specialty Name"
-                          autoFocus
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") handleUpdate(spec._id);
-                            if (e.key === "Escape") cancelEdit();
-                          }}
-                        />
-                        <Select value={editCommissionId} onValueChange={setEditCommissionId}>
-                          <SelectTrigger className="h-8 text-xs w-[130px] shrink-0">
-                            <SelectValue placeholder="Commission" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">No Commission</SelectItem>
-                            {commissions.map(c => (
-                              <SelectItem key={c._id} value={c._id}>
-                                {c.type === 'percentage' ? `${c.amount}%` : `${c.amount} ${c.currency}`}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          className="h-8 w-8 text-green-600 hover:bg-green-100 hover:text-green-700 shrink-0"
-                          onClick={() => handleUpdate(spec._id)}
-                          disabled={isProcessing}
-                        >
-                          <Check className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          className="h-8 w-8 text-gray-500 hover:bg-gray-200 shrink-0"
-                          onClick={cancelEdit}
-                          disabled={isProcessing}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <textarea
-                        value={editDescription}
-                        onChange={(e) => setEditDescription(e.target.value)}
-                        className="w-full text-sm rounded-md border border-input bg-transparent px-3 py-1 shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-h-[60px]"
-                        placeholder="Description (Optional)"
-                        onKeyDown={(e) => {
-                          if (e.key === "Escape") cancelEdit();
-                        }}
-                      />
-                    </div>
+                    <EditSpecialtyRow 
+                      specialty={spec}
+                      commissions={commissions}
+                      isProcessing={isProcessing}
+                      onSave={handleUpdate}
+                      onCancel={cancelEdit}
+                    />
                   ) : (
                     // VIEW MODE
                     <>
@@ -263,7 +198,7 @@ export function ManageSpecialtiesDialog({ category, initialSpecialties, commissi
                           size="icon" 
                           variant="ghost" 
                           className="h-8 w-8 text-gray-500 hover:text-[#2B4EFF] hover:bg-blue-50"
-                          onClick={() => startEdit(spec)}
+                          onClick={() => setEditingId(spec._id)}
                           disabled={isProcessing || editingId !== null}
                         >
                           <Edit2 className="w-3.5 h-3.5" />
@@ -287,49 +222,12 @@ export function ManageSpecialtiesDialog({ category, initialSpecialties, commissi
         </div>
 
         {/* CREATE SPECIALTY ROW */}
-        <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col gap-2">
-          <div className="flex gap-2">
-            <Input 
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              className="h-8 text-sm flex-1"
-              placeholder="Add new specialty..."
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleCreate();
-              }}
-            />
-            <Select value={newCommissionId} onValueChange={setNewCommissionId}>
-              <SelectTrigger className="h-8 text-xs w-[130px] shrink-0">
-                <SelectValue placeholder="Commission" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No Commission</SelectItem>
-                {commissions.map(c => (
-                  <SelectItem key={c._id} value={c._id}>
-                    {c.type === 'percentage' ? `${c.amount}%` : `${c.amount} ${c.currency}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button 
-              size="sm" 
-              className="h-8 bg-[#2B4EFF] hover:bg-blue-700 text-white shrink-0"
-              onClick={handleCreate}
-              disabled={isProcessing || !newName.trim()}
-            >
-              Add
-            </Button>
-          </div>
-          <textarea
-            value={newDescription}
-            onChange={(e) => setNewDescription(e.target.value)}
-            className="w-full text-sm rounded-md border border-input bg-transparent px-3 py-1 shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-h-[60px]"
-            placeholder="Description (Optional)"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && e.metaKey) handleCreate();
-            }}
-          />
-        </div>
+        <CreateSpecialtyForm 
+          category={category}
+          commissions={commissions}
+          isProcessing={isProcessing}
+          onCreate={handleCreate}
+        />
       </DialogContent>
 
       <AlertDialog open={specialtyToDelete !== null} onOpenChange={(open) => !open && setSpecialtyToDelete(null)}>
@@ -356,5 +254,217 @@ export function ManageSpecialtiesDialog({ category, initialSpecialties, commissi
         </AlertDialogContent>
       </AlertDialog>
     </Dialog>
+  );
+}
+
+function EditSpecialtyRow({ 
+  specialty, 
+  commissions, 
+  onSave, 
+  onCancel, 
+  isProcessing 
+}: { 
+  specialty: ServiceSpecialty;
+  commissions: Commission[];
+  onSave: (id: string, values: SpecialtyFormValues) => Promise<{ success: boolean; error?: string }>;
+  onCancel: () => void;
+  isProcessing: boolean;
+}) {
+  const form = useForm<SpecialtyFormValues>({
+    resolver: zodResolver(specialtySchema),
+    defaultValues: {
+      name: specialty.name,
+      description: specialty.description || "",
+      commissionId: specialty.commissionId || "none",
+    },
+  });
+
+  const onSubmit = async (values: SpecialtyFormValues) => {
+    const result = await onSave(specialty._id, values);
+    if (result.error) {
+      form.setError("root", { message: result.error });
+    }
+  };
+
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col gap-2 pr-2">
+      <div className="flex gap-2 items-start">
+        <Controller
+          control={form.control}
+          name="name"
+          render={({ field, fieldState }) => (
+            <Field className="flex-1 gap-1" data-invalid={fieldState.invalid}>
+              <Input 
+                {...field}
+                className="h-8 text-sm"
+                placeholder="Specialty Name"
+                autoFocus
+              />
+              <FieldError errors={[fieldState.error]} className="text-[10px]" />
+            </Field>
+          )}
+        />
+        <Controller
+          control={form.control}
+          name="commissionId"
+          render={({ field, fieldState }) => (
+            <Field className="shrink-0 w-auto gap-1" data-invalid={fieldState.invalid}>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <SelectTrigger className="h-8 text-xs w-[130px]">
+                  <SelectValue placeholder="Commission" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none" disabled>Select Commission</SelectItem>
+                  {commissions.map(c => (
+                    <SelectItem key={c._id} value={c._id}>
+                      {c.type === 'percentage' ? `${c.amount}%` : `${c.amount} ${c.currency}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldError errors={[fieldState.error]} className="text-[10px]" />
+            </Field>
+          )}
+        />
+        <Button 
+          type="submit"
+          size="icon" 
+          variant="ghost" 
+          className="h-8 w-8 text-green-600 hover:bg-green-100 hover:text-green-700 shrink-0"
+          disabled={isProcessing}
+        >
+          <Check className="w-4 h-4" />
+        </Button>
+        <Button 
+          type="button"
+          size="icon" 
+          variant="ghost" 
+          className="h-8 w-8 text-gray-500 hover:bg-gray-200 shrink-0"
+          onClick={onCancel}
+          disabled={isProcessing}
+        >
+          <X className="w-4 h-4" />
+        </Button>
+      </div>
+      <Controller
+        control={form.control}
+        name="description"
+        render={({ field, fieldState }) => (
+          <Field className="gap-1" data-invalid={fieldState.invalid}>
+            <textarea
+              {...field}
+              className="w-full text-sm rounded-md border border-input bg-transparent px-3 py-1 shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-h-[60px]"
+              placeholder="Description (At least 10 characters)"
+            />
+            <FieldError errors={[fieldState.error]} className="text-[10px]" />
+          </Field>
+        )}
+      />
+      {form.formState.errors.root && (
+        <div className="text-[11px] text-destructive mt-1 font-medium bg-destructive/10 p-2 rounded-md">
+          {form.formState.errors.root.message}
+        </div>
+      )}
+    </form>
+  );
+}
+
+function CreateSpecialtyForm({ 
+  category, 
+  commissions, 
+  isProcessing,
+  onCreate 
+}: { 
+  category: ServiceCategory; 
+  commissions: Commission[]; 
+  isProcessing: boolean;
+  onCreate: (values: SpecialtyFormValues) => Promise<{ success: boolean; error?: string }>;
+}) {
+  const form = useForm<SpecialtyFormValues>({
+    resolver: zodResolver(specialtySchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      commissionId: "none",
+    },
+  });
+
+  const onSubmit = async (values: SpecialtyFormValues) => {
+    const result = await onCreate(values);
+    if (result.success) {
+      form.reset();
+    } else if (result.error) {
+      form.setError("root", { message: result.error });
+    }
+  };
+
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)} className="mt-4 pt-4 border-t border-gray-100 flex flex-col gap-2">
+      <div className="flex gap-2 items-start">
+        <Controller
+          control={form.control}
+          name="name"
+          render={({ field, fieldState }) => (
+            <Field className="flex-1 gap-1" data-invalid={fieldState.invalid}>
+              <Input 
+                {...field}
+                className="h-8 text-sm"
+                placeholder="Add new specialty..."
+              />
+              <FieldError errors={[fieldState.error]} className="text-[10px]" />
+            </Field>
+          )}
+        />
+        <Controller
+          control={form.control}
+          name="commissionId"
+          render={({ field, fieldState }) => (
+            <Field className="shrink-0 w-auto gap-1" data-invalid={fieldState.invalid}>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <SelectTrigger className="h-8 text-xs w-[130px]">
+                  <SelectValue placeholder="Commission" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none" disabled>Select Commission</SelectItem>
+                  {commissions.map(c => (
+                    <SelectItem key={c._id} value={c._id}>
+                      {c.type === 'percentage' ? `${c.amount}%` : `${c.amount} ${c.currency}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldError errors={[fieldState.error]} className="text-[10px]" />
+            </Field>
+          )}
+        />
+        <Button 
+          type="submit"
+          size="sm" 
+          className="h-8 bg-[#2B4EFF] hover:bg-blue-700 text-white shrink-0"
+          disabled={isProcessing}
+        >
+          Add
+        </Button>
+      </div>
+      <Controller
+        control={form.control}
+        name="description"
+        render={({ field, fieldState }) => (
+          <Field className="gap-1" data-invalid={fieldState.invalid}>
+            <textarea
+              {...field}
+              className="w-full text-sm rounded-md border border-input bg-transparent px-3 py-1 shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-h-[60px]"
+              placeholder="Description (At least 10 characters)"
+            />
+            <FieldError errors={[fieldState.error]} className="text-[10px]" />
+          </Field>
+        )}
+      />
+      {form.formState.errors.root && (
+        <div className="text-[11px] text-destructive mt-1 font-medium bg-destructive/10 p-2 rounded-md">
+          {form.formState.errors.root.message}
+        </div>
+      )}
+    </form>
   );
 }

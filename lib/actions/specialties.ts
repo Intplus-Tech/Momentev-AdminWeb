@@ -115,9 +115,11 @@ export async function createServiceSpecialty(
     });
 
     const body = await response.json();
+    console.log('Create Specialty API Response Body:', JSON.stringify(body, null, 2));
 
     if (!response.ok) {
-      return { success: false, error: body.message || `Error: ${response.statusText}` };
+      const errorMsg = body.errors ? `${body.message}: ${JSON.stringify(body.errors)}` : body.message;
+      return { success: false, error: errorMsg || `Error: ${response.statusText}` };
     }
 
     revalidatePath("/admin/categories");
