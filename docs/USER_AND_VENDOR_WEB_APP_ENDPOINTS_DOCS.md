@@ -262,8 +262,8 @@ This document lists all the backend API endpoints consumed by the Momentev front
 
 - All protected endpoints use `Authorization: Bearer {accessToken}` header
 - Token refresh is handled automatically via `tryRefreshToken()` on 401 responses
-- Access tokens stored in HTTP-only cookies (`auth-token`)
-- Refresh tokens stored in HTTP-only cookies (`refresh-token`)
+- Access tokens stored in HTTP-only cookies (`moementev-admin-auth-token`)
+- Refresh tokens stored in HTTP-only cookies (`moementev-admin-refresh-token`)
 - `POST /auth/refresh-token` accepts `{ refreshToken }` in the request body
 
 ## 📁 Source Files Reference

@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
  * POST /api/uploads
  *
  * Proxies a multipart/form-data upload to the backend's Cloudinary endpoint.
- * Reads the auth-token cookie server-side so it never has to leave the server.
+ * Reads the access-token cookie server-side so it never has to leave the server.
  *
  * Expected body: FormData with:
  *   - file   (required) — the image/document binary
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   try {
     // Read auth token from HTTP-only cookie
     const cookieStore = await cookies();
-    const token = cookieStore.get("auth-token")?.value;
+    const token = cookieStore.get("moementev-admin-auth-token")?.value;
 
     if (!token) {
       return NextResponse.json(

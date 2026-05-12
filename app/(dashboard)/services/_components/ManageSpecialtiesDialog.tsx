@@ -84,11 +84,10 @@ export function ManageSpecialtiesDialog({ category, initialSpecialties, commissi
     
     setIsProcessing(false);
     if (result.success && result.data) {
+      setSpecialties(prev => prev.map(s => s._id === id ? result.data! : s));
       setEditingId(null);
       return { success: true };
     } else {
-      // Revert optimism
-      setSpecialties(previousState);
       return { success: false, error: result.error };
     }
   };

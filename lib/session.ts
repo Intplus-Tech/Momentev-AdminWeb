@@ -2,8 +2,8 @@
 
 import { cookies } from 'next/headers';
 
-const AUTH_TOKEN_KEY = 'auth-token';
-const REFRESH_TOKEN_KEY = 'refresh-token';
+const AUTH_TOKEN_KEY = 'moementev-admin-auth-token';
+const REFRESH_TOKEN_KEY = 'moementev-admin-refresh-token';
 
 // Token expiry defaults (in seconds)
 const ACCESS_TOKEN_MAX_AGE = 60 * 60; // 1 hour

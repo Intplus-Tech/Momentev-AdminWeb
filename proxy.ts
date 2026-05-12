@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const AUTH_TOKEN_KEY = 'auth-token';
-const REFRESH_TOKEN_KEY = 'refresh-token';
+// const AUTH_TOKEN_KEY = 'moementev-admin-auth-token';
+// const REFRESH_TOKEN_KEY = 'moementev-admin-refresh-token';
+const AUTH_TOKEN_KEY = 'moementev-admin-auth-token';
+const REFRESH_TOKEN_KEY = 'moementev-admin-refresh-token';
 
 // Paths that don't require authentication
 const publicPaths = [
