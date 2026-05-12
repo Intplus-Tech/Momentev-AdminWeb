@@ -222,7 +222,7 @@ export async function broadcastCustomerRequest(
     const { revalidatePath } = await import("next/cache");
     revalidatePath("/customer-requests");
 
-    console.log("Broadcast Quote Request Success:", body.data);                                                                                                                                                                       
+    console.log("Broadcast Quote Request Success:", body.data);
 
     return { success: true, data: body.data };
   } catch (error) {

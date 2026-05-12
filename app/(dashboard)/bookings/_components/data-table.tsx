@@ -91,7 +91,7 @@ export function DataTable<TData, TValue>({
         params.delete(key);
       }
       params.set("page", "1");
-      
+
       router.push(`${pathname}?${params.toString()}`);
     });
   };
@@ -141,7 +141,7 @@ export function DataTable<TData, TValue>({
               onValueChange={(value) => handleFilterChange("status", value)}
               disabled={isPending}
             >
-              <SelectTrigger className="w-[160px] h-9 bg-white">
+              <SelectTrigger className="w-40 h-9 bg-white">
                 <SelectValue placeholder="Booking Status" />
               </SelectTrigger>
               <SelectContent>
@@ -160,22 +160,22 @@ export function DataTable<TData, TValue>({
           {/* Date Filters (Basic HTML Date inputs pointing to 'from' and 'to') */}
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-600 hidden sm:inline">From: (Start Date)</span>
-            <Input 
-                type="date" 
-                className="h-9 w-auto bg-white"
-                value={localFrom}
-                disabled={isPending}
-                onChange={(e) => setLocalFrom(e.target.value)}
+            <Input
+              type="date"
+              className="h-9 w-auto bg-white"
+              value={localFrom}
+              disabled={isPending}
+              onChange={(e) => setLocalFrom(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-600 hidden sm:inline">To: (End Date)</span>
-            <Input 
-                type="date" 
-                className="h-9 w-auto bg-white"
-                disabled={isPending}
-                value={localTo}
-                onChange={(e) => setLocalTo(e.target.value)}
+            <Input
+              type="date"
+              className="h-9 w-auto bg-white"
+              disabled={isPending}
+              value={localTo}
+              onChange={(e) => setLocalTo(e.target.value)}
             />
           </div>
           <Button
@@ -215,7 +215,7 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
 
-      <div className="overflow-x-auto relative min-h-[400px]">
+      <div className="overflow-x-auto relative min-h-100">
         {isPending && (
           <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px] z-10 flex items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -230,9 +230,9 @@ export function DataTable<TData, TValue>({
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
                   </TableHead>
                 ))}
               </TableRow>

@@ -14,10 +14,10 @@ export const columns: ColumnDef<AdminBookingItem>[] = [
       const title = row.original.eventDetails?.title || "Unknown Event";
       const start = row.original.eventDetails?.startDate;
       const end = row.original.eventDetails?.endDate;
-      
+
       let dateRange = "No Date";
       if (start) {
-          dateRange = format(new Date(start), "MMM dd, yyyy");
+        dateRange = format(new Date(start), "MMM dd, yyyy");
       }
       return (
         <div className="flex flex-col">
@@ -32,18 +32,18 @@ export const columns: ColumnDef<AdminBookingItem>[] = [
     },
   },
   {
-    accessorFn: (row) => row.vendorId?.businessProfile || "Unknown Vendor",
+    accessorFn: (row) => {
+      const bp = row.vendorId?.businessProfile;
+      return (bp && typeof bp === 'object') ? (bp.businessName || bp._id || 'Unknown Vendor') : (row.vendorId?.id || 'Unknown Vendor');
+    },
     id: "vendor",
-    header: "Vendor ID", // In your JSON the vendor businessName is not populated well, mostly just the ID. 
+    header: "Vendor",
     cell: ({ row }) => {
-      // The provided response doesn't populate vendor details nicely in this array structure (sometimes just ID). 
-      // We'll show the ID or businessName if available.
-      const vendorName = row.original.vendorId?.businessProfile || row.original.vendorId?.id || "Unknown Vendor";
+      const bp = row.original.vendorId?.businessProfile;
+      const vendorName = bp && typeof bp === 'object' ? (bp.businessName || bp._id) : (row.original.vendorId?.id || 'Unknown Vendor');
       return (
         <div className="flex flex-col">
-          <span className="font-medium text-gray-900 line-clamp-1">
-            {vendorName}
-          </span>
+          <span className="font-medium text-gray-900 line-clamp-1">{vendorName}</span>
         </div>
       );
     },
@@ -84,7 +84,7 @@ export const columns: ColumnDef<AdminBookingItem>[] = [
     header: "Status",
     cell: ({ row }) => {
       const status = row.original.status || "unknown";
-      
+
       let badgeClass = "bg-gray-100 text-gray-800 hover:bg-gray-100 border border-gray-200";
       if (status === "confirmed" || status === "paid" || status === "completed") badgeClass = "bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 shadow-sm";
       else if (status === "pending_payment" || status === "active" || status === "pending") badgeClass = "bg-blue-100 text-blue-800 hover:bg-blue-100 border border-blue-200 shadow-sm";
@@ -105,7 +105,7 @@ export const columns: ColumnDef<AdminBookingItem>[] = [
       const model = row.original.paymentModel || "unknown";
       return (
         <span className="text-sm text-gray-600 capitalize">
-            {model.replace(/_/g, " ")}
+          {model.replace(/_/g, " ")}
         </span>
       );
     },
