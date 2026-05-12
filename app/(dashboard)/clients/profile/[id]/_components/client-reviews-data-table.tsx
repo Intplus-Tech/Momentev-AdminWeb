@@ -5,7 +5,6 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-  getPaginationRowModel,
   SortingState,
   getSortedRowModel,
 } from "@tanstack/react-table";
@@ -26,33 +25,37 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  pageIndex: number;
+  pageSize: number;
+  total: number;
+  onPageChange: (pageIndex: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
 }
 
 export default function ClientReviewsDataTable<TData, TValue>({
   columns,
   data,
+  pageIndex,
+  pageSize,
+  total,
+  onPageChange,
+  onPageSizeChange,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [pagination, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: 10,
-  });
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
-    onPaginationChange: setPagination,
     state: {
       sorting,
-      pagination,
     },
   });
 
-  const pageCount = table.getPageCount();
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const hasPagination = total > pageSize;
 
   return (
     <div className="w-full">
@@ -67,9 +70,9 @@ export default function ClientReviewsDataTable<TData, TValue>({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   );
                 })}
@@ -110,15 +113,15 @@ export default function ClientReviewsDataTable<TData, TValue>({
         </Table>
       </div>
 
-      {pageCount > 1 && (
+      {hasPagination && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-100 bg-gray-50/30">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-500">Rows per page</span>
             <Select
-              value={String(table.getState().pagination.pageSize)}
-              onValueChange={(value) => table.setPageSize(Number(value))}
+              value={String(pageSize)}
+              onValueChange={(value) => onPageSizeChange(Number(value))}
             >
-              <SelectTrigger className="h-8 w-[70px] bg-white border-gray-200">
+              <SelectTrigger className="h-8 w-17.5 bg-white border-gray-200">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -131,15 +134,15 @@ export default function ClientReviewsDataTable<TData, TValue>({
 
           <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
             <span className="text-sm font-medium text-gray-500">
-              Page {table.getState().pagination.pageIndex + 1} of {pageCount}
+              Page {pageIndex + 1} of {pageCount}
             </span>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="icon"
                 className="h-8 w-8 bg-white border-gray-200 text-gray-600 hover:text-gray-900"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
+                onClick={() => onPageChange(Math.max(0, pageIndex - 1))}
+                disabled={pageIndex <= 0}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -147,8 +150,8 @@ export default function ClientReviewsDataTable<TData, TValue>({
                 variant="outline"
                 size="icon"
                 className="h-8 w-8 bg-white border-gray-200 text-gray-600 hover:text-gray-900"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
+                onClick={() => onPageChange(Math.min(pageCount - 1, pageIndex + 1))}
+                disabled={pageIndex >= pageCount - 1}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>

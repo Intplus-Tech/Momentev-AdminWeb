@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getClientReviews, CustomerReviewResponse } from "@/lib/actions/reviews";
 import { Loader2 } from "lucide-react";
 import ClientReviewsDataTable from "./client-reviews-data-table";
@@ -14,38 +14,52 @@ export default function ClientReviews({ clientId }: Props) {
   const [data, setData] = useState<CustomerReviewResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
-  // We could add pagination state here if needed, but for now we'll fetch a large batch
-  // and handle pagination client-side like the other tables
   const [total, setTotal] = useState(0);
+  const previousClientIdRef = useRef(clientId);
+
+  const fetchReviews = useCallback(async (currentPageIndex: number, currentPageSize: number) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await getClientReviews(clientId, currentPageIndex + 1, currentPageSize);
+
+      if (!response.success) {
+        setError(response.error || "Failed to fetch reviews");
+        return;
+      }
+
+      setData(response.data || []);
+      setTotal(response.total || 0);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Something went wrong.";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, [clientId]);
 
   useEffect(() => {
-    async function fetchReviews() {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await getClientReviews(clientId, 1, 100);
-
-        if (!response.success) {
-          setError(response.error || "Failed to fetch reviews");
-          return;
-        }
-
-        setData(response.data || []);
-        setTotal(response.total || 0);
-      } catch (err: any) {
-        setError(err.message || "Something went wrong.");
-      } finally {
-        setLoading(false);
-      }
+    if (previousClientIdRef.current !== clientId) {
+      previousClientIdRef.current = clientId;
+      setPageIndex(0);
+      return;
     }
 
-    fetchReviews();
-  }, [clientId]);
+    fetchReviews(pageIndex, pageSize);
+  }, [clientId, pageIndex, pageSize, fetchReviews]);
+
+  const handlePageSizeChange = (nextPageSize: number) => {
+    setPageSize(nextPageSize);
+    setPageIndex(0);
+  };
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl border border-gray-100 shadow-sm min-h-[400px]">
+      <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl border border-gray-100 shadow-sm min-h-100">
         <Loader2 className="w-8 h-8 text-red-500 animate-spin mb-4" />
         <p className="text-gray-500 text-sm font-medium">Loading reviews...</p>
       </div>
@@ -54,14 +68,14 @@ export default function ClientReviews({ clientId }: Props) {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl border border-red-100 shadow-sm min-h-[400px]">
+      <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl border border-red-100 shadow-sm min-h-100">
         <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4">
           <span className="text-red-500 text-xl font-bold">!</span>
         </div>
         <p className="text-red-600 font-medium mb-1">Failed to load reviews</p>
         <p className="text-red-500/70 text-sm mb-4">{error}</p>
-        <button 
-          onClick={() => window.location.reload()}
+        <button
+          onClick={() => fetchReviews(pageIndex, pageSize)}
           className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors"
         >
           Try Again
@@ -85,9 +99,17 @@ export default function ClientReviews({ clientId }: Props) {
           </div>
         )}
       </div>
-      
+
       <div className="p-0">
-        <ClientReviewsDataTable columns={columns} data={data} />
+        <ClientReviewsDataTable
+          columns={columns}
+          data={data}
+          pageIndex={pageIndex}
+          pageSize={pageSize}
+          total={total}
+          onPageChange={setPageIndex}
+          onPageSizeChange={handlePageSizeChange}
+        />
       </div>
     </div>
   );

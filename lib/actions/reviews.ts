@@ -36,7 +36,7 @@ export async function getVendorReviews(
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-    
+
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
     }
@@ -65,7 +65,7 @@ export async function getVendorReviews(
     };
 
 
-    
+
   } catch (error) {
     console.error("Get Vendor Reviews Error:", error);
     return {
@@ -84,9 +84,19 @@ export interface CustomerReviewResponse {
     _id: string;
     id?: string;
     isActive?: boolean;
-    businessProfile?: string | any;
-    profilePhoto?: string | any;
+    rate?: number;
+    reviewCount?: number;
+    businessProfile?: {
+      _id?: string;
+      businessName?: string;
+    } | null;
+    profilePhoto?: {
+      url?: string;
+      originalName?: string;
+    } | null;
   };
+  reviewerUserId?: string;
+  updatedAt?: string;
 }
 
 export async function getClientReviews(
@@ -96,6 +106,8 @@ export async function getClientReviews(
 ): Promise<ActionResult<CustomerReviewResponse[]>> {
   try {
     const url = `${process.env.BACKEND_URL}/api/v1/customer-profile-management/${customerId}/reviews?page=${page}&limit=${limit}`;
+
+    console.log("Get Client Reviews Request:", { customerId, page, limit, url });
 
     const token = await getAccessToken();
     const headers: Record<string, string> = {
@@ -116,7 +128,24 @@ export async function getClientReviews(
 
     const body = await res.json().catch(() => ({}));
 
+    console.log("Get Client Reviews Response:", {
+      customerId,
+      page,
+      limit,
+      status: res.status,
+      ok: res.ok,
+      total: body.data?.total || 0,
+    });
+
     if (!res.ok) {
+      console.error("Get Client Reviews Failed:", {
+        customerId,
+        page,
+        limit,
+        status: res.status,
+        message: body.message || res.statusText,
+      });
+
       return {
         success: false,
         error: body.message || `Error: ${res.statusText}`,
@@ -131,7 +160,7 @@ export async function getClientReviews(
       limit: body.data?.limit || 20,
     };
   } catch (error) {
-    console.error("Get Client Reviews Error:", error);
+    console.error("Get Client Reviews Error:", { customerId, page, limit, error });
     return {
       success: false,
       error: "An unexpected network error occurred.",

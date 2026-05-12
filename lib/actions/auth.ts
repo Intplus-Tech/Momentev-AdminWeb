@@ -25,6 +25,8 @@ export async function login(input: LoginInput): Promise<ActionResult> {
       return { success: false, error: 'Backend not configured' };
     }
 
+    const invalidCredentialsError = 'Invalid email or password. Please check your credentials.';
+
     const response = await fetch(`${process.env.BACKEND_URL}/api/v1/auth/login`, {
       method: 'POST',
       headers: {
@@ -44,7 +46,7 @@ export async function login(input: LoginInput): Promise<ActionResult> {
         return { success: false, error: 'Too many login attempts. Please wait a moment and try again.' };
       }
       if (response.status === 401) {
-        return { success: false, error: 'Invalid email or password. Please check your credentials.' };
+        return { success: false, error: invalidCredentialsError };
       }
       const message = (data as { message?: string } | null)?.message;
       return { success: false, error: message || `Failed to login (${response.status})` };
@@ -53,6 +55,11 @@ export async function login(input: LoginInput): Promise<ActionResult> {
     // Store tokens in HTTP-only cookies
     const token = data?.data?.token;
     const refreshToken = data?.data?.refreshToken;
+    const signedInUser = data?.data?.user;
+
+    if (!signedInUser || signedInUser.role !== 'admin') {
+      return { success: false, error: invalidCredentialsError };
+    }
 
     if (token && refreshToken) {
       await setAuthCookies(token, refreshToken, input.remember ?? false);
