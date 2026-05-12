@@ -1,6 +1,7 @@
 "use server";
 
 import { getAccessToken } from "@/lib/session";
+import { fetchWithAuthRetry } from "@/lib/auth-retry";
 
 // Shared common response interface
 interface ActionResult<T> {
@@ -59,7 +60,7 @@ export interface ClientProfile {
   lastActiveAt: string | null;
   lastLoginAt: string | null;
   customerFavoriteVendors?: string[];
-  
+
   // Optional extended details (often available in getById)
   phoneNumber?: string | null;
   stripeCustomerId?: string | null;
@@ -76,27 +77,28 @@ export async function getAdminClients(
   status?: string
 ): Promise<ActionResult<ClientProfile[]>> {
   try {
-    const token = await getAccessToken();
-    if (!token) {
-      return { success: false, error: "Unauthorized: No access token" };
-    }
-
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
     });
-    
+
     if (search) params.append("search", search);
     if (status && status !== "all") params.append("status", status);
 
-    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/admin/clients?${params.toString()}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    });
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/admin/clients?${params.toString()}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      })
+    );
+
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to fetch clients" };
+    }
 
     const body = await response.json();
 
@@ -125,19 +127,20 @@ export async function getAdminClients(
 
 export async function getAdminClientById(id: string): Promise<ActionResult<ClientProfile>> {
   try {
-    const token = await getAccessToken();
-    if (!token) {
-      return { success: false, error: "Unauthorized: No access token" };
-    }
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/admin/clients/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      })
+    );
 
-    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/admin/clients/${id}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    });
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to fetch client" };
+    }
 
     const body = await response.json();
 
@@ -164,20 +167,21 @@ export async function updateClientStatus(
   reason?: string
 ): Promise<ActionResult<ClientProfile>> {
   try {
-    const token = await getAccessToken();
-    if (!token) {
-      return { success: false, error: "Unauthorized: No access token" };
-    }
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/admin/clients/${clientId}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ action, reason }),
+        cache: "no-store",
+      })
+    );
 
-    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/admin/clients/${clientId}/status`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ action, reason }),
-      cache: "no-store",
-    });
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to update client status" };
+    }
 
     const body = await response.json();
 

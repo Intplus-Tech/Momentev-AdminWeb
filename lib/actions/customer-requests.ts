@@ -1,6 +1,7 @@
 "use server";
 
 import { getAccessToken } from "@/lib/session";
+import { fetchWithAuthRetry } from "@/lib/auth-retry";
 
 // Re-use shared ActionResult
 interface ActionResult<T> {
@@ -85,11 +86,6 @@ export async function getCustomerRequests(
   params: CustomerRequestQueryParams = {}
 ): Promise<ActionResult<CustomerRequest[]>> {
   try {
-    const token = await getAccessToken();
-    if (!token) {
-      return { success: false, error: "Unauthorized: No access token" };
-    }
-
     const query = new URLSearchParams();
     query.set("page", (params.page ?? 1).toString());
     query.set("limit", (params.limit ?? 10).toString());
@@ -101,17 +97,20 @@ export async function getCustomerRequests(
     if (params.dateFrom) query.set("dateFrom", params.dateFrom);
     if (params.dateTo) query.set("dateTo", params.dateTo);
 
-    const response = await fetch(
-      `${process.env.BACKEND_URL}/api/v1/customer-requests?${query.toString()}`,
-      {
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/customer-requests?${query.toString()}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         cache: "no-store",
-      }
+      })
     );
+
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to fetch customer requests" };
+    }
 
     const body = await response.json();
 

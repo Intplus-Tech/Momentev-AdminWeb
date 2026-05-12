@@ -1,6 +1,7 @@
 "use server";
 
 import { getAccessToken } from "@/lib/session";
+import { fetchWithAuthRetry } from "@/lib/auth-retry";
 
 interface ActionResult<T> {
   success: boolean;
@@ -50,26 +51,27 @@ export async function getVendorEarnings(
   try {
     const url = `${process.env.BACKEND_URL}/api/v1/vendors/${vendorId}/earnings`;
 
-    const token = await getAccessToken();
-    if (!token) {
-      return { success: false, error: "Unauthorized: No access token" };
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      })
+    );
+
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to fetch vendor earnings" };
     }
 
-    const res = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    });
+    const body = await response.json().catch(() => ({}));
 
-    const body = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
+    if (!response.ok) {
       return {
         success: false,
-        error: body.message || `Error: ${res.statusText}`,
+        error: body.message || `Error: ${response.statusText}`,
       };
     }
 

@@ -1,6 +1,7 @@
 "use server";
 
 import { getAccessToken } from "@/lib/session";
+import { fetchWithAuthRetry } from "@/lib/auth-retry";
 import { ActionResult } from "./admin-analytics";
 
 export interface VendorProfile {
@@ -57,20 +58,25 @@ export async function getVendors(
   limit: number = 20
 ): Promise<ActionResult<PaginatedVendorsResponse>> {
   try {
-    const token = await getAccessToken();
-
-    if (!token) {
-      return { success: false, error: "Unauthorized: No access token found" };
-    }
-
-    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/vendors?page=${page}&limit=${limit}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
     });
+
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/vendors?${params.toString()}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      })
+    );
+
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to fetch vendors" };
+    }
 
     const body = await response.json();
 
@@ -99,29 +105,29 @@ export async function getAdminVendors(
   onBoarded?: boolean
 ): Promise<ActionResult<PaginatedVendorsResponse>> {
   try {
-    const token = await getAccessToken();
-
-    if (!token) {
-      return { success: false, error: "Unauthorized: No access token found" };
-    }
-
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
     });
-    
+
     if (search) params.append("search", search);
     if (isActive !== undefined) params.append("isActive", String(isActive));
     if (onBoarded !== undefined) params.append("onBoarded", String(onBoarded));
 
-    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/admin/vendors?${params.toString()}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    });
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/admin/vendors?${params.toString()}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      })
+    );
+
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to fetch vendors" };
+    }
 
     const body = await response.json();
 
@@ -144,19 +150,20 @@ export async function getAdminVendors(
 
 export async function getAdminVendorById(id: string): Promise<ActionResult<VendorProfile>> {
   try {
-    const token = await getAccessToken();
-    if (!token) {
-      return { success: false, error: "Unauthorized: No access token" };
-    }
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/admin/vendors/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      })
+    );
 
-    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/admin/vendors/${id}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    });
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to fetch vendor" };
+    }
 
     const body = await response.json();
 
@@ -242,7 +249,7 @@ export async function getAdminVendorServices(vendorId: string): Promise<ActionRe
       };
     }
 
-    return { success: true, data: body.data?.data || [] }; 
+    return { success: true, data: body.data?.data || [] };
   } catch (error) {
     console.error("Get Admin Vendor Services Error:", error);
     return {

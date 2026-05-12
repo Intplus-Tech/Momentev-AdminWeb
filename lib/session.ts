@@ -72,11 +72,29 @@ export async function getAuthCookies(): Promise<AuthTokens | null> {
 }
 
 /**
- * Get just the access token
+ * Get just the access token, or try to refresh it if missing
  */
 export async function getAccessToken(): Promise<string | null> {
   const cookieStore = await cookies();
-  return cookieStore.get(AUTH_TOKEN_KEY)?.value || null;
+  const accessToken = cookieStore.get(AUTH_TOKEN_KEY)?.value;
+
+  // Return if access token exists
+  if (accessToken) {
+    return accessToken;
+  }
+
+  // Try to refresh using refresh token
+  const refreshToken = cookieStore.get(REFRESH_TOKEN_KEY)?.value;
+  if (!refreshToken) {
+    return null;
+  }
+
+  const result = await refreshAccessToken(refreshToken);
+  if (result.success && result.token) {
+    return result.token;
+  }
+
+  return null;
 }
 
 /**

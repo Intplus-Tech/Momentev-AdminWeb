@@ -1,6 +1,7 @@
 "use server";
 
 import { getAccessToken } from "@/lib/session";
+import { fetchWithAuthRetry } from "@/lib/auth-retry";
 
 interface ActionResult<T> {
   success: boolean;
@@ -33,39 +34,67 @@ export async function getVendorReviews(
 
     // Note: The Swagger shows this is a public endpoint (no auth required), but we'll include it if available just in case.
     const token = await getAccessToken();
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
 
+    // Use retry helper if we have a token, otherwise make simple request
     if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
+      const { response, error } = await fetchWithAuthRetry((authToken) =>
+        fetch(url, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          cache: "no-store",
+        })
+      );
 
-    const res = await fetch(url, {
-      method: "GET",
-      headers,
-      cache: "no-store",
-    });
+      if (error && !response.ok) {
+        return { success: false, error: error || "Failed to fetch reviews" };
+      }
 
-    const body = await res.json().catch(() => ({}));
+      const body = await response.json().catch(() => ({}));
 
-    if (!res.ok) {
+      if (!response.ok) {
+        return {
+          success: false,
+          error: body.message || `Error: ${response.statusText}`,
+        };
+      }
+
       return {
-        success: false,
-        error: body.message || `Error: ${res.statusText}`,
+        success: true,
+        data: body.data?.data || [],
+        total: body.data?.total || 0,
+        page: body.data?.page || 1,
+        limit: body.data?.limit || 100,
+      };
+    } else {
+      // Public endpoint fallback
+      const res = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+      });
+
+      const body = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        return {
+          success: false,
+          error: body.message || `Error: ${res.statusText}`,
+        };
+      }
+
+      return {
+        success: true,
+        data: body.data?.data || [],
+        total: body.data?.total || 0,
+        page: body.data?.page || 1,
+        limit: body.data?.limit || 100,
       };
     }
-
-    return {
-      success: true,
-      data: body.data?.data || [],
-      total: body.data?.total || 0,
-      page: body.data?.page || 1,
-      limit: body.data?.limit || 100,
-    };
-
-
-
   } catch (error) {
     console.error("Get Vendor Reviews Error:", error);
     return {

@@ -1,6 +1,7 @@
 "use server";
 
 import { getAccessToken } from "@/lib/session";
+import { fetchWithAuthRetry } from "@/lib/auth-retry";
 import { AdminUser } from "@/lib/actions/admins";
 
 interface ActionResult<T> {
@@ -37,19 +38,20 @@ export interface UpdateProfileData {
 
 export async function getMyProfile(): Promise<ActionResult<ProfileUser>> {
   try {
-    const token = await getAccessToken();
-    if (!token) {
-      return { success: false, error: "Unauthorized: No access token" };
-    }
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/users/profile`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      })
+    );
 
-    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/users/profile`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    });
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to fetch profile" };
+    }
 
     const body = await response.json();
 
@@ -69,19 +71,20 @@ export async function getMyProfile(): Promise<ActionResult<ProfileUser>> {
 
 export async function updateMyProfile(data: UpdateProfileData): Promise<ActionResult<ProfileUser>> {
   try {
-    const token = await getAccessToken();
-    if (!token) {
-      return { success: false, error: "Unauthorized: No access token" };
-    }
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/users/profile/update`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      })
+    );
 
-    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/users/profile/update`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    });
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to update profile" };
+    }
 
     const body = await response.json();
 

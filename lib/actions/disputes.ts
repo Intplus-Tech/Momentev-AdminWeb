@@ -1,6 +1,7 @@
 "use server";
 
 import { getAccessToken } from "@/lib/session";
+import { fetchWithAuthRetry } from "@/lib/auth-retry";
 
 export interface ActionResult<T = unknown> {
   success: boolean;
@@ -165,20 +166,24 @@ async function authorizedRequest<T>(
   init?: RequestInit,
 ): Promise<ActionResult<T>> {
   try {
-    const token = await getAccessToken();
-    if (!token) {
-      return { success: false, error: "Unauthorized: No access token found" };
-    }
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}${path}`, {
+        ...init,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          ...(init?.headers || {}),
+        },
+        cache: "no-store",
+      })
+    );
 
-    const response = await fetch(`${process.env.BACKEND_URL}${path}`, {
-      ...init,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        ...(init?.headers || {}),
-      },
-      cache: "no-store",
-    });
+    if (error && !response.ok) {
+      return {
+        success: false,
+        error: error || "Request failed",
+      };
+    }
 
     const body = await parseBody(response);
     if (!response.ok) {

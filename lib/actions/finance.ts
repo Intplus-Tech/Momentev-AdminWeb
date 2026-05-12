@@ -1,6 +1,7 @@
 "use server";
 
 import { getAccessToken } from "@/lib/session";
+import { fetchWithAuthRetry } from "@/lib/auth-retry";
 
 // Re-use shared ActionResult from other actions
 export interface ActionResult<T = any> {
@@ -54,22 +55,20 @@ export async function getPlatformRevenue(
   period: "day" | "week" | "month" | "year" | "all-time" = "month"
 ): Promise<ActionResult<PlatformRevenueResponse>> {
   try {
-    const token = await getAccessToken();
-    if (!token) {
-      return { success: false, error: "Unauthorized: No access token found" };
-    }
-
-    const response = await fetch(
-      `${process.env.BACKEND_URL}/api/v1/admin/revenue?period=${period}`,
-      {
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/admin/revenue?period=${period}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         cache: "no-store",
-      }
+      })
     );
+
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to fetch platform revenue" };
+    }
 
     const body = await response.json();
 
@@ -95,25 +94,22 @@ export async function getPendingPayouts(
   limit: number = 20
 ): Promise<ActionResult<PendingPayoutsResponse>> {
   try {
-    const token = await getAccessToken();
-    if (!token) {
-      return { success: false, error: "Unauthorized: No access token found" };
-    }
-
-    const response = await fetch(
-      `${process.env.BACKEND_URL}/api/v1/admin/payouts/pending?page=${page}&limit=${limit}`,
-      {
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/admin/payouts/pending?page=${page}&limit=${limit}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         cache: "no-store",
-      }
+      })
     );
 
-    const body = await response.json();
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to fetch pending payouts" };
+    }
 
+    const body = await response.json();
 
     if (!response.ok) {
       return {

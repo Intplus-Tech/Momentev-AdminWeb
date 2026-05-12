@@ -1,6 +1,7 @@
 "use server";
 
 import { getAccessToken } from "@/lib/session";
+import { fetchWithAuthRetry } from "@/lib/auth-retry";
 import { revalidatePath } from "next/cache";
 import { ActionResult } from "./admin-analytics";
 
@@ -26,20 +27,20 @@ export async function getServiceSpecialties(
   limit: number = 1000
 ): Promise<ActionResult<PaginatedSpecialtiesResponse>> {
   try {
-    const token = await getAccessToken();
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/service-specialties?page=${page}&limit=${limit}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      })
+    );
 
-    if (!token) {
-      return { success: false, error: "Unauthorized: No access token found" };
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to fetch service specialties" };
     }
-
-    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/service-specialties?page=${page}&limit=${limit}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    });
 
     const body = await response.json();
 
@@ -64,20 +65,20 @@ export async function getServiceSpecialtiesByCategory(
   categoryId: string
 ): Promise<ActionResult<{ message: string; data: ServiceSpecialty[] }>> {
   try {
-    const token = await getAccessToken();
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/service-specialties/by-category/${categoryId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      })
+    );
 
-    if (!token) {
-      return { success: false, error: "Unauthorized: No access token found" };
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to fetch service specialties by category" };
     }
-
-    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/service-specialties/by-category/${categoryId}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    });
 
     const body = await response.json();
 

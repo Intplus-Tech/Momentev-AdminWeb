@@ -1,6 +1,7 @@
 "use server";
 
 import { getAccessToken } from "@/lib/session";
+import { fetchWithAuthRetry } from "@/lib/auth-retry";
 
 interface ActionResult<T> {
   success: boolean;
@@ -56,28 +57,29 @@ export async function getVendorBookings(
   limit: number = 10
 ): Promise<ActionResult<BookingResponse[]>> {
   try {
-    const token = await getAccessToken();
-    if (!token) {
-      return { success: false, error: "Unauthorized: No access token" };
-    }
-
     const url = `${process.env.BACKEND_URL}/api/v1/bookings/vendor/${vendorId}?page=${page}&limit=${limit}`;
 
-    const res = await fetch(url, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      cache: "no-store",
-    });
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+      })
+    );
 
-    const body = await res.json().catch(() => ({}));
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to fetch bookings" };
+    }
 
-    if (!res.ok) {
+    const body = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
       return {
         success: false,
-        error: body.message || `Error: ${res.statusText}`,
+        error: body.message || `Error: ${response.statusText}`,
       };
     }
 
@@ -224,13 +226,13 @@ export interface AdminBookingsResponse {
 }
 
 export async function getAdminBookings(
-    page: number = 1,
-    limit: number = 10,
-    status: string = "all",
-    vendorId?: string,
-    customerId?: string,
-    from?: string,
-    to?: string
+  page: number = 1,
+  limit: number = 10,
+  status: string = "all",
+  vendorId?: string,
+  customerId?: string,
+  from?: string,
+  to?: string
 ): Promise<ActionResult<AdminBookingsResponse>> {
   try {
     const token = await getAccessToken();
@@ -241,13 +243,13 @@ export async function getAdminBookings(
     const query = new URLSearchParams();
     query.append("page", page.toString());
     query.append("limit", limit.toString());
-    
+
     if (status && status !== "all" && status !== "--") query.append("status", status);
     if (vendorId && vendorId.trim() !== "") query.append("vendorId", vendorId);
     if (customerId && customerId.trim() !== "") query.append("customerId", customerId);
     if (from) query.append("from", from);
     if (to) query.append("to", to);
-    
+
     const queryString = query.toString() ? `?${query.toString()}` : "";
 
     const response = await fetch(

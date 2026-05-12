@@ -1,6 +1,7 @@
 "use server";
 
 import { getAccessToken } from "@/lib/session";
+import { fetchWithAuthRetry } from "@/lib/auth-retry";
 import { revalidatePath } from "next/cache";
 
 export interface AnalyticsOverviewResponse {
@@ -70,33 +71,30 @@ export async function getAnalyticsOverview(
   }
 ): Promise<ActionResult<AnalyticsOverviewResponse>> {
   try {
-    const token = await getAccessToken();
-
-    if (!token) {
-      return { success: false, error: "Unauthorized: No access token found" };
-    }
-
     // Build query params
     const query = new URLSearchParams();
     if (params?.from) query.append("from", params.from);
     if (params?.to) query.append("to", params.to);
     if (params?.currency) query.append("currency", params.currency);
     if (params?.limit) query.append("limit", params.limit.toString());
-    
+
     const queryString = query.toString() ? `?${query.toString()}` : "";
 
-    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/admin/analytics/overview${queryString}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      // Cache settings could go here depending on requirement, e.g. cache: 'no-store'
-    });
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/admin/analytics/overview${queryString}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+    );
+
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to fetch analytics" };
+    }
 
     const body = await response.json();
-
-    // console.log("Admin Overview Body: ", JSON.stringify(body, null, 2));
 
     if (!response.ok) {
       return {
@@ -140,26 +138,27 @@ export async function getBookingTrends(
   }
 ): Promise<ActionResult<BookingTrendsResponse>> {
   try {
-    const token = await getAccessToken();
-    if (!token) {
-      return { success: false, error: "Unauthorized: No access token found" };
-    }
-
     const query = new URLSearchParams();
     if (params?.from) query.append("from", params.from);
     if (params?.to) query.append("to", params.to);
     if (params?.period) query.append("period", params.period);
     if (params?.currency) query.append("currency", params.currency);
-    
+
     const queryString = query.toString() ? `?${query.toString()}` : "";
 
-    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/admin/analytics/booking-trends${queryString}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/admin/analytics/booking-trends${queryString}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+    );
+
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to fetch booking trends" };
+    }
 
     const body = await response.json();
 
