@@ -7,11 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 
-// Helper to format stripe amounts (which are in cents)
+// Helper to format stripe amounts (which are in pence)
 const formatAmount = (amount: number, currency: string) => {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-GB", {
     style: "currency",
-    currency: currency.toUpperCase(),
+    currency: "GBP",
   }).format(amount / 100);
 };
 

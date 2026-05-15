@@ -284,8 +284,8 @@ export default function BookingDetailsModal({
                     {isLoadingExtra ? (
                       <Loader2 className="w-3 h-3 animate-spin text-gray-400" />
                     ) : (
-                      <span className="truncate block" title={vendorName || vendor?.businessProfile || ""}>
-                        {vendorName || vendor?.businessProfile || "—"}
+                      <span className="truncate block" title={vendorName || vendor?.businessProfile?.businessName || ""}>
+                        {vendorName || vendor?.businessProfile?.businessName || "—"}
                       </span>
                     )}
                   </span>
