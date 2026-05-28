@@ -1,18 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  Combobox,
-  ComboboxInput,
-  ComboboxContent,
-  ComboboxList,
-  ComboboxItem,
-  ComboboxEmpty,
-} from "@/components/ui/combobox";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { getAdminVendors } from "@/lib/actions/vendors";
-import { getAdminClients } from "@/lib/actions/clients";
-import { useDebounce } from "@/hooks/use-debounce";
 
 type Props = {
   current?: { vendorId?: string | undefined; reviewerUserId?: string | undefined; isFlagged?: string | null; minRating?: string | undefined; maxRating?: string | undefined };
@@ -21,107 +11,37 @@ type Props = {
 };
 
 export default function FilterToolbar({ current = {}, onChange, onClear }: Props) {
-  const [vendorQuery, setVendorQuery] = useState("");
-  const [customerQuery, setCustomerQuery] = useState("");
-  const debouncedVendor = useDebounce(vendorQuery, 400);
-  const debouncedCustomer = useDebounce(customerQuery, 400);
-
-  const [vendorResults, setVendorResults] = useState<any[]>([]);
-  const [customerResults, setCustomerResults] = useState<any[]>([]);
+  const [vendorId, setVendorId] = useState(current.vendorId ?? "");
+  const [reviewerUserId, setReviewerUserId] = useState(current.reviewerUserId ?? "");
   const [minSel, setMinSel] = useState<string | undefined>(current.minRating ?? undefined);
   const [maxSel, setMaxSel] = useState<string | undefined>(current.maxRating ?? undefined);
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      if (!debouncedVendor) {
-        setVendorResults([]);
-        return;
-      }
-      const res = await getAdminVendors(1, 10, debouncedVendor);
-      if (mounted && res.success && res.data?.data) {
-        setVendorResults(res.data.data);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [debouncedVendor]);
-
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      if (!debouncedCustomer) {
-        setCustomerResults([]);
-        return;
-      }
-      const res = await getAdminClients(1, 10, debouncedCustomer);
-      if (mounted && res.success && res.data) {
-        setCustomerResults(res.data);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [debouncedCustomer]);
+  const handleApplyIds = () => {
+    onChange("vendorId", vendorId.trim() ? vendorId.trim() : null);
+    onChange("reviewerUserId", reviewerUserId.trim() ? reviewerUserId.trim() : null);
+  };
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div className="flex items-center gap-3 w-full">
         <div className="w-full sm:w-80">
-          <Combobox>
-            <ComboboxInput
-              placeholder="Search vendor..."
-              value={vendorQuery}
-              onValueChange={(v: string) => setVendorQuery(v)}
-              showClear
-            />
-            <ComboboxContent>
-              <ComboboxList>
-                <ComboboxEmpty>No vendors</ComboboxEmpty>
-                {vendorResults.map((v) => (
-                  <ComboboxItem
-                    key={v._id}
-                    value={v._id}
-                    onSelect={() => onChange("vendorId", v._id)}
-                  >
-                    <div className="flex flex-col">
-                      <span className="font-medium">{v.businessProfile?.businessName || `${v.userId?.firstName} ${v.userId?.lastName}`}</span>
-                      <span className="text-xs text-gray-500">{v.userId?.email}</span>
-                    </div>
-                  </ComboboxItem>
-                ))}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
+          <Input
+            type="text"
+            placeholder="Paste vendor Id"
+            value={vendorId}
+            onChange={(e) => setVendorId(e.target.value)}
+            className="h-9 bg-white"
+          />
         </div>
 
         <div className="w-full sm:w-80">
-          <Combobox>
-            <ComboboxInput
-              placeholder="Search customer..."
-              value={customerQuery}
-              onValueChange={(v: string) => setCustomerQuery(v)}
-              showClear
-            />
-            <ComboboxContent>
-              <ComboboxList>
-                <ComboboxEmpty>No customers</ComboboxEmpty>
-                {customerResults.map((c) => (
-                  <ComboboxItem
-                    key={c._id}
-                    value={c._id}
-                    onSelect={() => onChange("reviewerUserId", c._id)}
-                  >
-                    <div className="flex flex-col">
-                      <span className="font-medium">{c.firstName} {c.lastName}</span>
-                      <span className="text-xs text-gray-500">{c.email}</span>
-                    </div>
-                  </ComboboxItem>
-                ))}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
+          <Input
+            type="text"
+            placeholder="Paste customer Id"
+            value={reviewerUserId}
+            onChange={(e) => setReviewerUserId(e.target.value)}
+            className="h-9 bg-white"
+          />
         </div>
 
         <div className="flex items-center gap-2">
@@ -162,9 +82,12 @@ export default function FilterToolbar({ current = {}, onChange, onClear }: Props
           </select>
 
           <Button
+            type="button"
+            variant="secondary"
             size="sm"
-            className="ml-2"
+            className="ml-2 transition-transform duration-150 active:scale-95 active:translate-y-px"
             onClick={() => {
+              handleApplyIds();
               onChange("minRating", minSel ?? null);
               onChange("maxRating", maxSel ?? null);
             }}
