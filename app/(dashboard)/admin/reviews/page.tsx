@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import ReviewsClient from "./_components/reviews-client";
 
 export default async function AdminReviewsPage() {
@@ -11,7 +12,9 @@ export default async function AdminReviewsPage() {
       </div>
 
       {/* Client handles URL state and data fetching */}
-      <ReviewsClient />
+      <Suspense fallback={<div className="rounded-xl border border-gray-100 bg-white p-6">Loading reviews...</div>}>
+        <ReviewsClient />
+      </Suspense>
     </section>
   );
 }

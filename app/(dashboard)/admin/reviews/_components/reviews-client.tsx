@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { fetchAdminReviews } from "@/lib/actions/admin-reviews";
 import FilterToolbar from "./filter-toolbar";
 import ReviewsTable from "./reviews-table";
@@ -54,7 +54,7 @@ export default function ReviewsClient() {
       }
       return result.data;
     },
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 
   return (
