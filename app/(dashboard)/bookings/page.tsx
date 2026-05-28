@@ -2,6 +2,9 @@ import ActivePagination from "../vendors/_components/ActivePagination";
 import { DataTable } from "./_components/data-table";
 import { columns } from "./_components/columns";
 import { getAdminBookings } from "@/lib/actions/bookings";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, List } from "lucide-react";
 
 interface SearchParamsProps {
   searchParams: { [key: string]: string | string[] | undefined };
@@ -36,11 +39,20 @@ export default async function BookingsPage({ searchParams }: SearchParamsProps) 
   return (
     <div className="space-y-6 px-4 md:px-8 py-6 bg-[#F4F5F8] min-h-[calc(100vh-72px)]">
       {/* HEADER CARD */}
-      <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm flex flex-col gap-2">
-        <h1 className="text-xl sm:text-2xl font-semibold">Platform Bookings</h1>
-        <p className="text-muted-foreground text-sm">
-           {total.toLocaleString()} total bookings found
-        </p>
+      <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-xl sm:text-2xl font-semibold">Platform Bookings</h1>
+          <p className="text-muted-foreground text-sm">
+             {total.toLocaleString()} total bookings found
+          </p>
+        </div>
+        <Link href="/admin/payouts/pending">
+          <Button className="bg-[#2B4EFF] hover:bg-[#1f3de0] text-white">
+            <List className="h-4 w-4 mr-2" />
+            View Pending Payouts
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
+        </Link>
       </div>
 
       {/* ERROR STATE */}

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition, useEffect } from "react";
 import { getPendingPayouts, PendingPayoutsResponse } from "@/lib/actions/finance";
 import { Button } from "@/components/ui/button";
@@ -61,14 +62,21 @@ export default function PendingPayoutsTable() {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-6">
-      <div className="p-6 border-b border-gray-100">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <Clock className="h-5 w-5 text-amber-500" />
-          Pending Payouts
-        </h2>
-        <p className="text-sm text-gray-500">
-          Vendor payouts awaiting release. Total: {data?.total || 0}
-        </p>
+      <div className="p-6 border-b border-gray-100 flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Clock className="h-5 w-5 text-amber-500" />
+            Pending Payouts
+          </h2>
+          <p className="text-sm text-gray-500">
+            Vendor payouts awaiting release. Total: {data?.total || 0}
+          </p>
+        </div>
+        <Link href="/admin/payouts/pending">
+          <Button variant="outline" size="sm" className="shrink-0">
+            View All
+          </Button>
+        </Link>
       </div>
 
       <div className="overflow-x-auto">
