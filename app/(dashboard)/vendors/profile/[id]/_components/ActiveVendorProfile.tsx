@@ -2,6 +2,7 @@
 
 import { VendorProfile, VendorService } from "@/lib/actions/vendors";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ActiveVendorOverview from "./ActiveVendorOverview";
 import ActiveVendorBookings from "./ActiveVendorBookings";
 import ActiveVendorEarnings from "./ActiveVendorEarnings";
@@ -14,32 +15,48 @@ interface Props {
 }
 
 export default function ActiveVendorProfile({ vendor, services, specialties }: Props) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const activeTab = searchParams.get("tab") || "overview";
+
+  const handleTabChange = (value: string) => {
+    const next = new URLSearchParams(searchParams.toString());
+    if (value === "overview") {
+      next.delete("tab");
+    } else {
+      next.set("tab", value);
+    }
+    const query = next.toString();
+    router.push(query ? `${pathname}?${query}` : pathname);
+  };
+
   return (
     <div className="bg-white p-6 sm:p-10">
-      <Tabs defaultValue="overview" className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         {/* TABS */}
         <div className="border-b border-gray-200 mb-8">
           <TabsList className="bg-transparent h-auto p-0 flex justify-start gap-8 w-full border-0 rounded-none overflow-x-auto">
-            <TabsTrigger 
-              value="overview" 
+            <TabsTrigger
+              value="overview"
               className="relative -mb-px pb-3 pt-2 px-1 rounded-none bg-transparent shadow-none border-b-2 border-transparent data-[state=active]:border-b-red-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-[15px] font-medium text-gray-500 data-[state=active]:text-gray-900 data-[state=active]:font-semibold hover:text-gray-900 transition-colors focus-visible:ring-0 after:hidden"
             >
               Overview
             </TabsTrigger>
-            <TabsTrigger 
-              value="bookings" 
+            <TabsTrigger
+              value="bookings"
               className="relative -mb-px pb-3 pt-2 px-1 rounded-none bg-transparent shadow-none border-b-2 border-transparent data-[state=active]:border-b-red-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-[15px] font-medium text-gray-500 data-[state=active]:text-gray-900 data-[state=active]:font-semibold hover:text-gray-900 transition-colors focus-visible:ring-0 after:hidden"
             >
               Bookings
             </TabsTrigger>
-            <TabsTrigger 
-              value="earnings" 
+            <TabsTrigger
+              value="earnings"
               className="relative -mb-px pb-3 pt-2 px-1 rounded-none bg-transparent shadow-none border-b-2 border-transparent data-[state=active]:border-b-red-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-[15px] font-medium text-gray-500 data-[state=active]:text-gray-900 data-[state=active]:font-semibold hover:text-gray-900 transition-colors focus-visible:ring-0 after:hidden"
             >
               Earnings
             </TabsTrigger>
-            <TabsTrigger 
-              value="reviews" 
+            <TabsTrigger
+              value="reviews"
               className="relative -mb-px pb-3 pt-2 px-1 rounded-none bg-transparent shadow-none border-b-2 border-transparent data-[state=active]:border-b-red-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-[15px] font-medium text-gray-500 data-[state=active]:text-gray-900 data-[state=active]:font-semibold hover:text-gray-900 transition-colors focus-visible:ring-0 after:hidden"
             >
               Reviews
