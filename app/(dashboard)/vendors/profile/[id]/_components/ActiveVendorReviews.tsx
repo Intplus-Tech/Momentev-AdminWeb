@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { getVendorReviews, ReviewResponse } from "@/lib/actions/reviews";
 import { ReviewsDataTable } from "./reviews-data-table";
-import { columns } from "./reviews-columns";
+import { getReviewColumns } from "./reviews-columns";
 
 interface Props {
   vendorId: string;
@@ -22,6 +22,11 @@ function ReviewsContent({ vendorId }: { vendorId: string }) {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const handleReviewsChanged = () => {
+    setReloadKey((value) => value + 1);
+  };
 
   useEffect(() => {
     async function fetchReviews() {
@@ -45,7 +50,7 @@ function ReviewsContent({ vendorId }: { vendorId: string }) {
     }
 
     fetchReviews();
-  }, [vendorId]);
+  }, [vendorId, reloadKey]);
 
   if (loading) {
     return (
@@ -65,6 +70,6 @@ function ReviewsContent({ vendorId }: { vendorId: string }) {
   }
 
   return (
-    <ReviewsDataTable columns={columns} data={data} />
+    <ReviewsDataTable columns={getReviewColumns(handleReviewsChanged)} data={data} />
   );
 }

@@ -13,6 +13,7 @@ import {
   FileText,
   CalendarDays,
   LayersPlus,
+  Star,
 } from "lucide-react";
 import { useLayout } from "@/context/layout-context";
 
@@ -35,6 +36,7 @@ const menu: MenuItem[] = [
     icon: AlertTriangle,
     href: "/disputes",
   },
+  { label: "Reviews", icon: Star, href: "/admin/reviews" },
   { label: "Services", icon: LayersPlus, href: "/services" },
   { label: "Settings", icon: Settings, href: "/settings" },
 ];
@@ -53,11 +55,11 @@ function ProfileAvatar({
 }) {
   const initials = name
     ? name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
     : "AD";
 
   return (
@@ -128,8 +130,8 @@ export default function AppSidebar({
         className={`
           fixed md:static
           z-50
-          top-[72px]
-          w-[260px]
+          top-18
+          w-65
           h-[calc(100vh-72px)]
           bg-white
           px-4 py-6
@@ -157,13 +159,10 @@ export default function AppSidebar({
                 href={item.href}
                 onClick={() => dispatch({ type: "CLOSE" })}
                 className={`relative flex items-center gap-3 px-3 py-3 rounded-md transition-colors
-                  ${isActive ? "text-primary bg-primary/5" : "text-gray-600"}
+                  border-l-4 ${isActive ? "text-primary bg-primary/5 border-primary" : "text-gray-600 border-transparent"}
                   hover:text-primary hover:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary/50`}
                 aria-current={isActive ? "page" : undefined}
               >
-                {isActive && (
-                  <span className="absolute left-0 h-full w-[3px] bg-primary rounded-r" />
-                )}
                 <item.icon size={18} />
                 <span className="flex-1 text-sm font-medium">{item.label}</span>
                 {item.badge && (

@@ -17,6 +17,7 @@ export interface ReviewResponse {
   rating: number;
   comment: string;
   createdAt: string;
+  isFlagged?: boolean;
   reviewer: {
     firstName: string;
     lastName: string;
