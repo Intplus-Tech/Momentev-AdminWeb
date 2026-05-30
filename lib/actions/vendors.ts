@@ -330,6 +330,51 @@ export async function updateVendor(vendorId: string, data: Partial<VendorProfile
   }
 }
 
+export async function updateVendorStatus(
+  vendorId: string,
+  action: "suspend" | "reactivate",
+  reason?: string
+): Promise<ActionResult<any>> {
+  try {
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/admin/vendors/${vendorId}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ action, reason }),
+        cache: "no-store",
+      })
+    );
+
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to update vendor status" };
+    }
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/vendors");
+    revalidatePath(`/vendors/profile/${vendorId}`);
+
+    return { success: true, data: body.data };
+  } catch (error) {
+    console.error("Update Vendor Status Error:", error);
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
+
 export async function approveVendor(vendorId: string): Promise<ActionResult<any>> {
-  return updateVendor(vendorId, { isActive: true });
+  return updateVendorStatus(vendorId, "reactivate");
 }

@@ -6,7 +6,6 @@ import {
   getAdminVendorServices,
   getAdminVendorSpecialties,
 } from "@/lib/actions/vendors";
-import InactiveVendorReview from "./_components/InactiveVendorReview";
 import ActiveVendorProfile from "./_components/ActiveVendorProfile";
 
 interface PageProps {
@@ -50,49 +49,46 @@ export default async function VendorProfilePage({ params }: PageProps) {
 
   const services = servicesRes.success ? (servicesRes.data || []) : [];
   const specialties = specialtiesRes.success ? (specialtiesRes.data || []) : [];
-  
-  // Decide which View to render based on isActive and onBoarded status
-  // If the user hasn't successfully completed all steps, or is pending review, show the review UI
-  const isPendingReview = !vendor.isActive; // Assuming inactive vendors require review/activation
+
+  // Always show the full vendor profile to admins, even when the vendor is suspended.
+  // Legacy review-only view has been removed — admins need access to full data regardless of `isActive`.
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* HEADER */}
       <div className="flex items-center gap-4 border-b border-gray-100 pb-4">
-        <Link 
-          href="/vendors" 
+        <Link
+          href="/vendors"
           className="flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors uppercase tracking-wider gap-2"
         >
           <ChevronLeft className="w-4 h-4" />
           BACK
         </Link>
-        
+
         <div className="flex-1 text-center">
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-wide uppercase">
-            {isPendingReview ? "Vendor Application Review" : "Vendor Profile Management"}
-          </h1>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-wide uppercase">Vendor Profile Management</h1>
+          {vendor?.isActive === false && (
+            <div className="mt-2 flex justify-center">
+              <span className="inline-flex items-center gap-2 bg-red-50 text-red-700 px-2 py-0.5 rounded-full text-xs font-semibold border border-red-100">
+                <span className="w-2 h-2 rounded-full bg-red-600 block" />
+                Suspended
+              </span>
+            </div>
+          )}
           {/* <p className="text-sm text-gray-500 font-mono mt-1">
             #{vendor._id.slice(-6).toUpperCase()}
           </p> */}
         </div>
-        
+
         {/* Invisible spacer to perfectly center the title against the back button */}
-        <div className="w-[84px] hidden sm:block"></div> 
+        <div className="w-21 hidden sm:block"></div>
       </div>
 
-      {isPendingReview ? (
-        <InactiveVendorReview 
-          vendor={vendor} 
-          services={services} 
-          specialties={specialties} 
-        />
-      ) : (
-        <ActiveVendorProfile 
-          vendor={vendor} 
-          services={services} 
-          specialties={specialties} 
-        />
-      )}
+      <ActiveVendorProfile
+        vendor={vendor}
+        services={services}
+        specialties={specialties}
+      />
     </div>
   );
 }

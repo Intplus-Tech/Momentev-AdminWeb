@@ -23,6 +23,10 @@ This document lists all the backend API endpoints consumed by the Momentev front
 - **File Upload** — Summary count was 1, but 2 endpoints exist (`POST /uploads`, `GET /uploads/{id}`). Fixed to 2.
 - **Summary table counts** were incorrect across multiple categories. All corrected.
 
+### Missing Endpoints Added
+
+- **Vendor Status (Admin)** — `PATCH /admin/vendors/{vendorId}/status` is now implemented in `lib/actions/vendors.ts` for suspending/reactivating vendor accounts with an optional reason.
+
 ### Previous Changelog (2026-02-14)
 
 - **Bookings** — 4 endpoints (`POST /bookings`, `GET /bookings`, `GET /bookings/{bookingId}`, `POST /bookings/{bookingId}/cancel`) added.
@@ -78,6 +82,7 @@ This document lists all the backend API endpoints consumed by the Momentev front
 | ------- | --------------------- | ----------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
 | `GET`   | `/vendors/{vendorId}` | Get public vendor profile                       | ❌   | **Path:** `vendorId`                                                                                                                                                                                                                                                                        | `lib/actions/chat.ts`, `app/(home)/search/_data/actions.ts` |
 | `PATCH` | `/vendors/{vendorId}` | Update vendor profile media & onboarding status | ✅   | **Path:** `vendorId` · **Body:** `{ profilePhoto, coverPhoto, portfolioGallery, socialMediaLinks?, isActive, onBoardingStage, onBoarded }`                                                                                                                                                  | `lib/actions/vendor-profile.ts`                             |
+| `PATCH` | `/admin/vendors/{vendorId}/status` | Suspend or reactivate a vendor account          | ✅   | **Path:** `vendorId` · **Body:** `{ action: "suspend" | "reactivate", reason? }`                                                                                                                                                                                                       | `lib/actions/vendors.ts`                                    |
 | `POST`  | `/business-profiles`  | Create/update business profile                  | ✅   | **Body:** `{ vendorId, contactInfo: { primaryContactName, emailAddress, phoneNumber, meansOfIdentification, addressId }, businessName, yearInBusiness, companyRegNo, businessRegType, businessDescription, serviceArea: { travelDistance, areaNames[] }, workdays[], businessDocuments[] }` | `lib/actions/vendor-setup.ts`                               |
 
 ### Vendor Staff Management
