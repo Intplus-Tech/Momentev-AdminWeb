@@ -14,6 +14,7 @@ import {
   CalendarDays,
   LayersPlus,
   Star,
+  MessageSquare,
 } from "lucide-react";
 import { useLayout } from "@/context/layout-context";
 
@@ -35,6 +36,11 @@ const menu: MenuItem[] = [
     label: "Disputes",
     icon: AlertTriangle,
     href: "/disputes",
+  },
+  {
+    label: "Support Requests",
+    icon: MessageSquare,
+    href: "/support-requests",
   },
   { label: "Reviews", icon: Star, href: "/admin/reviews" },
   { label: "Services", icon: LayersPlus, href: "/services" },
