@@ -23,13 +23,13 @@ export default function CreateAdminModal({ onClose, onSuccess, rolesAndPermissio
     email: "",
     phoneNumber: "",
     password: "",
-    adminPermissions: [],
+    permissions: [],
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handlePermissionsChange = (newPermissions: string[]) => {
-    setFormData((prev) => ({ ...prev, adminPermissions: newPermissions }));
+    setFormData((prev) => ({ ...prev, permissions: newPermissions }));
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,7 +48,7 @@ export default function CreateAdminModal({ onClose, onSuccess, rolesAndPermissio
         email: formData.email,
         phoneNumber: formData.phoneNumber,
         password: formData.password,
-        permissions: formData.adminPermissions,
+        permissions: formData.permissions,
       };
       const response = await createAdmin(payload);
       if (response.success) {
@@ -155,7 +155,7 @@ export default function CreateAdminModal({ onClose, onSuccess, rolesAndPermissio
             </p>
             <PermissionsSelector
               groups={rolesAndPermissions.adminPermissionGroups}
-              selectedPermissions={formData.adminPermissions || []}
+              selectedPermissions={formData.permissions || []}
               onChange={handlePermissionsChange}
               disabled={loading}
             />

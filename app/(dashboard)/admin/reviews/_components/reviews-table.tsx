@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { flagReview, deleteReview } from "@/lib/actions/admin-reviews";
 import type { Review } from "@/types/review";
+import { usePermissions } from "@/context/permissions-context";
 
 type Props = {
   reviews: Review[];
@@ -40,6 +41,8 @@ type Props = {
 export default function ReviewsTable({ reviews }: Props) {
   const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState<Review | null>(null);
+  const { hasPermission } = usePermissions();
+  const canWrite = hasPermission("reviews:write");
 
   const flagMutation = useMutation({
     mutationFn: async ({ id, isFlagged }: { id: string; isFlagged: boolean }) => {
@@ -115,29 +118,33 @@ export default function ReviewsTable({ reviews }: Props) {
           <TableCell className="align-top">{Array.from({ length: r.rating }).map(() => "★").join("")} ({r.rating})</TableCell>
           <TableCell className="align-top max-w-xs truncate" title={r.comment}>{r.comment || "—"}</TableCell>
           <TableCell className="align-top">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {r.isFlagged && <Badge variant="destructive">Flagged</Badge>}
               {r.isEdited && <Badge variant="secondary">Edited</Badge>}
             </div>
           </TableCell>
           <TableCell className="align-top text-right">
             <div className="flex items-center justify-end">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button size="sm">Actions</Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onSelect={() => handleToggleFlag(r)}>
-                    {r.isFlagged ? "Unflag" : "Flag"}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onSelect={() => setDeleting(r)}
-                    data-variant="destructive"
-                  >
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {canWrite ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm">Actions</Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onSelect={() => handleToggleFlag(r)}>
+                      {r.isFlagged ? "Unflag" : "Flag"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={() => setDeleting(r)}
+                      data-variant="destructive"
+                    >
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <span className="text-sm text-gray-400">—</span>
+              )}
             </div>
           </TableCell>
         </TableRow>

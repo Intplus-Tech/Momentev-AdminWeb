@@ -22,9 +22,9 @@ export default function FilterToolbar({ current = {}, onChange, onClear }: Props
   };
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div className="flex items-center gap-3 w-full">
-        <div className="w-full sm:w-80">
+    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center gap-3 w-full">
+        <div className="w-full sm:w-64 flex-1 min-w-[200px]">
           <Input
             type="text"
             placeholder="Paste vendor Id"
@@ -34,7 +34,7 @@ export default function FilterToolbar({ current = {}, onChange, onClear }: Props
           />
         </div>
 
-        <div className="w-full sm:w-80">
+        <div className="w-full sm:w-64 flex-1 min-w-[200px]">
           <Input
             type="text"
             placeholder="Paste customer Id"

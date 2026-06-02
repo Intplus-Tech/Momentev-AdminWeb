@@ -24,7 +24,7 @@ export default function EditAdminModal({ adminId, onClose, onSuccess, rolesAndPe
     firstName: "",
     lastName: "",
     phoneNumber: "",
-    adminPermissions: [],
+    permissions: [],
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +40,7 @@ export default function EditAdminModal({ adminId, onClose, onSuccess, rolesAndPe
           lastName: res.data.lastName,
           // @ts-ignore - if the backend returns phoneNumber we use it, otherwise empty string
           phoneNumber: res.data.phoneNumber || "", 
-          adminPermissions: res.data.adminPermissions || [],
+          permissions: res.data.adminPermissions || [],
         });
       } else {
         toast.error("Failed to load admin details");
@@ -52,7 +52,7 @@ export default function EditAdminModal({ adminId, onClose, onSuccess, rolesAndPe
   }, [adminId, onClose]);
 
   const handlePermissionsChange = (newPermissions: string[]) => {
-    setFormData((prev) => ({ ...prev, adminPermissions: newPermissions }));
+    setFormData((prev) => ({ ...prev, permissions: newPermissions }));
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,7 +69,7 @@ export default function EditAdminModal({ adminId, onClose, onSuccess, rolesAndPe
       const payload: UpdateAdminData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        permissions: formData.adminPermissions,
+        permissions: formData.permissions,
       };
 
       if (formData.phoneNumber && formData.phoneNumber.trim().length > 0) {
@@ -160,7 +160,7 @@ export default function EditAdminModal({ adminId, onClose, onSuccess, rolesAndPe
             </p>
             <PermissionsSelector
               groups={rolesAndPermissions.adminPermissionGroups}
-              selectedPermissions={formData.adminPermissions || []}
+              selectedPermissions={formData.permissions || []}
               onChange={handlePermissionsChange}
               disabled={loading}
             />
