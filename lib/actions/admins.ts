@@ -30,6 +30,25 @@ export interface AdminUser {
   lastLoginAt: string | null;
   rootAdmin: boolean;
   customerFavoriteVendors?: string[];
+  adminPermissions?: string[];
+}
+
+export interface AdminPermission {
+  name: string;
+  modes: string[];
+}
+
+export interface AdminPermissionGroup {
+  domain: string;
+  label: string;
+  permissions: AdminPermission[];
+}
+
+export interface RolesAndPermissions {
+  roles: string[];
+  vendorPermissions: AdminPermission[];
+  adminPermissions: string[];
+  adminPermissionGroups: AdminPermissionGroup[];
 }
 
 export async function getAdmins(
@@ -87,12 +106,46 @@ export async function getAdmins(
   }
 }
 
+export async function getAdminById(id: string): Promise<ActionResult<AdminUser>> {
+  try {
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/admin-management/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      })
+    );
+
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to fetch admin" };
+    }
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    return { success: true, data: body.data };
+  } catch (error) {
+    console.error("Get Admin By ID Error:", error);
+    return { success: false, error: "An unexpected network error occurred." };
+  }
+}
+
 export interface CreateAdminData {
   firstName: string;
   lastName: string;
   email: string;
   phoneNumber: string;
   password?: string;
+  permissions?: string[];
 }
 
 export async function createAdmin(data: CreateAdminData): Promise<ActionResult<AdminUser>> {
@@ -114,14 +167,21 @@ export async function createAdmin(data: CreateAdminData): Promise<ActionResult<A
     const body = await response.json();
 
     if (!response.ok) {
+      console.error("Create Admin Backend Error Response:", JSON.stringify(body, null, 2));
+      const errorMessage = body.errors 
+        ? `${body.message}: ${JSON.stringify(body.errors)}`
+        : body.message || `Error: ${response.statusText}`;
+
       return {
         success: false,
-        error: body.message || `Error: ${response.statusText}`,
+        error: errorMessage,
       };
     }
 
     const { revalidatePath } = await import("next/cache");
     revalidatePath("/settings");
+
+    console.log("Create Admin Backend Success Response:", JSON.stringify(body, null, 2));
 
     return {
       success: true,
@@ -140,6 +200,7 @@ export interface UpdateAdminData {
   firstName?: string;
   lastName?: string;
   phoneNumber?: string;
+  permissions?: string[];
 }
 
 export async function updateAdmin(id: string, data: UpdateAdminData): Promise<ActionResult<AdminUser>> {
@@ -148,6 +209,8 @@ export async function updateAdmin(id: string, data: UpdateAdminData): Promise<Ac
     if (!token) {
       return { success: false, error: "Unauthorized: No access token" };
     }
+
+    console.log("Update Admin Request Payload:", JSON.stringify(data, null, 2));
 
     const response = await fetch(`${process.env.BACKEND_URL}/api/v1/admin-management/${id}`, {
       method: "PATCH",
@@ -161,14 +224,21 @@ export async function updateAdmin(id: string, data: UpdateAdminData): Promise<Ac
     const body = await response.json();
 
     if (!response.ok) {
+      console.error("Update Admin Backend Error Response:", JSON.stringify(body, null, 2));
+      const errorMessage = body.errors 
+        ? `${body.message}: ${JSON.stringify(body.errors)}`
+        : body.message || `Error: ${response.statusText}`;
+
       return {
         success: false,
-        error: body.message || `Error: ${response.statusText}`,
+        error: errorMessage,
       };
     }
 
     const { revalidatePath } = await import("next/cache");
     revalidatePath("/settings");
+
+    console.log("Update Admin Backend Success Response:", JSON.stringify(body, null, 2));
 
     return {
       success: true,
@@ -291,6 +361,45 @@ export async function reactivateAdmin(id: string): Promise<ActionResult<AdminUse
     return { success: true, data: body.data };
   } catch (error) {
     console.error("Reactivate Admin Error:", error);
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
+
+export async function getRolesAndPermissions(): Promise<ActionResult<RolesAndPermissions>> {
+  try {
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/admin-management/roles-and-permissions`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      })
+    );
+
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to fetch roles and permissions" };
+    }
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    return {
+      success: true,
+      data: body.data,
+    };
+  } catch (error) {
+    console.error("Get Roles and Permissions Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",

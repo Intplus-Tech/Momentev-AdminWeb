@@ -2,6 +2,7 @@ import { LayoutProvider } from "@/context/layout-context";
 import AdminNavbar from "./_component/AdminNavbar";
 import AppSidebar from "./_component/AppSidebar";
 import { getMyProfile } from "@/lib/actions/profile";
+import { getTokenClaims } from "@/lib/session";
 
 export default async function dashboardLayout({
   children,
@@ -10,6 +11,7 @@ export default async function dashboardLayout({
 }) {
   const profileResult = await getMyProfile();
   const profile = profileResult.success ? profileResult.data : null;
+  const tokenClaims = await getTokenClaims();
 
   return (
     <div>
@@ -26,13 +28,14 @@ export default async function dashboardLayout({
 
           {/* BODY */}
           <div className="flex pt-[72px] h-full">
-            {/* FIXED SIDEBAR */}
             <AppSidebar
               firstName={profile?.firstName}
               lastName={profile?.lastName}
               email={profile?.email}
               role={profile?.role}
               avatarUrl={profile?.avatar?.url ?? null}
+              permissions={tokenClaims?.adminPermissions || []}
+              isRootAdmin={tokenClaims?.rootAdmin || false}
             />
 
             {/* SCROLLABLE CONTENT */}

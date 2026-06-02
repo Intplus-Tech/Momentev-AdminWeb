@@ -1,4 +1,4 @@
-import { getAdmins } from "@/lib/actions/admins";
+import { getAdmins, getRolesAndPermissions } from "@/lib/actions/admins";
 import SettingsClient from "./_components/SettingsClient";
 
 interface SearchParamsProps {
@@ -14,7 +14,13 @@ export default async function SettingsPage({ searchParams }: SearchParamsProps) 
   const search = typeof params?.search === "string" ? params.search : "";
   const status = typeof params?.status === "string" ? params.status : "all";
 
-  const { success, data: admins = [], error } = await getAdmins(page, limit, search, status);
+  const [adminsRes, rolesRes] = await Promise.all([
+    getAdmins(page, limit, search, status),
+    getRolesAndPermissions()
+  ]);
+
+  const { success, data: admins = [], error } = adminsRes;
+  const rolesAndPermissions = rolesRes.success && rolesRes.data ? rolesRes.data : null;
 
   return (
     <>
@@ -23,7 +29,10 @@ export default async function SettingsPage({ searchParams }: SearchParamsProps) 
           {error}
         </div>
       )}
-      <SettingsClient initialAdmins={admins} />
+      <SettingsClient 
+        initialAdmins={admins} 
+        rolesAndPermissions={rolesAndPermissions} 
+      />
     </>
   );
 }

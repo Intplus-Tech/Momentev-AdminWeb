@@ -7,22 +7,30 @@ import { createAdmin, CreateAdminData } from "@/lib/actions/admins";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RolesAndPermissions } from "@/lib/actions/admins";
+import PermissionsSelector from "./PermissionsSelector";
 
 interface Props {
   onClose: () => void;
   onSuccess: () => void;
+  rolesAndPermissions?: RolesAndPermissions | null;
 }
 
-export default function CreateAdminModal({ onClose, onSuccess }: Props) {
+export default function CreateAdminModal({ onClose, onSuccess, rolesAndPermissions }: Props) {
   const [formData, setFormData] = useState<CreateAdminData>({
     firstName: "",
     lastName: "",
     email: "",
     phoneNumber: "",
     password: "",
+    adminPermissions: [],
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handlePermissionsChange = (newPermissions: string[]) => {
+    setFormData((prev) => ({ ...prev, adminPermissions: newPermissions }));
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -34,7 +42,15 @@ export default function CreateAdminModal({ onClose, onSuccess }: Props) {
     setLoading(true);
 
     try {
-      const response = await createAdmin(formData);
+      const payload: CreateAdminData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        password: formData.password,
+        permissions: formData.adminPermissions,
+      };
+      const response = await createAdmin(payload);
       if (response.success) {
         toast.success("Admin created successfully");
         onSuccess();
@@ -51,7 +67,7 @@ export default function CreateAdminModal({ onClose, onSuccess }: Props) {
   };
 
   return (
-    <div className="bg-white rounded-xl w-full max-w-md p-6 space-y-6">
+    <div className="bg-white rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Create New Admin</h2>
         <button onClick={onClose} disabled={loading}>
@@ -130,6 +146,21 @@ export default function CreateAdminModal({ onClose, onSuccess }: Props) {
             disabled={loading}
           />
         </div>
+
+        {rolesAndPermissions?.adminPermissionGroups && (
+          <div className="space-y-2 pt-2 border-t mt-4">
+            <Label className="text-base font-semibold">Admin Permissions</Label>
+            <p className="text-sm text-gray-500 mb-2">
+              Select the modules and actions this admin can access.
+            </p>
+            <PermissionsSelector
+              groups={rolesAndPermissions.adminPermissionGroups}
+              selectedPermissions={formData.adminPermissions || []}
+              onChange={handlePermissionsChange}
+              disabled={loading}
+            />
+          </div>
+        )}
 
         <div className="flex justify-end gap-3 pt-4">
           <Button type="button" variant="outline" onClick={onClose} disabled={loading}>

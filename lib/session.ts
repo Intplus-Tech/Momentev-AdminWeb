@@ -172,3 +172,32 @@ export async function tryRefreshToken() {
 
   return refreshAccessToken(refreshTokenValue);
 }
+
+/**
+ * Decode the JWT payload and return the claims.
+ * No external library needed — JWT payload is just base64url-encoded JSON.
+ */
+export interface TokenClaims {
+  userId?: string;
+  email?: string;
+  role?: string;
+  adminPermissions?: string[];
+  rootAdmin?: boolean;
+}
+
+export async function getTokenClaims(): Promise<TokenClaims | null> {
+  try {
+    const token = await getAccessToken();
+    if (!token) return null;
+
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+
+    // Base64url -> Base64 -> JSON
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const json = Buffer.from(base64, 'base64').toString('utf8');
+    return JSON.parse(json) as TokenClaims;
+  } catch {
+    return null;
+  }
+}

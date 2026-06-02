@@ -4,18 +4,21 @@ import { useState } from "react";
 import { Check, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import CreateAdminModal from "./CreateAdminModal";
+import EditAdminModal from "./EditAdminModal";
 import AdminActions from "./AdminActions";
 import SecuritySettings from "./SecuritySettings";
-import { AdminUser } from "@/lib/actions/admins";
+import { AdminUser, RolesAndPermissions } from "@/lib/actions/admins";
 import { format } from "date-fns";
 
 interface Props {
   initialAdmins: AdminUser[];
+  rolesAndPermissions?: RolesAndPermissions | null;
 }
 
-export default function SettingsClient({ initialAdmins }: Props) {
+export default function SettingsClient({ initialAdmins, rolesAndPermissions }: Props) {
   const [activeTab, setActiveTab] = useState<"users" | "security">("users");
   const [showCreateAdmin, setShowCreateAdmin] = useState(false);
+  const [activeEditAdminId, setActiveEditAdminId] = useState<string | null>(null);
 
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return "Never";
@@ -93,7 +96,14 @@ export default function SettingsClient({ initialAdmins }: Props) {
                   </tr>
                 ) : (
                   initialAdmins.map((admin) => (
-                    <tr key={admin._id}>
+                    <tr 
+                      key={admin._id} 
+                      onClick={() => !admin.rootAdmin && setActiveEditAdminId(admin.id)}
+                      className={cn(
+                        "transition-colors",
+                        !admin.rootAdmin && "cursor-pointer hover:bg-gray-50"
+                      )}
+                    >
                       <td className="p-4 font-medium whitespace-nowrap">
                         {admin.firstName} {admin.lastName}
                         {admin.rootAdmin && (
@@ -124,8 +134,8 @@ export default function SettingsClient({ initialAdmins }: Props) {
                           </span>
                         )}
                       </td>
-                      <td className="text-right pr-4">
-                        <AdminActions admin={admin} />
+                      <td className="text-right pr-4" onClick={(e) => e.stopPropagation()}>
+                        <AdminActions admin={admin} onEdit={() => setActiveEditAdminId(admin.id)} />
                       </td>
                     </tr>
                   ))
@@ -136,12 +146,23 @@ export default function SettingsClient({ initialAdmins }: Props) {
         </>
       )}
 
-      {/* CREATE ADMIN MODAL */}
       {showCreateAdmin && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
           <CreateAdminModal
             onClose={() => setShowCreateAdmin(false)}
             onSuccess={() => setShowCreateAdmin(false)}
+            rolesAndPermissions={rolesAndPermissions}
+          />
+        </div>
+      )}
+
+      {activeEditAdminId && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+          <EditAdminModal
+            adminId={activeEditAdminId}
+            onClose={() => setActiveEditAdminId(null)}
+            onSuccess={() => setActiveEditAdminId(null)}
+            rolesAndPermissions={rolesAndPermissions}
           />
         </div>
       )}

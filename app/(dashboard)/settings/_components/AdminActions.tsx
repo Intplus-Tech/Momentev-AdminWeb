@@ -21,14 +21,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import EditAdminModal from "./EditAdminModal";
 
 interface Props {
   admin: AdminUser;
+  onEdit: () => void;
 }
 
-export default function AdminActions({ admin }: Props) {
-  const [showEdit, setShowEdit] = useState(false);
+export default function AdminActions({ admin, onEdit }: Props) {
   const [showConfirmAction, setShowConfirmAction] = useState<"delete" | "deactivate" | "reactivate" | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -79,7 +78,7 @@ export default function AdminActions({ admin }: Props) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem
-            onClick={() => setShowEdit(true)}
+            onClick={onEdit}
             className="cursor-pointer"
           >
             <Edit2 className="mr-2 h-4 w-4" />
@@ -150,17 +149,6 @@ export default function AdminActions({ admin }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* EDIT MODAL */}
-      {showEdit && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-          <EditAdminModal
-            admin={admin}
-            onClose={() => setShowEdit(false)}
-            onSuccess={() => setShowEdit(false)}
-          />
-        </div>
-      )}
     </>
   );
 }

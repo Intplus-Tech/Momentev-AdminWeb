@@ -23,28 +23,31 @@ type MenuItem = {
   icon: React.ElementType;
   href: string;
   badge?: string | number;
+  requiredPermission?: string;
 };
 
 const menu: MenuItem[] = [
-  { label: "Overview", icon: Home, href: "/overview" },
-  { label: "Vendors", icon: Users, href: "/vendors" },
-  { label: "Clients", icon: User, href: "/clients" },
-  { label: "Financial", icon: Wallet, href: "/financial" },
-  { label: "Bookings", icon: CalendarDays, href: "/bookings" },
-  { label: "Client Requests", icon: FileText, href: "/customer-requests" },
+  { label: "Overview", icon: Home, href: "/overview", requiredPermission: "analytics:read" },
+  { label: "Vendors", icon: Users, href: "/vendors", requiredPermission: "vendors:read" },
+  { label: "Clients", icon: User, href: "/clients", requiredPermission: "clients:read" },
+  { label: "Financial", icon: Wallet, href: "/financial", requiredPermission: "finance:read" },
+  { label: "Bookings", icon: CalendarDays, href: "/bookings", requiredPermission: "bookings:read" },
+  { label: "Client Requests", icon: FileText, href: "/customer-requests", requiredPermission: "customer-requests:read" },
   {
     label: "Disputes",
     icon: AlertTriangle,
     href: "/disputes",
+    requiredPermission: "disputes:read"
   },
   {
     label: "Support Requests",
     icon: MessageSquare,
     href: "/support-requests",
+    requiredPermission: "support:read"
   },
-  { label: "Reviews", icon: Star, href: "/admin/reviews" },
-  { label: "Services", icon: LayersPlus, href: "/services" },
-  { label: "Settings", icon: Settings, href: "/settings" },
+  { label: "Reviews", icon: Star, href: "/admin/reviews", requiredPermission: "reviews:read" },
+  { label: "Services", icon: LayersPlus, href: "/services", requiredPermission: "catalog:read" },
+  { label: "Settings", icon: Settings, href: "/settings", requiredPermission: "admins:read" },
 ];
 
 // Profile header component
@@ -104,6 +107,8 @@ interface AppSidebarProps {
   email?: string;
   role?: string;
   avatarUrl?: string | null;
+  permissions?: string[];
+  isRootAdmin?: boolean;
 }
 
 export default function AppSidebar({
@@ -112,6 +117,8 @@ export default function AppSidebar({
   email,
   role,
   avatarUrl,
+  permissions = [],
+  isRootAdmin = false,
 }: AppSidebarProps) {
   const pathname = usePathname();
   const { state, dispatch } = useLayout();
@@ -154,6 +161,11 @@ export default function AppSidebar({
         {/* MENU */}
         <nav className="space-y-1" role="navigation">
           {menu.map((item) => {
+            // Check permissions
+            if (!isRootAdmin && item.requiredPermission && !permissions.includes(item.requiredPermission)) {
+              return null;
+            }
+
             // Improved active detection
             const isActive =
               pathname === item.href ||
