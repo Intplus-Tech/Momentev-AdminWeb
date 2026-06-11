@@ -44,6 +44,8 @@ export interface VendorProfile {
   isActive: boolean;
   onBoardingStage: number;
   onBoarded: boolean;
+  vendorStatus?: "active" | "suspended" | "banned";
+  suspensionReason?: string;
 }
 
 export interface PaginatedVendorsResponse {
@@ -175,6 +177,7 @@ export async function getAdminVendorById(id: string): Promise<ActionResult<Vendo
     }
 
     // Single vendor profiles are usually wrapped in body.data from Momentev API
+    console.log("Fetched vendor data:", body.data);
     return { success: true, data: body.data };
   } catch (error) {
     console.error("Get Admin Vendor By ID Error:", error);
@@ -330,26 +333,25 @@ export async function updateVendor(vendorId: string, data: Partial<VendorProfile
   }
 }
 
-export async function updateVendorStatus(
+export async function suspendVendor(
   vendorId: string,
-  action: "suspend" | "reactivate",
   reason?: string
-): Promise<ActionResult<any>> {
+): Promise<ActionResult<VendorProfile>> {
   try {
     const { response, error } = await fetchWithAuthRetry((token) =>
-      fetch(`${process.env.BACKEND_URL}/api/v1/admin/vendors/${vendorId}/status`, {
+      fetch(`${process.env.BACKEND_URL}/api/v1/admin/vendors/${vendorId}/suspend`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ action, reason }),
+        body: JSON.stringify({ reason }),
         cache: "no-store",
       })
     );
 
     if (error && !response.ok) {
-      return { success: false, error: error || "Failed to update vendor status" };
+      return { success: false, error: error || "Failed to suspend vendor account" };
     }
 
     const body = await response.json();
@@ -361,13 +363,15 @@ export async function updateVendorStatus(
       };
     }
 
+    console.log("Suspend vendor response:", { vendorId, response: body.data });
+
     const { revalidatePath } = await import("next/cache");
     revalidatePath("/vendors");
     revalidatePath(`/vendors/profile/${vendorId}`);
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Update Vendor Status Error:", error);
+    console.error("Suspend Vendor Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -375,6 +379,95 @@ export async function updateVendorStatus(
   }
 }
 
-export async function approveVendor(vendorId: string): Promise<ActionResult<any>> {
-  return updateVendorStatus(vendorId, "reactivate");
+export async function banVendor(
+  vendorId: string,
+  reason?: string
+): Promise<ActionResult<VendorProfile>> {
+  try {
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/admin/vendors/${vendorId}/ban`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ reason }),
+        cache: "no-store",
+      })
+    );
+
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to ban vendor account" };
+    }
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    console.log("Ban vendor response:", { vendorId, response: body.data });
+
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/vendors");
+    revalidatePath(`/vendors/profile/${vendorId}`);
+
+    return { success: true, data: body.data };
+  } catch (error) {
+    console.error("Ban Vendor Error:", error);
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
 }
+
+export async function reactivateVendor(
+  vendorId: string,
+  reason?: string
+): Promise<ActionResult<VendorProfile>> {
+  try {
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/admin/vendors/${vendorId}/reactivate`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ reason }),
+        cache: "no-store",
+      })
+    );
+
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to reactivate vendor account" };
+    }
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    console.log("Reactivate vendor response:", { vendorId, response: body.data });
+
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/vendors");
+    revalidatePath(`/vendors/profile/${vendorId}`);
+
+    return { success: true, data: body.data };
+  } catch (error) {
+    console.error("Reactivate Vendor Error:", error);
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
+

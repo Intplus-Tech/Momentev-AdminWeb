@@ -10,6 +10,8 @@ import Link from "next/link";
 const statusStyles: Record<string, string> = {
   Active: "bg-green-100 text-green-700",
   Inactive: "bg-red-100 text-red-700",
+  Suspended: "bg-amber-100 text-amber-700",
+  Banned: "bg-red-100 text-red-700",
 };
 
 export const columns: ColumnDef<VendorProfile>[] = [
@@ -56,7 +58,13 @@ export const columns: ColumnDef<VendorProfile>[] = [
     header: "Status & Stage",
     cell: ({ row }) => {
       const vendor = row.original;
-      const statusText = vendor.isActive ? "Active" : "Inactive";
+      const statusText = vendor.vendorStatus === "banned"
+        ? "Banned"
+        : vendor.vendorStatus === "suspended"
+          ? "Suspended"
+          : vendor.isActive
+            ? "Active"
+            : "Inactive";
       return (
         <div className="flex flex-col items-start gap-1.5">
           <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${statusStyles[statusText]}`}>

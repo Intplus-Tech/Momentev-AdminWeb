@@ -46,6 +46,18 @@ export default async function VendorProfilePage({ params }: PageProps) {
   }
 
   const vendor = vendorRes.data;
+  const vendorStatus =
+    vendor.userId?.status === "active" || vendor.userId?.status === "suspended" || vendor.userId?.status === "banned"
+      ? vendor.userId.status
+      : vendor.vendorStatus || (vendor.isActive ? "active" : "suspended");
+  const vendorStatusLabel =
+    vendorStatus === "banned" ? "Banned" : vendorStatus === "suspended" ? "Suspended" : "Active";
+  const vendorStatusBadgeClass =
+    vendorStatus === "banned"
+      ? "bg-red-50 text-red-700 border-red-100"
+      : vendorStatus === "suspended"
+        ? "bg-amber-50 text-amber-700 border-amber-100"
+        : "bg-green-50 text-green-700 border-green-100";
 
   const services = servicesRes.success ? (servicesRes.data || []) : [];
   const specialties = specialtiesRes.success ? (specialtiesRes.data || []) : [];
@@ -67,11 +79,11 @@ export default async function VendorProfilePage({ params }: PageProps) {
 
         <div className="flex-1 text-center">
           <h1 className="text-xl sm:text-2xl font-semibold tracking-wide uppercase">Vendor Profile Management</h1>
-          {vendor?.isActive === false && (
+          {vendorStatus !== "active" && (
             <div className="mt-2 flex justify-center">
-              <span className="inline-flex items-center gap-2 bg-red-50 text-red-700 px-2 py-0.5 rounded-full text-xs font-semibold border border-red-100">
-                <span className="w-2 h-2 rounded-full bg-red-600 block" />
-                Suspended
+              <span className={`inline-flex items-center gap-2 px-2 py-0.5 rounded-full text-xs font-semibold border ${vendorStatusBadgeClass}`}>
+                <span className={`w-2 h-2 rounded-full block ${vendorStatus === "banned" ? "bg-red-600" : "bg-amber-500"}`} />
+                {vendorStatusLabel}
               </span>
             </div>
           )}

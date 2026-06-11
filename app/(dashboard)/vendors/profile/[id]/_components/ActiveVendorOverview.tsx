@@ -2,7 +2,7 @@
 
 import { VendorProfile, VendorService } from "@/lib/actions/vendors";
 import { FileText, Image as ImageIcon, Star } from "lucide-react";
-import VendorStatusToggle from "./VendorStatusToggle";
+import VendorStatusActions from "./VendorStatusActions";
 
 interface Props {
   vendor: VendorProfile;
@@ -14,6 +14,17 @@ export default function ActiveVendorOverview({ vendor, services, specialties }: 
   const profile = vendor.businessProfile as any;
   const user = vendor.userId as any;
   const vendorAny = vendor as any;
+  const status =
+    user?.status === "active" || user?.status === "suspended" || user?.status === "banned"
+      ? user.status
+      : vendor.vendorStatus || (vendor.isActive ? "active" : "suspended");
+
+  const quickActionCopy =
+    status === "banned"
+      ? "This vendor is banned and cannot access the dashboard or public listings. Reactivate to restore access."
+      : status === "suspended"
+        ? "This vendor is suspended and cannot access the dashboard. Reactivate to restore access, or use Ban for a permanent restriction."
+        : "Suspend to restrict access while keeping data, or Ban to completely remove the vendor from the platform. Provide a reason for audit trail.";
 
   const contactName = profile?.contactInfo?.primaryContactName || user?.firstName || "Unknown";
   const email = profile?.contactInfo?.emailAddress || user?.email || "—";
@@ -86,9 +97,9 @@ export default function ActiveVendorOverview({ vendor, services, specialties }: 
       <section className="py-8 border-b border-gray-100">
         <h3 className="font-semibold text-[15px] text-gray-900 mb-5">Quick Actions</h3>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <VendorStatusToggle vendor={vendor} />
-          <p className="text-[12px] text-gray-500 leading-relaxed max-w-xl">
-            Use this toggle to suspend or reactivate the vendor account. Suspended vendors are removed from public listings and cannot log in.
+          <VendorStatusActions vendor={vendor} />
+          <p className="text-[12px] text-gray-600 leading-relaxed max-w-xl">
+            {quickActionCopy}
           </p>
         </div>
       </section>
