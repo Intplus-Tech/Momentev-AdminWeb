@@ -44,7 +44,7 @@ export default function ActivePagination({ totalPages, currentPage }: ActivePagi
   const getVisiblePages = () => {
     const pages: (number | string)[] = [];
     const windowSize = 1; // pages before & after current
-    
+
     // If no pages needed, return empty
     if (totalPages <= 1) return pages;
 
@@ -81,14 +81,14 @@ export default function ActivePagination({ totalPages, currentPage }: ActivePagi
       <button
         onClick={handlePrevious}
         disabled={currentPage === 1}
-        className="flex items-center gap-2 text-[#757575] disabled:opacity-40 hover:text-[#2B4EFF] transition-colors"
+        className="flex items-center gap-2 text-[#757575] disabled:opacity-40 hover:text-[#2B4EFF] transition-colors cursor-pointer"
       >
         <ArrowLeft className="w-4 h-4" />
         <span className="text-sm font-medium">Previous</span>
       </button>
 
       {/* PAGE NUMBERS */}
-      <div className="flex items-center space-x-2 sm:space-x-4 text-sm font-medium">
+      <div className="flex items-center space-x-2 sm:space-x-4 text-sm font-medium cursor-pointer">
         {getVisiblePages().map((page, index) =>
           page === "..." ? (
             <span key={`dots-${index}`} className="text-[#757575] px-2">
@@ -98,7 +98,7 @@ export default function ActivePagination({ totalPages, currentPage }: ActivePagi
             <button
               key={page}
               onClick={() => navigateToPage(page as number)}
-              className={`w-10 h-10 border rounded-lg transition-colors ${isActive(page as number)}`}
+              className={`w-10 h-10 cursor-pointer border rounded-lg transition-colors ${isActive(page as number)}`}
             >
               {page}
             </button>
