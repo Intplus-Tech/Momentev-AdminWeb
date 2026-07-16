@@ -47,7 +47,6 @@ export async function fetchAdminReviews(
     // Expect backend to return { data, total, page, limit }
     return { success: true, data: body.data };
   } catch (err) {
-    console.error("Fetch Admin Reviews Error:", err);
     return { success: false, error: "An unexpected network error occurred." };
   }
 }
@@ -81,7 +80,6 @@ export async function flagReview(reviewId: string, isFlagged: boolean): Promise<
 
     return { success: true, data: body.data };
   } catch (err) {
-    console.error("Flag Review Error:", err);
     return { success: false, error: "An unexpected network error occurred." };
   }
 }
@@ -114,7 +112,6 @@ export async function deleteReview(reviewId: string): Promise<AdminActionResult<
 
     return { success: true, data: body.data || { message: body.message } };
   } catch (err) {
-    console.error("Delete Review Error:", err);
     return { success: false, error: "An unexpected network error occurred." };
   }
 }

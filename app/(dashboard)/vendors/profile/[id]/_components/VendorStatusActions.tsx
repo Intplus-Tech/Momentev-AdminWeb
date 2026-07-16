@@ -96,7 +96,6 @@ export default function VendorStatusActions({ vendor }: Props) {
       setActiveAction(null);
       router.refresh();
     } catch (error) {
-      console.error(`Error during ${activeAction}:`, error);
       toast.error("An unexpected error occurred");
     } finally {
       setLoading(false);

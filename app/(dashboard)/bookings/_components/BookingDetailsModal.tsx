@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { AdminBookingItem, releaseBookingPayout, refundBookingPayment } from "@/lib/actions/bookings";
 import { getAdminVendorById, getAdminVendorSpecialties } from "@/lib/actions/vendors";
+import { formatMoneyFromMinorUnits } from "@/lib/utils";
 import { format } from "date-fns";
 
 interface BookingDetailsModalProps {
@@ -90,7 +91,6 @@ export default function BookingDetailsModal({
             setSpecialtyNames(namesMap);
           }
         } catch (error) {
-          console.error("Failed to load extra details:", error);
         } finally {
           setIsLoadingExtra(false);
         }
@@ -123,7 +123,7 @@ export default function BookingDetailsModal({
 
   const handleRefundPayment = async () => {
     if (!booking?._id) return;
-    
+
     const input = window.prompt("Enter refund amount in minor units (e.g., 54900 for $549.00). Leave blank to refund the FULL amount.");
     if (input === null) return; // User cancelled
 
@@ -172,10 +172,9 @@ export default function BookingDetailsModal({
                 </DialogTitle>
                 <Badge
                   variant="outline"
-                  className={`rounded-sm text-[10px] font-bold uppercase tracking-wider ${
-                    statusStyles[booking.status] ||
+                  className={`rounded-sm text-[10px] font-bold uppercase tracking-wider ${statusStyles[booking.status] ||
                     "bg-gray-50 text-gray-600 border-gray-200"
-                  }`}
+                    }`}
                 >
                   {booking.status?.replace(/_/g, " ")}
                 </Badge>
@@ -185,8 +184,8 @@ export default function BookingDetailsModal({
 
             <div className="flex items-center gap-2">
               {booking.payment?.status === "succeeded" && booking.status !== "cancelled" && (
-                <Button 
-                  onClick={handleRefundPayment} 
+                <Button
+                  onClick={handleRefundPayment}
                   disabled={isRefunding || isReleasing}
                   size="sm"
                   variant="outline"
@@ -204,8 +203,8 @@ export default function BookingDetailsModal({
               )}
 
               {booking.paymentModel === "split_payout" && booking.status !== "completed" && booking.status !== "cancelled" && booking.payment?.status === "succeeded" && (
-                <Button 
-                  onClick={handleReleasePayout} 
+                <Button
+                  onClick={handleReleasePayout}
                   disabled={isReleasing || isRefunding}
                   size="sm"
                   className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
@@ -247,7 +246,7 @@ export default function BookingDetailsModal({
                 <div className="flex justify-between items-center pb-2 border-b border-gray-100">
                   <span className="text-gray-500">Email</span>
                   <span
-                    className="font-medium text-right truncate max-w-[150px]"
+                    className="font-medium text-right truncate max-w-37.5"
                     title={customer?.email}
                   >
                     {customer?.email}
@@ -280,7 +279,7 @@ export default function BookingDetailsModal({
 
                 <div className="flex justify-between items-center pb-2 border-b border-gray-100">
                   <span className="text-gray-500">Business Name</span>
-                  <span className="font-medium text-right max-w-[150px]">
+                  <span className="font-medium text-right max-w-37.5">
                     {isLoadingExtra ? (
                       <Loader2 className="w-3 h-3 animate-spin text-gray-400" />
                     ) : (
@@ -308,7 +307,7 @@ export default function BookingDetailsModal({
               </div>
               Financial & Payment Details
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
               <div className="space-y-2">
                 <div className="flex justify-between items-center pb-2 border-b border-gray-100">
@@ -320,25 +319,25 @@ export default function BookingDetailsModal({
                 <div className="flex justify-between items-center pb-2 border-b border-gray-100">
                   <span className="text-gray-500">Subtotal</span>
                   <span className="font-medium">
-                    {amounts?.subtotal?.toLocaleString(undefined, { style: "currency", currency: booking.currency || "GBP" })}
+                    {formatMoneyFromMinorUnits(amounts?.subtotal, booking.currency || "GBP", undefined)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center pb-2 border-b border-gray-100">
                   <span className="text-gray-500">Fees</span>
                   <span className="font-medium">
-                    {amounts?.fees?.toLocaleString(undefined, { style: "currency", currency: booking.currency || "GBP" })}
+                    {formatMoneyFromMinorUnits(amounts?.fees, booking.currency || "GBP", undefined)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center pb-2 border-b border-gray-100">
                   <span className="text-gray-500">Commission</span>
                   <span className="font-medium text-amber-600">
-                    {amounts?.commission?.toLocaleString(undefined, { style: "currency", currency: booking.currency || "GBP" })}
+                    {formatMoneyFromMinorUnits(amounts?.commission, booking.currency || "GBP", undefined)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center pb-1 font-semibold">
                   <span className="text-gray-900">Total</span>
                   <span className="text-emerald-700">
-                    {amounts?.total?.toLocaleString(undefined, { style: "currency", currency: booking.currency || "GBP" })}
+                    {formatMoneyFromMinorUnits(amounts?.total, booking.currency || "GBP", undefined)}
                   </span>
                 </div>
               </div>
@@ -375,35 +374,35 @@ export default function BookingDetailsModal({
             {/* Budget Allocations */}
             {booking.budgetAllocations && booking.budgetAllocations.length > 0 && (
               <div className="mt-4 pt-4 border-t border-gray-100">
-                 <span className="text-gray-500 text-xs block mb-2 uppercase tracking-wider font-semibold">
-                    Budget Allocations
-                 </span>
-                 <div className="space-y-2">
-                    {booking.budgetAllocations.map((alloc, idx) => (
-                       <div key={idx} className="flex justify-between bg-white border border-gray-100 p-2 rounded items-center">
-                          <div className="flex flex-col">
-                             <div className="flex items-center gap-2">
-                               <span className="text-xs font-medium text-gray-700">
-                                 {specialtyNames[alloc.vendorSpecialtyId?._id] || "Specialty"}
-                               </span>
-                               {isLoadingExtra && (
-                                 <Loader2 className="w-3 h-3 animate-spin text-gray-400" />
-                               )}
-                             </div>
-                             {!specialtyNames[alloc.vendorSpecialtyId?._id] && !isLoadingExtra && (
-                                <span className="text-[10px] text-gray-400 italic">Unknown Specialty</span>
-                             )}
-                             <span className="text-[10px] text-gray-400 capitalize flex items-center gap-1">
-                                <Info className="w-3 h-3" />
-                                {alloc.vendorSpecialtyId?.priceCharge?.replace(/_/g, " ")} @ {alloc.vendorSpecialtyId?.price}
-                             </span>
-                          </div>
-                          <Badge variant="secondary" className="font-medium bg-gray-50">
-                             {alloc.budgetedAmount?.toLocaleString(undefined, { style: "currency", currency: booking.currency || "GBP" })}
-                          </Badge>
-                       </div>
-                    ))}
-                 </div>
+                <span className="text-gray-500 text-xs block mb-2 uppercase tracking-wider font-semibold">
+                  Budget Allocations
+                </span>
+                <div className="space-y-2">
+                  {booking.budgetAllocations.map((alloc, idx) => (
+                    <div key={idx} className="flex justify-between bg-white border border-gray-100 p-2 rounded items-center">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-medium text-gray-700">
+                            {specialtyNames[alloc.vendorSpecialtyId?._id] || "Specialty"}
+                          </span>
+                          {isLoadingExtra && (
+                            <Loader2 className="w-3 h-3 animate-spin text-gray-400" />
+                          )}
+                        </div>
+                        {!specialtyNames[alloc.vendorSpecialtyId?._id] && !isLoadingExtra && (
+                          <span className="text-[10px] text-gray-400 italic">Unknown Specialty</span>
+                        )}
+                        <span className="text-[10px] text-gray-400 capitalize flex items-center gap-1">
+                          <Info className="w-3 h-3" />
+                          {alloc.vendorSpecialtyId?.priceCharge?.replace(/_/g, " ")} @ {alloc.vendorSpecialtyId?.price}
+                        </span>
+                      </div>
+                      <Badge variant="secondary" className="font-medium bg-gray-50">
+                        {formatMoneyFromMinorUnits(alloc.budgetedAmount, booking.currency || "GBP", undefined)}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -412,7 +411,7 @@ export default function BookingDetailsModal({
           <div className="bg-gray-50 border border-gray-100 rounded-lg p-4">
             <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
               <div className="p-1.5 bg-amber-100 rounded-full text-amber-600">
-                 <Calendar className="w-3 h-3" />
+                <Calendar className="w-3 h-3" />
               </div>
               Event Details
             </h3>

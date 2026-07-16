@@ -97,7 +97,6 @@ export async function getVendorReviews(
       };
     }
   } catch (error) {
-    console.error("Get Vendor Reviews Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -137,8 +136,6 @@ export async function getClientReviews(
   try {
     const url = `${process.env.BACKEND_URL}/api/v1/customer-profile-management/${customerId}/reviews?page=${page}&limit=${limit}`;
 
-    console.log("Get Client Reviews Request:", { customerId, page, limit, url });
-
     const token = await getAccessToken();
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -158,24 +155,7 @@ export async function getClientReviews(
 
     const body = await res.json().catch(() => ({}));
 
-    console.log("Get Client Reviews Response:", {
-      customerId,
-      page,
-      limit,
-      status: res.status,
-      ok: res.ok,
-      total: body.data?.total || 0,
-    });
-
     if (!res.ok) {
-      console.error("Get Client Reviews Failed:", {
-        customerId,
-        page,
-        limit,
-        status: res.status,
-        message: body.message || res.statusText,
-      });
-
       return {
         success: false,
         error: body.message || `Error: ${res.statusText}`,
@@ -189,8 +169,7 @@ export async function getClientReviews(
       page: body.data?.page || 1,
       limit: body.data?.limit || 20,
     };
-  } catch (error) {
-    console.error("Get Client Reviews Error:", { customerId, page, limit, error });
+  } catch {
     return {
       success: false,
       error: "An unexpected network error occurred.",

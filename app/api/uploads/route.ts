@@ -66,7 +66,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: body.data }, { status: 201 });
   } catch (error) {
-    console.error("Upload Route Error:", error);
     return NextResponse.json(
       { success: false, error: "An unexpected error occurred during upload." },
       { status: 500 }

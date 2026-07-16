@@ -51,7 +51,6 @@ export async function uploadFile(
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Upload File Error:", error);
     return { success: false, error: "An unexpected network error occurred." };
   }
 }

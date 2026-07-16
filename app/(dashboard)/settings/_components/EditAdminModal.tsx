@@ -33,13 +33,12 @@ export default function EditAdminModal({ adminId, onClose, onSuccess, rolesAndPe
     async function loadAdmin() {
       const res = await getAdminById(adminId);
       if (res.success && res.data) {
-        console.log("Fetched Admin Details:", res.data);
         setAdmin(res.data);
         setFormData({
           firstName: res.data.firstName,
           lastName: res.data.lastName,
           // @ts-ignore - if the backend returns phoneNumber we use it, otherwise empty string
-          phoneNumber: res.data.phoneNumber || "", 
+          phoneNumber: res.data.phoneNumber || "",
           permissions: res.data.adminPermissions || [],
         });
       } else {
@@ -111,72 +110,72 @@ export default function EditAdminModal({ adminId, onClose, onSuccess, rolesAndPe
         <>
           {error && <div className="p-3 bg-red-50 text-red-600 rounded-md text-sm">{error}</div>}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="firstName">First Name</Label>
-            <Input
-              id="firstName"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              placeholder="John"
-              required
-              disabled={loading}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="lastName">Last Name</Label>
-            <Input
-              id="lastName"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              placeholder="Doe"
-              required
-              disabled={loading}
-            />
-          </div>
-        </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  placeholder="John"
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  placeholder="Doe"
+                  required
+                  disabled={loading}
+                />
+              </div>
+            </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="phoneNumber">Phone Number</Label>
-          <Input
-            id="phoneNumber"
-            name="phoneNumber"
-            type="tel"
-            value={formData.phoneNumber || ""}
-            onChange={handleChange}
-            placeholder="+1234567890"
-            disabled={loading}
-          />
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="phoneNumber">Phone Number</Label>
+              <Input
+                id="phoneNumber"
+                name="phoneNumber"
+                type="tel"
+                value={formData.phoneNumber || ""}
+                onChange={handleChange}
+                placeholder="+1234567890"
+                disabled={loading}
+              />
+            </div>
 
-        {rolesAndPermissions?.adminPermissionGroups && (
-          <div className="space-y-2 pt-2 border-t mt-4">
-            <Label className="text-base font-semibold">Admin Permissions</Label>
-            <p className="text-sm text-gray-500 mb-2">
-              Select the modules and actions this admin can access.
-            </p>
-            <PermissionsSelector
-              groups={rolesAndPermissions.adminPermissionGroups}
-              selectedPermissions={formData.permissions || []}
-              onChange={handlePermissionsChange}
-              disabled={loading}
-            />
-          </div>
-        )}
+            {rolesAndPermissions?.adminPermissionGroups && (
+              <div className="space-y-2 pt-2 border-t mt-4">
+                <Label className="text-base font-semibold">Admin Permissions</Label>
+                <p className="text-sm text-gray-500 mb-2">
+                  Select the modules and actions this admin can access.
+                </p>
+                <PermissionsSelector
+                  groups={rolesAndPermissions.adminPermissionGroups}
+                  selectedPermissions={formData.permissions || []}
+                  onChange={handlePermissionsChange}
+                  disabled={loading}
+                />
+              </div>
+            )}
 
-        <div className="flex justify-end gap-3 pt-4">
-          <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Changes
-          </Button>
-        </div>
-      </form>
+            <div className="flex justify-end gap-3 pt-4">
+              <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Changes
+              </Button>
+            </div>
+          </form>
         </>
       )}
     </div>

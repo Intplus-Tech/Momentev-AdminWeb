@@ -52,7 +52,6 @@ export async function getCommissions(
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Get Commissions Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -100,7 +99,6 @@ export async function createCommission(data: {
     revalidatePath("/financial");
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Create Commission Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -145,7 +143,6 @@ export async function updateCommission(
     revalidatePath("/financial");
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Update Commission Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -172,7 +169,6 @@ export async function deleteCommission(id: string): Promise<ActionResult<any>> {
     );
 
     const body = await response.json();
-    console.log("DELETE /commissions response body:", body);
 
     if (!response.ok) {
       return {
@@ -184,7 +180,6 @@ export async function deleteCommission(id: string): Promise<ActionResult<any>> {
     revalidatePath("/financial");
     return { success: true };
   } catch (error) {
-    console.error("Delete Commission Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",

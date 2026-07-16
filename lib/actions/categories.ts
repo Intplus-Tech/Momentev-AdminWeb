@@ -52,7 +52,6 @@ export async function getServiceCategories(
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Get Service Categories Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -91,7 +90,6 @@ export async function createServiceCategory(
     revalidatePath("/admin/categories");
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Create Service Category Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -131,7 +129,6 @@ export async function updateServiceCategory(
     revalidatePath("/admin/categories");
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Update Service Category Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -143,7 +140,6 @@ export async function deleteServiceCategory(
   id: string
 ): Promise<ActionResult<{ message: string }>> {
   try {
-    console.log(`[Delete Category]: Triggered for ID ${id}`);
     const token = await getAccessToken();
 
     if (!token) {
@@ -159,7 +155,6 @@ export async function deleteServiceCategory(
     });
 
     const body = await response.json();
-    console.log(`[Delete Category]: Backend Response`, body);
 
     if (!response.ok) {
       return {
@@ -171,7 +166,6 @@ export async function deleteServiceCategory(
     revalidatePath("/admin/categories");
     return { success: true, data: { message: body.message } };
   } catch (error) {
-    console.error("Delete Service Category Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",

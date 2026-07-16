@@ -98,7 +98,6 @@ export async function getAdmins(
       limit: body.data.limit,
     };
   } catch (error) {
-    console.error("Get Admins Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -134,7 +133,6 @@ export async function getAdminById(id: string): Promise<ActionResult<AdminUser>>
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Get Admin By ID Error:", error);
     return { success: false, error: "An unexpected network error occurred." };
   }
 }
@@ -167,8 +165,7 @@ export async function createAdmin(data: CreateAdminData): Promise<ActionResult<A
     const body = await response.json();
 
     if (!response.ok) {
-      console.error("Create Admin Backend Error Response:", JSON.stringify(body, null, 2));
-      const errorMessage = body.errors 
+      const errorMessage = body.errors
         ? `${body.message}: ${JSON.stringify(body.errors)}`
         : body.message || `Error: ${response.statusText}`;
 
@@ -181,14 +178,11 @@ export async function createAdmin(data: CreateAdminData): Promise<ActionResult<A
     const { revalidatePath } = await import("next/cache");
     revalidatePath("/settings");
 
-    console.log("Create Admin Backend Success Response:", JSON.stringify(body, null, 2));
-
     return {
       success: true,
       data: body.data,
     };
   } catch (error) {
-    console.error("Create Admin Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -210,8 +204,6 @@ export async function updateAdmin(id: string, data: UpdateAdminData): Promise<Ac
       return { success: false, error: "Unauthorized: No access token" };
     }
 
-    console.log("Update Admin Request Payload:", JSON.stringify(data, null, 2));
-
     const response = await fetch(`${process.env.BACKEND_URL}/api/v1/admin-management/${id}`, {
       method: "PATCH",
       headers: {
@@ -224,8 +216,7 @@ export async function updateAdmin(id: string, data: UpdateAdminData): Promise<Ac
     const body = await response.json();
 
     if (!response.ok) {
-      console.error("Update Admin Backend Error Response:", JSON.stringify(body, null, 2));
-      const errorMessage = body.errors 
+      const errorMessage = body.errors
         ? `${body.message}: ${JSON.stringify(body.errors)}`
         : body.message || `Error: ${response.statusText}`;
 
@@ -238,14 +229,11 @@ export async function updateAdmin(id: string, data: UpdateAdminData): Promise<Ac
     const { revalidatePath } = await import("next/cache");
     revalidatePath("/settings");
 
-    console.log("Update Admin Backend Success Response:", JSON.stringify(body, null, 2));
-
     return {
       success: true,
       data: body.data,
     };
   } catch (error) {
-    console.error("Update Admin Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -286,7 +274,6 @@ export async function deleteAdmin(id: string): Promise<ActionResult<null>> {
 
     return { success: true };
   } catch (error) {
-    console.error("Delete Admin Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -323,7 +310,6 @@ export async function deactivateAdmin(id: string): Promise<ActionResult<AdminUse
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Deactivate Admin Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -360,7 +346,6 @@ export async function reactivateAdmin(id: string): Promise<ActionResult<AdminUse
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Reactivate Admin Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -399,7 +384,6 @@ export async function getRolesAndPermissions(): Promise<ActionResult<RolesAndPer
       data: body.data,
     };
   } catch (error) {
-    console.error("Get Roles and Permissions Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",

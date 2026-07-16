@@ -53,7 +53,6 @@ export async function getServiceSpecialties(
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Get Service Specialties Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -91,7 +90,6 @@ export async function getServiceSpecialtiesByCategory(
 
     return { success: true, data: body };
   } catch (error) {
-    console.error("Get Service Specialties By Category Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -116,7 +114,6 @@ export async function createServiceSpecialty(
     });
 
     const body = await response.json();
-    console.log('Create Specialty API Response Body:', JSON.stringify(body, null, 2));
 
     if (!response.ok) {
       const errorMsg = body.errors ? `${body.message}: ${JSON.stringify(body.errors)}` : body.message;
@@ -126,7 +123,6 @@ export async function createServiceSpecialty(
     revalidatePath("/admin/categories");
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Create Service Specialty Error:", error);
     return { success: false, error: "An unexpected network error occurred." };
   }
 }
@@ -157,7 +153,6 @@ export async function updateServiceSpecialty(
     revalidatePath("/admin/categories");
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Update Service Specialty Error:", error);
     return { success: false, error: "An unexpected network error occurred." };
   }
 }
@@ -180,7 +175,6 @@ export async function deleteServiceSpecialty(id: string): Promise<ActionResult<v
     revalidatePath("/admin/categories");
     return { success: true };
   } catch (error) {
-    console.error("Delete Service Specialty Error:", error);
     return { success: false, error: "An unexpected network error occurred." };
   }
 }
