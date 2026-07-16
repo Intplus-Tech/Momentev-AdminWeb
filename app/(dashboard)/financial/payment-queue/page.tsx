@@ -39,7 +39,6 @@ export default async function PaymentQueuePage({ searchParams }: SearchParamsPro
 
   const queueItems = data?.data || [];
 
-  // console.log("Payment Queue Data:", data, "Error:", error); // Debug log to inspect the data and error
 
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / limit);

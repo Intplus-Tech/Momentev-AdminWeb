@@ -36,11 +36,9 @@ export async function fetchPendingPayouts(
       };
     }
 
-    console.log("Server raw pending payouts response:", JSON.stringify(body.data, null, 2));
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Fetch Pending Payouts Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -81,7 +79,6 @@ export async function releaseVendorPayout(
 
     return { success: true, data: body };
   } catch (error) {
-    console.error("Release Vendor Payout Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",

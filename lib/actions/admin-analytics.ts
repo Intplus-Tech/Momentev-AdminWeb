@@ -106,7 +106,6 @@ export async function getAnalyticsOverview(
     // Typical Momentev API responses have the data wrapped in `{ message: string, data: T }`
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Get Analytics Overview Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -171,7 +170,6 @@ export async function getBookingTrends(
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Get Booking Trends Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",

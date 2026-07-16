@@ -91,7 +91,6 @@ export async function getVendorBookings(
       limit: body.data.limit,
     };
   } catch (error) {
-    console.error("Get Vendor Bookings Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -152,7 +151,6 @@ export async function getAdminClientBookings(
       limit: body.data.limit,
     };
   } catch (error) {
-    console.error("Get Admin Client Bookings Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -264,9 +262,9 @@ export async function getAdminBookings(
       }
     );
 
-    const body = await response.json();
+    const rawResponse = await response.text();
 
-    console.log("Admin Bookings Response:", JSON.stringify(body, null, 2));
+    const body = rawResponse ? JSON.parse(rawResponse) : {};
 
     if (!response.ok) {
       return {
@@ -277,7 +275,6 @@ export async function getAdminBookings(
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Get Admin Bookings Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -321,7 +318,6 @@ export async function releaseBookingPayout(
 
     return { success: true, data: body };
   } catch (error) {
-    console.error("Release Booking Payout Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -369,7 +365,6 @@ export async function refundBookingPayment(
 
     return { success: true, data: body };
   } catch (error) {
-    console.error("Refund Booking Payment Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",

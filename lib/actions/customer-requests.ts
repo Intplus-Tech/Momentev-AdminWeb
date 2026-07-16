@@ -129,7 +129,6 @@ export async function getCustomerRequests(
       limit: body.data.limit,
     };
   } catch (error) {
-    console.error("Get Customer Requests Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -176,7 +175,6 @@ export async function approveRejectCustomerRequest(
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Approve/Reject Customer Request Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -221,11 +219,9 @@ export async function broadcastCustomerRequest(
     const { revalidatePath } = await import("next/cache");
     revalidatePath("/customer-requests");
 
-    console.log("Broadcast Quote Request Success:", body.data);
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Broadcast Quote Request Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",

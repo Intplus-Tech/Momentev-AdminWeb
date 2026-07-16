@@ -117,7 +117,6 @@ export async function getAdminClients(
       limit: body.data.limit,
     };
   } catch (error) {
-    console.error("Get Admin Clients Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -153,7 +152,6 @@ export async function getAdminClientById(id: string): Promise<ActionResult<Clien
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Get Admin Client By ID Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -198,7 +196,6 @@ export async function updateClientStatus(
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Update Admin Client Status Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -267,7 +264,6 @@ export async function getClientPaymentDashboard(
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Get Client Payment Dashboard Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -331,7 +327,6 @@ export async function getClientOverview(
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Get Client Overview Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",

@@ -101,7 +101,6 @@ async function authorizedRequest<T>(
       data: (body?.data as T) ?? (body as T),
     };
   } catch (err) {
-    console.error("Support Requests API error:", err);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -172,12 +171,6 @@ export async function updateSupportRequest(
 
     const body = await parseBody(response);
 
-    // Log the update status response server-side to debug validation errors
-    console.log("updateSupportRequest RESPONSE:", {
-      status: response.status,
-      body: JSON.stringify(body),
-    });
-
     if (!response.ok) {
       return {
         success: false,
@@ -189,8 +182,7 @@ export async function updateSupportRequest(
       success: true,
       data: (body?.data as SupportRequest) ?? (body as unknown as SupportRequest),
     };
-  } catch (err) {
-    console.error("updateSupportRequest exception:", err);
+  } catch {
     return {
       success: false,
       error: "An unexpected network error occurred.",

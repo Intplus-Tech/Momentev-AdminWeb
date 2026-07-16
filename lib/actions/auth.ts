@@ -128,7 +128,6 @@ export async function changePassword(input: ChangePasswordInput): Promise<Action
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Change Password Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",

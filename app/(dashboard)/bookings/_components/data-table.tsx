@@ -20,6 +20,7 @@ import { Search, Loader2, X, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { downloadCsv } from "@/lib/exportCsv";
+import { formatMoneyFromMinorUnits } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -69,7 +70,7 @@ export function DataTable<TData, TValue>({
       "Status": item.status,
       "Customer": item.customer?.nameSnapshot || "",
       "Vendor": item.vendor?.nameSnapshot || "",
-      "Amount Minor": item.amounts?.total || 0,
+      "Amount": formatMoneyFromMinorUnits(item.amounts?.total, item.currency || "GBP"),
       "Currency": item.currency || "GBP",
       "Start Date": item.eventDetails?.startDate || "",
     }));

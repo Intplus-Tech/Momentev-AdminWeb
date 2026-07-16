@@ -81,7 +81,6 @@ export async function getVendorEarnings(
       total: body.data.total,
     };
   } catch (error) {
-    console.error("Get Vendor Earnings Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",

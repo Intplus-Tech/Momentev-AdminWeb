@@ -64,7 +64,6 @@ export async function getMyProfile(): Promise<ActionResult<ProfileUser>> {
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Get Profile Error:", error);
     return { success: false, error: "An unexpected network error occurred." };
   }
 }
@@ -100,7 +99,6 @@ export async function updateMyProfile(data: UpdateProfileData): Promise<ActionRe
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Update Profile Error:", error);
     return { success: false, error: "An unexpected network error occurred." };
   }
 }
@@ -144,7 +142,6 @@ export async function updateMyAvatar(
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Update Avatar Error:", error);
     return { success: false, error: "An unexpected network error occurred." };
   }
 }

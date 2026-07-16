@@ -81,7 +81,6 @@ export async function getPlatformRevenue(
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Get Platform Revenue Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -123,7 +122,6 @@ export async function getPendingPayouts(
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Get Pending Payouts Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -230,7 +228,6 @@ export async function getPaymentQueue(params?: {
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Get Payment Queue Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -268,7 +265,6 @@ export async function syncStripePaymentStatuses(): Promise<ActionResult> {
 
     return { success: true, data: body };
   } catch (error) {
-    console.error("Sync Stripe Payment Statuses Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",

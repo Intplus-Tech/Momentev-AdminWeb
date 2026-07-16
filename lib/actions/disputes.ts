@@ -198,7 +198,6 @@ async function authorizedRequest<T>(
       data: (body?.data as T) || (body as T),
     };
   } catch (error) {
-    console.error("Disputes API request failed:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",

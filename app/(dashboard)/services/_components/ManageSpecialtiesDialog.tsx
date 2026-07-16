@@ -35,9 +35,9 @@ import { Input } from "@/components/ui/input";
 import { Field, FieldError } from "@/components/ui/field";
 import { ServiceCategory } from "@/lib/actions/categories";
 import { Commission } from "@/lib/actions/commissions";
-import { 
-  ServiceSpecialty, 
-  updateServiceSpecialty, 
+import {
+  ServiceSpecialty,
+  updateServiceSpecialty,
   deleteServiceSpecialty,
   createServiceSpecialty
 } from "@/lib/actions/specialties";
@@ -75,13 +75,13 @@ export function ManageSpecialtiesDialog({ category, initialSpecialties, commissi
 
   const handleUpdate = async (id: string, values: SpecialtyFormValues) => {
     setIsProcessing(true);
-    
-    const result = await updateServiceSpecialty(id, { 
+
+    const result = await updateServiceSpecialty(id, {
       name: values.name.trim(),
       description: values.description.trim(),
-      commissionId: values.commissionId 
+      commissionId: values.commissionId
     });
-    
+
     setIsProcessing(false);
     if (result.success && result.data) {
       setSpecialties(prev => prev.map(s => s._id === id ? result.data! : s));
@@ -95,13 +95,13 @@ export function ManageSpecialtiesDialog({ category, initialSpecialties, commissi
   const confirmDelete = async () => {
     if (!specialtyToDelete) return;
     const { id } = specialtyToDelete;
-    
+
     setIsProcessing(true);
     const previousState = [...specialties];
     setSpecialties(prev => prev.filter(s => s._id !== id)); // Optimistic UI
-    
+
     const result = await deleteServiceSpecialty(id);
-    
+
     setIsProcessing(false);
     setSpecialtyToDelete(null);
 
@@ -121,7 +121,6 @@ export function ManageSpecialtiesDialog({ category, initialSpecialties, commissi
       commissionId: values.commissionId,
     });
 
-    console.log('Create Specialty Response:', result);
 
     setIsProcessing(false);
     if (result.success && result.data) {
@@ -155,13 +154,13 @@ export function ManageSpecialtiesDialog({ category, initialSpecialties, commissi
           ) : (
             <ul className="space-y-2">
               {specialties.map((spec) => (
-                <li 
+                <li
                   key={spec._id}
                   className="flex items-center justify-between p-3 rounded-md border bg-gray-50/50"
                 >
                   {editingId === spec._id ? (
                     // EDIT MODE
-                    <EditSpecialtyRow 
+                    <EditSpecialtyRow
                       specialty={spec}
                       commissions={commissions}
                       isProcessing={isProcessing}
@@ -193,18 +192,18 @@ export function ManageSpecialtiesDialog({ category, initialSpecialties, commissi
                         )}
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
+                        <Button
+                          size="icon"
+                          variant="ghost"
                           className="h-8 w-8 text-gray-500 hover:text-[#2B4EFF] hover:bg-blue-50"
                           onClick={() => setEditingId(spec._id)}
                           disabled={isProcessing || editingId !== null}
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </Button>
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
+                        <Button
+                          size="icon"
+                          variant="ghost"
                           className="h-8 w-8 text-gray-500 hover:text-red-600 hover:bg-red-50"
                           onClick={() => setSpecialtyToDelete({ id: spec._id, name: spec.name })}
                           disabled={isProcessing || editingId !== null}
@@ -221,7 +220,7 @@ export function ManageSpecialtiesDialog({ category, initialSpecialties, commissi
         </div>
 
         {/* CREATE SPECIALTY ROW */}
-        <CreateSpecialtyForm 
+        <CreateSpecialtyForm
           category={category}
           commissions={commissions}
           isProcessing={isProcessing}
@@ -239,7 +238,7 @@ export function ManageSpecialtiesDialog({ category, initialSpecialties, commissi
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isProcessing}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
                 confirmDelete();
@@ -256,13 +255,13 @@ export function ManageSpecialtiesDialog({ category, initialSpecialties, commissi
   );
 }
 
-function EditSpecialtyRow({ 
-  specialty, 
-  commissions, 
-  onSave, 
-  onCancel, 
-  isProcessing 
-}: { 
+function EditSpecialtyRow({
+  specialty,
+  commissions,
+  onSave,
+  onCancel,
+  isProcessing
+}: {
   specialty: ServiceSpecialty;
   commissions: Commission[];
   onSave: (id: string, values: SpecialtyFormValues) => Promise<{ success: boolean; error?: string }>;
@@ -293,7 +292,7 @@ function EditSpecialtyRow({
           name="name"
           render={({ field, fieldState }) => (
             <Field className="flex-1 gap-1" data-invalid={fieldState.invalid}>
-              <Input 
+              <Input
                 {...field}
                 className="h-8 text-sm"
                 placeholder="Specialty Name"
@@ -325,19 +324,19 @@ function EditSpecialtyRow({
             </Field>
           )}
         />
-        <Button 
+        <Button
           type="submit"
-          size="icon" 
-          variant="ghost" 
+          size="icon"
+          variant="ghost"
           className="h-8 w-8 text-green-600 hover:bg-green-100 hover:text-green-700 shrink-0"
           disabled={isProcessing}
         >
           <Check className="w-4 h-4" />
         </Button>
-        <Button 
+        <Button
           type="button"
-          size="icon" 
-          variant="ghost" 
+          size="icon"
+          variant="ghost"
           className="h-8 w-8 text-gray-500 hover:bg-gray-200 shrink-0"
           onClick={onCancel}
           disabled={isProcessing}
@@ -368,14 +367,14 @@ function EditSpecialtyRow({
   );
 }
 
-function CreateSpecialtyForm({ 
-  category, 
-  commissions, 
+function CreateSpecialtyForm({
+  category,
+  commissions,
   isProcessing,
-  onCreate 
-}: { 
-  category: ServiceCategory; 
-  commissions: Commission[]; 
+  onCreate
+}: {
+  category: ServiceCategory;
+  commissions: Commission[];
   isProcessing: boolean;
   onCreate: (values: SpecialtyFormValues) => Promise<{ success: boolean; error?: string }>;
 }) {
@@ -405,7 +404,7 @@ function CreateSpecialtyForm({
           name="name"
           render={({ field, fieldState }) => (
             <Field className="flex-1 gap-1" data-invalid={fieldState.invalid}>
-              <Input 
+              <Input
                 {...field}
                 className="h-8 text-sm"
                 placeholder="Add new specialty..."
@@ -436,9 +435,9 @@ function CreateSpecialtyForm({
             </Field>
           )}
         />
-        <Button 
+        <Button
           type="submit"
-          size="sm" 
+          size="sm"
           className="h-8 bg-[#2B4EFF] hover:bg-blue-700 text-white shrink-0"
           disabled={isProcessing}
         >

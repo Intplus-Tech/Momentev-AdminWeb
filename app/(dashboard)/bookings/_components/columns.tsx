@@ -5,6 +5,7 @@ import { AdminBookingItem } from "@/lib/actions/bookings";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { formatMoneyFromMinorUnits } from "@/lib/utils";
 
 export const columns: ColumnDef<AdminBookingItem>[] = [
   {
@@ -71,11 +72,7 @@ export const columns: ColumnDef<AdminBookingItem>[] = [
     cell: ({ row }) => {
       const total = row.original.amounts?.total || 0;
       const currency = row.original.currency || "GBP";
-      const formatted = total.toLocaleString("en-GB", {
-        style: "currency",
-        currency: currency,
-      });
-      return <div className="font-semibold">{formatted}</div>;
+      return <div className="font-semibold">{formatMoneyFromMinorUnits(total, currency)}</div>;
     },
   },
   {

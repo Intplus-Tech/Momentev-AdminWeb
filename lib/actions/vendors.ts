@@ -91,7 +91,6 @@ export async function getVendors(
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Get Vendors Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -142,7 +141,6 @@ export async function getAdminVendors(
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Get Admin Vendors Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -177,10 +175,8 @@ export async function getAdminVendorById(id: string): Promise<ActionResult<Vendo
     }
 
     // Single vendor profiles are usually wrapped in body.data from Momentev API
-    console.log("Fetched vendor data:", body.data);
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Get Admin Vendor By ID Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -254,7 +250,6 @@ export async function getAdminVendorServices(vendorId: string): Promise<ActionRe
 
     return { success: true, data: body.data?.data || [] };
   } catch (error) {
-    console.error("Get Admin Vendor Services Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -289,7 +284,6 @@ export async function getAdminVendorSpecialties(vendorId: string): Promise<Actio
 
     return { success: true, data: body.data?.data || [] };
   } catch (error) {
-    console.error("Get Admin Vendor Specialties Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -325,7 +319,6 @@ export async function updateVendor(vendorId: string, data: Partial<VendorProfile
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Update Vendor Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred during vendor update.",
@@ -363,7 +356,6 @@ export async function suspendVendor(
       };
     }
 
-    console.log("Suspend vendor response:", { vendorId, response: body.data });
 
     const { revalidatePath } = await import("next/cache");
     revalidatePath("/vendors");
@@ -371,7 +363,6 @@ export async function suspendVendor(
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Suspend Vendor Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -409,7 +400,6 @@ export async function banVendor(
       };
     }
 
-    console.log("Ban vendor response:", { vendorId, response: body.data });
 
     const { revalidatePath } = await import("next/cache");
     revalidatePath("/vendors");
@@ -417,7 +407,6 @@ export async function banVendor(
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Ban Vendor Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",
@@ -455,7 +444,6 @@ export async function reactivateVendor(
       };
     }
 
-    console.log("Reactivate vendor response:", { vendorId, response: body.data });
 
     const { revalidatePath } = await import("next/cache");
     revalidatePath("/vendors");
@@ -463,7 +451,6 @@ export async function reactivateVendor(
 
     return { success: true, data: body.data };
   } catch (error) {
-    console.error("Reactivate Vendor Error:", error);
     return {
       success: false,
       error: "An unexpected network error occurred.",

@@ -80,7 +80,6 @@ export default function PendingPayoutsClient({
       if (!result.success || !result.data) {
         throw new Error(result.error || "Failed to fetch pending payouts");
       }
-      console.log("Pending payouts fetched:", result.data);
       return result.data;
     },
   });

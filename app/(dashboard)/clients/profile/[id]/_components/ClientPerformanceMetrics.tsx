@@ -27,7 +27,6 @@ export default function ClientPerformanceMetrics({ clientId }: Props) {
           setData(res.data);
         }
       } catch (err) {
-        console.error(err);
       } finally {
         setLoading(false);
       }
