@@ -79,6 +79,7 @@ export default async function VendorProfilePage({ params }: PageProps) {
 
         <div className="flex-1 text-center">
           <h1 className="text-xl sm:text-2xl font-semibold tracking-wide uppercase">Vendor Profile Management</h1>
+          <p>{vendor._id}</p>
           {vendorStatus !== "active" && (
             <div className="mt-2 flex justify-center">
               <span className={`inline-flex items-center gap-2 px-2 py-0.5 rounded-full text-xs font-semibold border ${vendorStatusBadgeClass}`}>
