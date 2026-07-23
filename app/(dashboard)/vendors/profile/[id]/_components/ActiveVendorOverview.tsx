@@ -1,7 +1,7 @@
 "use client";
 
 import { VendorProfile, VendorService } from "@/lib/actions/vendors";
-import { FileText, Image as ImageIcon, Star } from "lucide-react";
+import { FileText, Image as ImageIcon } from "lucide-react";
 import VendorStatusActions from "./VendorStatusActions";
 
 interface Props {
@@ -26,23 +26,32 @@ export default function ActiveVendorOverview({ vendor, services, specialties }: 
         ? "This vendor is suspended and cannot access the dashboard. Reactivate to restore access, or use Ban for a permanent restriction."
         : "Suspend to restrict access while keeping data, or Ban to completely remove the vendor from the platform. Provide a reason for audit trail.";
 
-  const contactName = profile?.contactInfo?.primaryContactName || user?.firstName || "Unknown";
-  const email = profile?.contactInfo?.emailAddress || user?.email || "—";
-  const phone = profile?.contactInfo?.phoneNumber || "—";
+  const userName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Unknown";
+  const userEmail = user?.email || "—";
+  const userPhone = user?.phoneNumber || "—";
+  const contactName = profile?.contactInfo?.primaryContactName || "—";
+  const contactEmail = profile?.contactInfo?.emailAddress || "—";
+  const contactPhone = profile?.contactInfo?.phoneNumber || "—";
+  const meansOfIdentification = profile?.contactInfo?.meansOfIdentification || "—";
   const businessName = profile?.businessName || "—";
-
-  const joinedDate = new Date(vendorAny.createdAt || Date.now()).toLocaleDateString("en-US", {
-    year: "numeric", month: "short", day: "numeric"
-  });
+  const userInitials = [user?.firstName, user?.lastName]
+    .filter(Boolean)
+    .map((value: string) => value.charAt(0).toUpperCase())
+    .join("")
+    .slice(0, 2) || "VP";
 
   const regType = profile?.businessRegType?.replace(/_/g, " ") || 'N/A';
   const yearsInBusiness = profile?.yearInBusiness?.replace(/_/g, " ") || 'N/A';
+  const dateOfBirth = user?.dateOfBirth
+    ? new Date(user.dateOfBirth).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
+    : "—";
 
   const address = profile?.contactInfo?.addressId;
   const formatAddress = () => {
     if (!address) return "Address missing";
+    if (typeof address === "string") return "Address details unavailable";
     return [address.street, address.city, address.state, address.postalCode, address.country]
-      .filter(Boolean).join(", ");
+      .filter(Boolean).join(", ") || "Address details unavailable";
   };
 
   const serviceArea = profile?.serviceArea;
@@ -51,12 +60,14 @@ export default function ActiveVendorOverview({ vendor, services, specialties }: 
     ? serviceAreaNames.map(a => a.city).join(", ")
     : "Not specified";
 
-  let commissionDisplay = "10%";
-  if (vendor.commissionAgreement?.accepted && vendor.commissionAgreement.commissionAmount) {
-    const amt = vendor.commissionAgreement.commissionAmount;
-    const type = vendor.commissionAgreement.commissionType;
-    commissionDisplay = type === "percentage" ? `${amt}%` : `${amt} ${vendor.commissionAgreement.currency || "GBP"}`;
-  }
+  const statusBadgeClass =
+    status === "banned"
+      ? "bg-red-50 text-red-700 border-red-200"
+      : status === "suspended"
+        ? "bg-amber-50 text-amber-700 border-amber-200"
+        : "bg-emerald-50 text-emerald-700 border-emerald-200";
+
+  const onboardingLabel = vendor.onBoarded ? "Onboarding complete" : `Onboarding stage ${vendor.onBoardingStage || 0}`;
 
   // Media arrays
   const documentsList: { name: string; url: string }[] = [];
@@ -92,153 +103,237 @@ export default function ActiveVendorOverview({ vendor, services, specialties }: 
     </div>
   );
 
-  return (
-    <div className="flex flex-col">
-      <section className="py-8 border-b border-gray-100">
-        <h3 className="font-semibold text-[15px] text-gray-900 mb-5">Quick Actions</h3>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <VendorStatusActions vendor={vendor} />
-          <p className="text-[12px] text-gray-600 leading-relaxed max-w-xl">
-            {quickActionCopy}
-          </p>
-        </div>
-      </section>
+  const InfoRow = ({ label, value, multiline = false }: { label: string; value: React.ReactNode; multiline?: boolean }) => (
+    <div className={`grid gap-1 ${multiline ? "sm:grid-cols-[140px_1fr]" : "sm:grid-cols-[140px_1fr] sm:items-start"}`}>
+      <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400">{label}</span>
+      <div className="text-sm leading-6 text-gray-900">{value}</div>
+    </div>
+  );
 
-      {/* Performance metrics - only show if backend actually returns these later on. Right now, hiding static data */}
-      {/* {vendor.reviewCount !== undefined && (
-          <section className="py-8 border-b border-gray-100">
-            <h3 className="font-semibold text-[15px] text-gray-900 mb-5">Performance Metrics</h3>
-            <div className="flex gap-4">
-              <div className="p-4 border rounded-xl border-gray-100 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] min-w-[150px]">
-                <p className="text-[11px] font-semibold text-gray-500 mb-1 uppercase tracking-wider">Rating</p>
-                <p className="text-2xl font-bold text-gray-900 flex items-center gap-1.5">
-                  {Number(vendorAny.rate || vendorAny.rating || vendorAny.averageRating || 0) > 0 
-                    ? Number(vendorAny.rate || vendorAny.rating || vendorAny.averageRating || 0).toFixed(1) 
-                    : "N/A"} 
-                  <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                </p>
-                <p className="text-[10px] text-gray-400 mt-2">Reviews: {vendor.reviewCount || vendorAny.reviewsCount || 0}</p>
+  const SectionCard = ({
+    title,
+    subtitle,
+    children,
+  }: {
+    title: string;
+    subtitle?: string;
+    children: React.ReactNode;
+  }) => (
+    <section className="rounded-3xl border border-gray-200 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+      <div className="p-5 sm:p-6">
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <h3 className="text-base font-semibold text-gray-950">{title}</h3>
+            {subtitle && <p className="mt-1 text-sm text-gray-500">{subtitle}</p>}
+          </div>
+        </div>
+        <div className="space-y-4">{children}</div>
+      </div>
+    </section>
+  );
+
+  return (
+    <div className="space-y-5">
+      <section className="relative overflow-hidden rounded-[28px] border border-gray-200 bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_52%,#fff4f1_100%)] p-5 shadow-[0_18px_45px_rgba(15,23,42,0.07)] sm:p-6">
+        <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-red-100/60 blur-3xl" />
+        <div className="absolute -bottom-20 left-10 h-40 w-40 rounded-full bg-slate-200/70 blur-3xl" />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex items-start gap-4 sm:gap-5">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gray-950 text-lg font-semibold text-white shadow-lg shadow-gray-950/10">
+              {userInitials}
+            </div>
+            <div className="space-y-3">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-gray-500">Vendor Account</p>
+                <h2 className="mt-1 text-2xl font-semibold tracking-tight text-gray-950">{userName}</h2>
+                <p className="mt-1 text-sm text-gray-600">{businessName !== "—" ? businessName : "Business details pending"}</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2.5 text-sm">
+                <span className={`inline-flex items-center rounded-full border px-3 py-1 font-medium capitalize ${statusBadgeClass}`}>
+                  {status}
+                </span>
+                <span className="inline-flex items-center rounded-full border border-slate-200 bg-white/80 px-3 py-1 font-medium text-slate-700">
+                  {onboardingLabel}
+                </span>
+                <span className="inline-flex items-center rounded-full border border-gray-200 bg-white/80 px-3 py-1 font-medium text-gray-700">
+                  {services.length} service{services.length === 1 ? "" : "s"}
+                </span>
+                <span className="inline-flex items-center rounded-full border border-gray-200 bg-white/80 px-3 py-1 font-medium text-gray-700">
+                  {specialties.length} specialt{specialties.length === 1 ? "y" : "ies"}
+                </span>
               </div>
             </div>
-          </section>
-        )} */}
-
-      {/* Business Details */}
-      <section className="py-8 border-b border-gray-100">
-        <h3 className="font-semibold text-[15px] text-gray-900 mb-5">Business Details</h3>
-
-        <div className="grid grid-cols-[140px_1fr] md:grid-cols-[160px_1fr] gap-y-4 items-start text-[13px]">
-          <span className="text-gray-500 font-medium">Vendor ID:</span>
-          <span className="text-gray-900">{vendor.id}</span>
-          <span className="text-gray-500 font-medium">Business Name:</span>
-          <span className="text-gray-900">{businessName}</span>
-          <span className="text-gray-500 font-medium">Owner:</span>
-          <span className="text-gray-900">{contactName} <span className="text-gray-400 mx-1">•</span> Joined: {joinedDate}</span>
-
-          <span className="text-gray-500 font-medium">Business Type:</span>
-          <span className="capitalize text-gray-900">{regType} <span className="text-gray-400 mx-1">•</span> {yearsInBusiness} experience</span>
-
-          <span className="text-gray-500 font-medium">Service Area:</span>
-          <span className="capitalize text-gray-900">{serviceAreaString} {serviceArea?.travelDistance ? `+ ${serviceArea.travelDistance} radius` : ""}</span>
-
-          <span className="text-gray-500 font-medium pt-0.5">Registration:</span>
-          <div className="space-y-2.5">
-            {docs.length > 0 ? (
-              docs.map((d: any, i: number) => (
-                <div key={i} className="flex items-center gap-2.5 text-gray-900">
-                  <CheckSquare />
-                  <span>{d.docName || `Document ${i + 1}`}</span>
-                </div>
-              ))
-            ) : (
-              <span className="text-gray-400 italic">No registration documents uploaded</span>
-            )}
           </div>
 
-          <span className="text-gray-500 font-medium">Payment Model:</span>
-          <span className="capitalize text-gray-900">{vendorAny.paymentModel?.replace(/_/g, " ") || "Split Payout (50% deposit)"}</span>
-
-          <span className="text-gray-500 font-medium pt-0.5">Stripe Account:</span>
-          <div className="flex items-center gap-2.5 text-gray-900">
-            <CheckSquare />
-            <span className="capitalize">{vendorAny.paymentAccountProvider || "Not Connected"}</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Services & Contact */}
-      <section className="py-8 border-b border-gray-100">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-          <div>
-            <h3 className="font-semibold text-[15px] text-gray-900 mb-5">Services Categories</h3>
-            <ul className="list-disc pl-5 space-y-3 text-[13px] text-gray-800">
-              {services.length > 0 ? (
-                services.map((svc) => (
-                  <li key={svc._id} className="capitalize">{svc.serviceCategory?.name || "Unknown"}</li>
-                ))
-              ) : (
-                <span className="text-gray-400 italic block -ml-5">No services listed yet</span>
-              )}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold text-[15px] text-gray-900 mb-5">Contact Information</h3>
-            <div className="space-y-3 text-[13px] text-gray-800">
-              <div className="flex"><span className="w-24 text-gray-500 font-medium shrink-0">Email:</span> <span>{email}</span></div>
-              <div className="flex"><span className="w-24 text-gray-500 font-medium shrink-0">Phone:</span> <span>{phone}</span></div>
-              <div className="flex"><span className="w-24 text-gray-500 font-medium shrink-0">Mobile:</span> <span>{phone}</span></div>
-              <div className="flex items-start"><span className="w-24 text-gray-500 font-medium shrink-0 mt-px">Address:</span> <span className="leading-snug">{formatAddress()}</span></div>
-              <div className="flex"><span className="w-24 text-gray-500 font-medium shrink-0">City:</span> <span className="capitalize">{address?.city || "London, UK"}</span></div>
-              {vendorAny.socialMediaLinks?.map((s: any, i: number) => {
-                if (s.name === 'website') return <div key={i} className="flex"><span className="w-24 text-gray-500 font-medium shrink-0">Website:</span> <a href={s.link} className="text-blue-600 hover:underline" target="_blank" rel="noreferrer">{s.link.replace(/^https?:\/\//, '')}</a></div>;
-                return null;
-              })}
+          <div className="w-full max-w-xl rounded-3xl border border-white/70 bg-white/80 p-4 backdrop-blur lg:p-5">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-900">Quick Actions</p>
+                <p className="mt-1 text-sm leading-6 text-gray-600">{quickActionCopy}</p>
+              </div>
+              <div className="shrink-0">
+                <VendorStatusActions vendor={vendor} />
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Documents & Portfolio */}
-      <section className="py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-          <div>
-            <h3 className="font-semibold text-[15px] text-gray-900 mb-5">Documents</h3>
-            <div className="space-y-3 text-[13px] text-gray-800">
-              {documentsList.length > 0 ? (
-                documentsList.map((doc, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <FileText className="w-4 h-4 text-red-500 shrink-0" strokeWidth={2} />
-                    <a href={doc.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline truncate capitalize font-medium">
-                      {doc.name.replace(/_/g, " ")}.pdf
+      <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
+        <SectionCard title="User Information" subtitle="Account-level details from the linked user record.">
+          <InfoRow label="Name" value={userName} />
+          <InfoRow label="Email" value={userEmail} />
+          <InfoRow label="Phone" value={userPhone} />
+          <InfoRow label="Gender" value={<span className="capitalize">{user?.gender || "—"}</span>} />
+          <InfoRow label="Date of birth" value={dateOfBirth} />
+        </SectionCard>
+
+        <SectionCard title="Business Operations" subtitle="Operational state and payout readiness.">
+          <InfoRow label="Onboarding" value={vendor.onBoarded ? "Complete" : `In progress (stage ${vendor.onBoardingStage || 0})`} />
+          <InfoRow label="Payment model" value={<span className="capitalize">{vendorAny.paymentModel?.replace(/_/g, " ") || "Not configured"}</span>} />
+          <InfoRow label="Payment account" value={<span className="capitalize">{vendorAny.paymentAccountProvider?.replace(/_/g, " ") || "Not connected"}</span>} />
+          <InfoRow label="Commission" value={vendor.commissionAgreement?.accepted ? "Accepted" : "Not accepted"} />
+          <InfoRow label="Vendor ID" value={vendor.id} />
+        </SectionCard>
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+        <SectionCard title="Business Information" subtitle="Business profile data and the single business address.">
+          <InfoRow label="Business profile ID" value={profile?._id || "—"} />
+          <InfoRow label="Business name" value={businessName} />
+          <InfoRow label="Years in business" value={<span className="capitalize">{yearsInBusiness}</span>} />
+          <InfoRow label="Business type" value={<span className="capitalize">{regType}</span>} />
+          <InfoRow label="Registration no." value={profile?.companyRegNo || "—"} />
+          <InfoRow label="Description" value={profile?.businessDescription || "—"} multiline />
+          <InfoRow label="Business address" value={formatAddress()} multiline />
+          <InfoRow
+            label="Service area"
+            value={<span className="capitalize">{serviceAreaString} {serviceArea?.travelDistance ? `+ ${serviceArea.travelDistance} radius` : ""}</span>}
+            multiline
+          />
+        </SectionCard>
+
+        <SectionCard title="Contact Information" subtitle="Business-facing contact channels and identity details.">
+          <InfoRow label="Primary contact" value={contactName} />
+          <InfoRow label="Business email" value={contactEmail} />
+          <InfoRow label="Business phone" value={contactPhone} />
+          <InfoRow label="Identification" value={meansOfIdentification} />
+          {vendorAny.socialMediaLinks?.some((socialLink: any) => socialLink.name === "website") ? (
+            vendorAny.socialMediaLinks.map((socialLink: any, index: number) => {
+              if (socialLink.name !== "website") return null;
+              return (
+                <InfoRow
+                  key={index}
+                  label="Website"
+                  value={
+                    <a href={socialLink.link} className="break-all text-blue-600 hover:underline" target="_blank" rel="noreferrer">
+                      {socialLink.link.replace(/^https?:\/\//, "")}
                     </a>
-                  </div>
-                ))
-              ) : (
-                <span className="text-gray-400 italic">No documents available</span>
-              )}
-            </div>
-          </div>
+                  }
+                  multiline
+                />
+              );
+            })
+          ) : (
+            <InfoRow label="Website" value="—" />
+          )}
+        </SectionCard>
+      </div>
 
-          <div>
-            <h3 className="font-semibold text-[15px] text-gray-900 mb-5">Portfolio</h3>
-            <div className="space-y-3 text-[13px] text-gray-800">
-              {portfolioList.length > 0 ? (
-                portfolioList.map((port, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <ImageIcon className="w-4 h-4 text-blue-500 shrink-0" strokeWidth={2} />
-                    <a href={port.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline truncate font-medium">
-                      {port.name}
-                    </a>
-                  </div>
-                ))
-              ) : (
-                <span className="text-gray-400 italic">No portfolio media uploaded</span>
-              )}
+      <div className="grid gap-5 lg:grid-cols-2">
+        <SectionCard title="Service Categories" subtitle="Top-level service groupings this vendor offers.">
+          {services.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {services.map((svc) => (
+                <span
+                  key={svc._id}
+                  className="inline-flex items-center rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-sm font-medium capitalize text-violet-800"
+                >
+                  {svc.serviceCategory?.name || "Unknown"}
+                </span>
+              ))}
             </div>
+          ) : (
+            <p className="text-sm italic text-gray-400">No services listed yet</p>
+          )}
+        </SectionCard>
+
+        <SectionCard title="Specialties" subtitle="Specific specialties attached to the vendor profile.">
+          {specialties.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {specialties.map((specialty: any) => (
+                <span
+                  key={specialty._id || specialty.id}
+                  className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium capitalize text-sky-800"
+                >
+                  {specialty.specialty?.name || specialty.name || "Unknown"}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm italic text-gray-400">No specialties listed yet</p>
+          )}
+        </SectionCard>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <SectionCard title="Documents" subtitle="Business registration and compliance uploads.">
+          {documentsList.length > 0 ? (
+            <div className="space-y-3">
+              {documentsList.map((doc, i) => (
+                <a
+                  key={i}
+                  href={doc.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-3 rounded-2xl border border-gray-200 px-4 py-3 transition-colors hover:border-rose-200 hover:bg-rose-50/60"
+                >
+                  <FileText className="h-4 w-4 shrink-0 text-rose-500" strokeWidth={2} />
+                  <span className="min-w-0 truncate text-sm font-medium capitalize text-gray-900">{doc.name.replace(/_/g, " ")}</span>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm italic text-gray-400">No documents available</p>
+          )}
+        </SectionCard>
+
+        <SectionCard title="Portfolio" subtitle="Media attached to the vendor profile and gallery.">
+          {portfolioList.length > 0 ? (
+            <div className="space-y-3">
+              {portfolioList.map((port, i) => (
+                <a
+                  key={i}
+                  href={port.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-3 rounded-2xl border border-gray-200 px-4 py-3 transition-colors hover:border-blue-200 hover:bg-blue-50/60"
+                >
+                  <ImageIcon className="h-4 w-4 shrink-0 text-blue-500" strokeWidth={2} />
+                  <span className="min-w-0 truncate text-sm font-medium text-gray-900">{port.name}</span>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm italic text-gray-400">No portfolio media uploaded</p>
+          )}
+        </SectionCard>
+      </div>
+
+      <SectionCard title="Registration Checklist" subtitle="At-a-glance confirmation of uploaded business documents.">
+        {docs.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {docs.map((d: any, i: number) => (
+              <div key={i} className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-4 py-3 text-sm text-emerald-900">
+                <CheckSquare />
+                <span className="truncate">{d.docName || `Document ${i + 1}`}</span>
+              </div>
+            ))}
           </div>
-        </div>
-      </section>
+        ) : (
+          <p className="text-sm italic text-gray-400">No registration documents uploaded</p>
+        )}
+      </SectionCard>
     </div>
   );
 }
