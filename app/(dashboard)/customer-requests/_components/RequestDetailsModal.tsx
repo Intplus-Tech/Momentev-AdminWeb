@@ -39,6 +39,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { formatMoneyFromMinorUnits } from "@/lib/utils";
 
 interface RequestDetailsModalProps {
   request: CustomerRequest | null;
@@ -347,7 +348,7 @@ export default function RequestDetailsModal({
                   <div className="flex justify-between items-center pb-2 border-b border-gray-100">
                     <span className="text-gray-500">Total Budget</span>
                     <span className="font-semibold text-emerald-700 text-right">
-                      ${totalBudget.toLocaleString()}
+                      {formatMoneyFromMinorUnits(totalBudget)}
                     </span>
                   </div>
 
@@ -363,7 +364,7 @@ export default function RequestDetailsModal({
                             variant="secondary"
                             className="text-[10px] font-medium bg-white border-gray-200"
                           >
-                            ${alloc.budgetedAmount.toLocaleString()}
+                            {formatMoneyFromMinorUnits(alloc.budgetedAmount)}
                           </Badge>
                         ))
                       ) : (
