@@ -19,12 +19,30 @@ export interface VendorProfile {
   businessProfile?: {
     _id: string;
     businessName: string;
+    yearInBusiness?: string;
     companyRegNo?: string;
     businessRegType?: string;
+    businessDescription?: string;
     contactInfo?: {
       primaryContactName: string;
       emailAddress: string;
       phoneNumber: string;
+      meansOfIdentification?: string;
+      addressId?:
+      | string
+      | {
+        _id?: string;
+        id?: string;
+        street?: string;
+        city?: string;
+        state?: string;
+        postalCode?: string;
+        country?: string;
+      };
+    };
+    serviceArea?: {
+      travelDistance?: string;
+      areaNames?: { city: string; state?: string; country?: string }[];
     };
   };
   commissionAgreement?: {
@@ -322,6 +340,67 @@ export async function updateVendor(vendorId: string, data: Partial<VendorProfile
     return {
       success: false,
       error: "An unexpected network error occurred during vendor update.",
+    };
+  }
+}
+
+export interface UpdateBusinessProfileInput {
+  businessName?: string;
+  yearInBusiness?: string;
+  companyRegNo?: string;
+  businessRegType?: string;
+  businessDescription?: string;
+  contactInfo?: {
+    primaryContactName?: string;
+    emailAddress?: string;
+    phoneNumber?: string;
+    meansOfIdentification?: string;
+    addressId?: string;
+  };
+}
+
+export async function updateBusinessProfile(
+  businessProfileId: string,
+  data: UpdateBusinessProfileInput,
+  vendorId?: string
+): Promise<ActionResult<any>> {
+  try {
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/business-profiles/${businessProfileId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+        cache: "no-store",
+      })
+    );
+
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to update business profile" };
+    }
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/vendors");
+    if (vendorId) {
+      revalidatePath(`/vendors/profile/${vendorId}`);
+    }
+
+    return { success: true, data: body.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: "An unexpected network error occurred while updating business profile.",
     };
   }
 }

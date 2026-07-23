@@ -3,6 +3,8 @@
 import { VendorProfile, VendorService } from "@/lib/actions/vendors";
 import { FileText, Image as ImageIcon } from "lucide-react";
 import VendorStatusActions from "./VendorStatusActions";
+import EditBusinessProfileModal from "./EditBusinessProfileModal";
+import EditContactInfoModal from "./EditContactInfoModal";
 
 interface Props {
   vendor: VendorProfile;
@@ -113,10 +115,12 @@ export default function ActiveVendorOverview({ vendor, services, specialties }: 
   const SectionCard = ({
     title,
     subtitle,
+    action,
     children,
   }: {
     title: string;
     subtitle?: string;
+    action?: React.ReactNode;
     children: React.ReactNode;
   }) => (
     <section className="rounded-3xl border border-gray-200 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
@@ -126,6 +130,7 @@ export default function ActiveVendorOverview({ vendor, services, specialties }: 
             <h3 className="text-base font-semibold text-gray-950">{title}</h3>
             {subtitle && <p className="mt-1 text-sm text-gray-500">{subtitle}</p>}
           </div>
+          {action ? <div className="shrink-0">{action}</div> : null}
         </div>
         <div className="space-y-4">{children}</div>
       </div>
@@ -198,7 +203,11 @@ export default function ActiveVendorOverview({ vendor, services, specialties }: 
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
-        <SectionCard title="Business Information" subtitle="Business profile data and the single business address.">
+        <SectionCard
+          title="Business Information"
+          subtitle="Business profile data and the single business address."
+          action={<EditBusinessProfileModal vendor={vendor} />}
+        >
           <InfoRow label="Business profile ID" value={profile?._id || "—"} />
           <InfoRow label="Business name" value={businessName} />
           <InfoRow label="Years in business" value={<span className="capitalize">{yearsInBusiness}</span>} />
@@ -213,7 +222,11 @@ export default function ActiveVendorOverview({ vendor, services, specialties }: 
           />
         </SectionCard>
 
-        <SectionCard title="Contact Information" subtitle="Business-facing contact channels and identity details.">
+        <SectionCard
+          title="Contact Information"
+          subtitle="Business-facing contact channels and identity details."
+          action={<EditContactInfoModal vendor={vendor} />}
+        >
           <InfoRow label="Primary contact" value={contactName} />
           <InfoRow label="Business email" value={contactEmail} />
           <InfoRow label="Business phone" value={contactPhone} />

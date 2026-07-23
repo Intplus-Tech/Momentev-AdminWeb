@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BookingResponse } from "@/lib/actions/bookings";
 import { format } from "date-fns";
+import { formatMoneyFromMinorUnits } from "@/lib/utils";
 import {
   CalendarDays,
   MapPin,
@@ -38,12 +39,7 @@ interface BookingDetailsModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const formatCurrency = (amount: number, currencyCode: string) => {
-  return new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency: currencyCode,
-  }).format(amount);
-};
+
 
 export default function BookingDetailsModal({
   booking,
@@ -176,21 +172,21 @@ export default function BookingDetailsModal({
                   <div className="divide-y">
                     <FinancialRow
                       label="Subtotal"
-                      value={formatCurrency(amounts?.subtotal || 0, currency)}
+                      value={formatMoneyFromMinorUnits(amounts?.subtotal || 0, currency)}
                     />
                     <FinancialRow
                       label="Fees"
-                      value={formatCurrency(amounts?.fees || 0, currency)}
+                      value={formatMoneyFromMinorUnits(amounts?.fees || 0, currency)}
                       muted
                     />
                     <FinancialRow
                       label="Commission"
-                      value={formatCurrency(amounts?.commission || 0, currency)}
+                      value={formatMoneyFromMinorUnits(amounts?.commission || 0, currency)}
                       muted
                     />
                     <FinancialRow
                       label="Total"
-                      value={formatCurrency(amounts?.total || 0, currency)}
+                      value={formatMoneyFromMinorUnits(amounts?.total || 0, currency)}
                       bold
                     />
                   </div>

@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
+import { formatMoneyFromMinorUnits } from "@/lib/utils";
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   pending: { label: "Pending", color: "bg-yellow-100 text-yellow-800" },
@@ -68,17 +69,10 @@ export const columns: ColumnDef<BookingResponse>[] = [
     cell: ({ row }) => {
       const amt = row.original.amounts?.total || 0;
       const cur = row.original.currency || "GBP";
-      
-      const formatCurrency = (amount: number, currencyCode: string) => {
-        return new Intl.NumberFormat('en-GB', {
-          style: 'currency',
-          currency: currencyCode,
-        }).format(amount);
-      };
 
       return (
         <div className="flex flex-col">
-           <span className="font-medium text-gray-900">{formatCurrency(amt, cur)}</span>
+           <span className="font-medium text-gray-900">{formatMoneyFromMinorUnits(amt, cur)}</span>
            <span className="text-[10px] text-gray-400 capitalize">{row.original.paymentModel?.replace(/_/g, " ")}</span>
         </div>
       );
