@@ -57,6 +57,10 @@ export interface VendorProfile {
   coverPhoto?: {
     url: string;
   } | null;
+  socialMediaLinks?: {
+    name: string;
+    link: string;
+  }[];
   rate: number;
   reviewCount: number;
   isActive: boolean;
