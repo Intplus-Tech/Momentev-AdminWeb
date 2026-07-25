@@ -31,7 +31,11 @@ interface ContactFormState {
   primaryContactName: string;
   emailAddress: string;
   phoneNumber: string;
-  website: string;
+}
+
+interface SocialLinkFormItem {
+  name: string;
+  link: string;
 }
 
 function normalizeString(value?: string | null) {
@@ -45,8 +49,16 @@ export default function EditContactInfoModal({ vendor }: EditContactInfoModalPro
 
   const profile = vendor.businessProfile;
   const contactInfo = profile?.contactInfo;
-  const currentWebsite =
-    vendor.socialMediaLinks?.find((link) => link?.name === "website")?.link || "";
+  const initialSocialLinks = useMemo(() => {
+    const links = (vendor.socialMediaLinks || [])
+      .filter((link) => link?.name)
+      .map((link) => ({
+        name: normalizeString(link.name),
+        link: normalizeString(link.link),
+      }));
+
+    return links.length > 0 ? links : [{ name: "website", link: "" }];
+  }, [vendor.socialMediaLinks]);
   const existingAddressId = useMemo(() => {
     const rawAddressId = contactInfo?.addressId;
     if (!rawAddressId) return undefined;
@@ -58,16 +70,16 @@ export default function EditContactInfoModal({ vendor }: EditContactInfoModalPro
     primaryContactName: normalizeString(contactInfo?.primaryContactName),
     emailAddress: normalizeString(contactInfo?.emailAddress),
     phoneNumber: normalizeString(contactInfo?.phoneNumber),
-    website: normalizeString(currentWebsite),
   });
+  const [socialLinks, setSocialLinks] = useState<SocialLinkFormItem[]>(initialSocialLinks);
 
   const resetForm = () => {
     setForm({
       primaryContactName: normalizeString(contactInfo?.primaryContactName),
       emailAddress: normalizeString(contactInfo?.emailAddress),
       phoneNumber: normalizeString(contactInfo?.phoneNumber),
-      website: normalizeString(currentWebsite),
     });
+    setSocialLinks(initialSocialLinks);
   };
 
   const updateField = (field: keyof ContactFormState, value: string) => {
@@ -83,7 +95,6 @@ export default function EditContactInfoModal({ vendor }: EditContactInfoModalPro
     const primaryContactName = form.primaryContactName.trim();
     const emailAddress = form.emailAddress.trim();
     const phoneNumber = form.phoneNumber.trim();
-    const website = form.website.trim();
 
     if (!primaryContactName || !emailAddress || !phoneNumber) {
       toast.error("Primary contact, business email, and business phone are required.");
@@ -96,14 +107,20 @@ export default function EditContactInfoModal({ vendor }: EditContactInfoModalPro
       return;
     }
 
-    const websiteWithProtocol =
-      website.length > 0 && !/^https?:\/\//i.test(website)
-        ? `https://${website}`
-        : website;
+    const normalizedSocialLinks = socialLinks
+      .map((item) => {
+        const name = item.name.trim();
+        const rawLink = item.link.trim();
+        const link = rawLink && !/^https?:\/\//i.test(rawLink) ? `https://${rawLink}` : rawLink;
+        return { name, link };
+      })
+      .filter((item) => item.name.length > 0 && item.link.length > 0);
 
-    if (websiteWithProtocol && !/^https?:\/\//i.test(websiteWithProtocol)) {
-      toast.error("Please enter a valid website URL.");
-      return;
+    for (const socialLink of normalizedSocialLinks) {
+      if (!/^https?:\/\//i.test(socialLink.link)) {
+        toast.error(`Please enter a valid URL for ${socialLink.name}.`);
+        return;
+      }
     }
 
     const payload: UpdateBusinessProfileInput = {
@@ -129,13 +146,8 @@ export default function EditContactInfoModal({ vendor }: EditContactInfoModalPro
         return;
       }
 
-      const nonWebsiteLinks = (vendor.socialMediaLinks || []).filter((link) => link?.name !== "website");
-      const updatedSocialMediaLinks = websiteWithProtocol
-        ? [...nonWebsiteLinks, { name: "website", link: websiteWithProtocol }]
-        : nonWebsiteLinks;
-
       const vendorResult = await updateVendor(vendor.id, {
-        socialMediaLinks: updatedSocialMediaLinks,
+        socialMediaLinks: normalizedSocialLinks,
       });
 
       if (!vendorResult.success) {
@@ -174,53 +186,75 @@ export default function EditContactInfoModal({ vendor }: EditContactInfoModalPro
         <DialogHeader>
           <DialogTitle>Edit Contact Information</DialogTitle>
           <DialogDescription>
-            Update business-facing contact details for this vendor.
+            Update business-facing contact details and social links for this vendor.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="contact-primaryContactName">Primary Contact</Label>
-            <Input
-              id="contact-primaryContactName"
-              value={form.primaryContactName}
-              onChange={(event) => updateField("primaryContactName", event.target.value)}
-              disabled={isSaving}
-            />
-          </div>
+        <div className="space-y-5">
+          <section className="rounded-xl border border-gray-200 p-4">
+            <h4 className="mb-4 text-sm font-semibold text-gray-900">Contact Details</h4>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="contact-primaryContactName">Primary Contact</Label>
+                <Input
+                  id="contact-primaryContactName"
+                  value={form.primaryContactName}
+                  onChange={(event) => updateField("primaryContactName", event.target.value)}
+                  disabled={isSaving}
+                />
+              </div>
 
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="contact-emailAddress">Business Email</Label>
-            <Input
-              id="contact-emailAddress"
-              type="email"
-              value={form.emailAddress}
-              onChange={(event) => updateField("emailAddress", event.target.value)}
-              disabled={isSaving}
-            />
-          </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="contact-emailAddress">Business Email</Label>
+                <Input
+                  id="contact-emailAddress"
+                  type="email"
+                  value={form.emailAddress}
+                  onChange={(event) => updateField("emailAddress", event.target.value)}
+                  disabled={isSaving}
+                />
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="contact-phoneNumber">Business Phone</Label>
-            <Input
-              id="contact-phoneNumber"
-              value={form.phoneNumber}
-              onChange={(event) => updateField("phoneNumber", event.target.value)}
-              disabled={isSaving}
-            />
-          </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="contact-phoneNumber">Business Phone</Label>
+                <Input
+                  id="contact-phoneNumber"
+                  value={form.phoneNumber}
+                  onChange={(event) => updateField("phoneNumber", event.target.value)}
+                  disabled={isSaving}
+                />
+              </div>
+            </div>
+          </section>
 
-          <div className="space-y-2">
-            <Label htmlFor="contact-website">Website</Label>
-            <Input
-              id="contact-website"
-              placeholder="https://example.com"
-              value={form.website}
-              onChange={(event) => updateField("website", event.target.value)}
-              disabled={isSaving}
-            />
-          </div>
-
+          <section className="rounded-xl border border-gray-200 p-4">
+            <h4 className="mb-1 text-sm font-semibold text-gray-900">Social Links</h4>
+            <p className="mb-4 text-xs text-gray-500">Update each platform URL for this vendor.</p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {socialLinks.map((socialLink, index) => {
+                const inputId = `contact-social-${socialLink.name || index}`;
+                return (
+                  <div className="space-y-2" key={`${socialLink.name}-${index}`}>
+                    <Label htmlFor={inputId} className="capitalize">{socialLink.name || "Social Link"}</Label>
+                    <Input
+                      id={inputId}
+                      placeholder="https://example.com"
+                      value={socialLink.link}
+                      onChange={(event) => {
+                        const nextLink = event.target.value;
+                        setSocialLinks((prev) =>
+                          prev.map((item, itemIndex) =>
+                            itemIndex === index ? { ...item, link: nextLink } : item
+                          )
+                        );
+                      }}
+                      disabled={isSaving}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </section>
         </div>
 
         <DialogFooter>
