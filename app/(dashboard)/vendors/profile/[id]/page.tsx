@@ -30,6 +30,13 @@ export default async function VendorProfilePage({ params }: PageProps) {
     getAdminVendorSpecialties(vendorId),
   ]);
 
+  console.log("[VendorProfilePage] fetched data", {
+    vendorId,
+    vendorRes,
+    servicesRes,
+    specialtiesRes,
+  });
+
   if (!vendorRes.success || !vendorRes.data) {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center h-full space-y-4">

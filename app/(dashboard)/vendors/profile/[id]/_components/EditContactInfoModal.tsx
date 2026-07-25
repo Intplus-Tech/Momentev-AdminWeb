@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  updateVendor,
   updateBusinessProfile,
   UpdateBusinessProfileInput,
   VendorProfile,
@@ -30,7 +31,7 @@ interface ContactFormState {
   primaryContactName: string;
   emailAddress: string;
   phoneNumber: string;
-  meansOfIdentification: string;
+  website: string;
 }
 
 function normalizeString(value?: string | null) {
@@ -44,6 +45,8 @@ export default function EditContactInfoModal({ vendor }: EditContactInfoModalPro
 
   const profile = vendor.businessProfile;
   const contactInfo = profile?.contactInfo;
+  const currentWebsite =
+    vendor.socialMediaLinks?.find((link) => link?.name === "website")?.link || "";
   const existingAddressId = useMemo(() => {
     const rawAddressId = contactInfo?.addressId;
     if (!rawAddressId) return undefined;
@@ -55,7 +58,7 @@ export default function EditContactInfoModal({ vendor }: EditContactInfoModalPro
     primaryContactName: normalizeString(contactInfo?.primaryContactName),
     emailAddress: normalizeString(contactInfo?.emailAddress),
     phoneNumber: normalizeString(contactInfo?.phoneNumber),
-    meansOfIdentification: normalizeString(contactInfo?.meansOfIdentification),
+    website: normalizeString(currentWebsite),
   });
 
   const resetForm = () => {
@@ -63,7 +66,7 @@ export default function EditContactInfoModal({ vendor }: EditContactInfoModalPro
       primaryContactName: normalizeString(contactInfo?.primaryContactName),
       emailAddress: normalizeString(contactInfo?.emailAddress),
       phoneNumber: normalizeString(contactInfo?.phoneNumber),
-      meansOfIdentification: normalizeString(contactInfo?.meansOfIdentification),
+      website: normalizeString(currentWebsite),
     });
   };
 
@@ -77,6 +80,32 @@ export default function EditContactInfoModal({ vendor }: EditContactInfoModalPro
       return;
     }
 
+    const primaryContactName = form.primaryContactName.trim();
+    const emailAddress = form.emailAddress.trim();
+    const phoneNumber = form.phoneNumber.trim();
+    const website = form.website.trim();
+
+    if (!primaryContactName || !emailAddress || !phoneNumber) {
+      toast.error("Primary contact, business email, and business phone are required.");
+      return;
+    }
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(emailAddress)) {
+      toast.error("Please enter a valid business email address.");
+      return;
+    }
+
+    const websiteWithProtocol =
+      website.length > 0 && !/^https?:\/\//i.test(website)
+        ? `https://${website}`
+        : website;
+
+    if (websiteWithProtocol && !/^https?:\/\//i.test(websiteWithProtocol)) {
+      toast.error("Please enter a valid website URL.");
+      return;
+    }
+
     const payload: UpdateBusinessProfileInput = {
       businessName: profile.businessName,
       yearInBusiness: profile.yearInBusiness,
@@ -84,19 +113,33 @@ export default function EditContactInfoModal({ vendor }: EditContactInfoModalPro
       companyRegNo: profile.companyRegNo,
       businessDescription: profile.businessDescription,
       contactInfo: {
-        primaryContactName: form.primaryContactName.trim() || undefined,
-        emailAddress: form.emailAddress.trim() || undefined,
-        phoneNumber: form.phoneNumber.trim() || undefined,
-        meansOfIdentification: form.meansOfIdentification.trim() || undefined,
+        primaryContactName,
+        emailAddress,
+        phoneNumber,
+        meansOfIdentification: contactInfo?.meansOfIdentification,
         addressId: existingAddressId,
       },
     };
 
     setIsSaving(true);
     try {
-      const result = await updateBusinessProfile(profile._id, payload, vendor.id);
-      if (!result.success) {
-        toast.error(result.error || "Failed to update contact information");
+      const businessProfileResult = await updateBusinessProfile(profile._id, payload, vendor.id);
+      if (!businessProfileResult.success) {
+        toast.error(businessProfileResult.error || "Failed to update contact information");
+        return;
+      }
+
+      const nonWebsiteLinks = (vendor.socialMediaLinks || []).filter((link) => link?.name !== "website");
+      const updatedSocialMediaLinks = websiteWithProtocol
+        ? [...nonWebsiteLinks, { name: "website", link: websiteWithProtocol }]
+        : nonWebsiteLinks;
+
+      const vendorResult = await updateVendor(vendor.id, {
+        socialMediaLinks: updatedSocialMediaLinks,
+      });
+
+      if (!vendorResult.success) {
+        toast.error(vendorResult.error || "Contact details updated, but website failed to update.");
         return;
       }
 
@@ -168,14 +211,16 @@ export default function EditContactInfoModal({ vendor }: EditContactInfoModalPro
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="contact-meansOfIdentification">Identification</Label>
+            <Label htmlFor="contact-website">Website</Label>
             <Input
-              id="contact-meansOfIdentification"
-              value={form.meansOfIdentification}
-              onChange={(event) => updateField("meansOfIdentification", event.target.value)}
+              id="contact-website"
+              placeholder="https://example.com"
+              value={form.website}
+              onChange={(event) => updateField("website", event.target.value)}
               disabled={isSaving}
             />
           </div>
+
         </div>
 
         <DialogFooter>

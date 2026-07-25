@@ -34,7 +34,6 @@ export default function ActiveVendorOverview({ vendor, services, specialties }: 
   const contactName = profile?.contactInfo?.primaryContactName || "—";
   const contactEmail = profile?.contactInfo?.emailAddress || "—";
   const contactPhone = profile?.contactInfo?.phoneNumber || "—";
-  const meansOfIdentification = profile?.contactInfo?.meansOfIdentification || "—";
   const businessName = profile?.businessName || "—";
   const userInitials = [user?.firstName, user?.lastName]
     .filter(Boolean)
@@ -61,6 +60,9 @@ export default function ActiveVendorOverview({ vendor, services, specialties }: 
   const serviceAreaString = serviceAreaNames.length > 0
     ? serviceAreaNames.map(a => a.city).join(", ")
     : "Not specified";
+  const socialLinks = Array.isArray(vendorAny.socialMediaLinks)
+    ? vendorAny.socialMediaLinks.filter((link: any) => link?.name && link?.link)
+    : [];
 
   const statusBadgeClass =
     status === "banned"
@@ -230,25 +232,21 @@ export default function ActiveVendorOverview({ vendor, services, specialties }: 
           <InfoRow label="Primary contact" value={contactName} />
           <InfoRow label="Business email" value={contactEmail} />
           <InfoRow label="Business phone" value={contactPhone} />
-          <InfoRow label="Identification" value={meansOfIdentification} />
-          {vendorAny.socialMediaLinks?.some((socialLink: any) => socialLink.name === "website") ? (
-            vendorAny.socialMediaLinks.map((socialLink: any, index: number) => {
-              if (socialLink.name !== "website") return null;
-              return (
-                <InfoRow
-                  key={index}
-                  label="Website"
-                  value={
-                    <a href={socialLink.link} className="break-all text-blue-600 hover:underline" target="_blank" rel="noreferrer">
-                      {socialLink.link.replace(/^https?:\/\//, "")}
-                    </a>
-                  }
-                  multiline
-                />
-              );
-            })
+          {socialLinks.length > 0 ? (
+            socialLinks.map((socialLink: any, index: number) => (
+              <InfoRow
+                key={`${socialLink.name}-${index}`}
+                label={socialLink.name}
+                value={
+                  <a href={socialLink.link} className="break-all text-blue-600 hover:underline" target="_blank" rel="noreferrer">
+                    {socialLink.link.replace(/^https?:\/\//, "")}
+                  </a>
+                }
+                multiline
+              />
+            ))
           ) : (
-            <InfoRow label="Website" value="—" />
+            <InfoRow label="Social links" value="—" />
           )}
         </SectionCard>
       </div>
