@@ -1,7 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { setAuthCookies, clearAuthCookies, getRefreshToken, refreshAccessToken } from '@/lib/session';
+import { setAuthCookies, clearAuthCookies, getRefreshToken, refreshAccessToken, getAccessToken } from '@/lib/session';
 import type { LoginResponse } from '@/types/auth';
 
 export interface LoginInput {
@@ -25,6 +25,8 @@ export async function login(input: LoginInput): Promise<ActionResult> {
       return { success: false, error: 'Backend not configured' };
     }
 
+    const invalidCredentialsError = 'Invalid email or password. Please check your credentials.';
+
     const response = await fetch(`${process.env.BACKEND_URL}/api/v1/auth/login`, {
       method: 'POST',
       headers: {
@@ -44,7 +46,7 @@ export async function login(input: LoginInput): Promise<ActionResult> {
         return { success: false, error: 'Too many login attempts. Please wait a moment and try again.' };
       }
       if (response.status === 401) {
-        return { success: false, error: 'Invalid email or password. Please check your credentials.' };
+        return { success: false, error: invalidCredentialsError };
       }
       const message = (data as { message?: string } | null)?.message;
       return { success: false, error: message || `Failed to login (${response.status})` };
@@ -53,6 +55,11 @@ export async function login(input: LoginInput): Promise<ActionResult> {
     // Store tokens in HTTP-only cookies
     const token = data?.data?.token;
     const refreshToken = data?.data?.refreshToken;
+    const signedInUser = data?.data?.user;
+
+    if (!signedInUser || signedInUser.role !== 'admin') {
+      return { success: false, error: invalidCredentialsError };
+    }
 
     if (token && refreshToken) {
       await setAuthCookies(token, refreshToken, input.remember ?? false);
@@ -84,4 +91,46 @@ export async function tryRefreshToken() {
   }
 
   return refreshAccessToken(refreshTokenValue);
+}
+
+export interface ChangePasswordInput {
+  currentPassword?: string;
+  newPassword?: string;
+}
+
+/**
+ * Change the password for the logged-in user
+ */
+export async function changePassword(input: ChangePasswordInput): Promise<ActionResult> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      return { success: false, error: 'Unauthorized: No access token' };
+    }
+
+    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/auth/change-password`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(input),
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    return { success: true, data: body.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
 }

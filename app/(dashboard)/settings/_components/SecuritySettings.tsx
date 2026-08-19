@@ -1,113 +1,112 @@
 "use client";
 
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { changePassword } from "@/lib/actions/auth";
 
-interface Props {
-  onSwitchToUsers: () => void;
-}
-
-export default function SecuritySettings({ onSwitchToUsers }: Props) {
-  const [email, setEmail] = useState("");
-  const [oldPassword, setOldPassword] = useState("");
+export default function SecuritySettings() {
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleUpdate = (e: React.FormEvent) => {
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (newPassword !== confirmPassword) {
-      alert("New passwords do not match!");
+      toast.error("New passwords do not match");
       return;
     }
-    console.log({ email, oldPassword, newPassword });
-    alert("Security settings updated successfully!");
+
+    if (newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await changePassword({ currentPassword, newPassword });
+      
+      if (response.success) {
+        toast.success("Password changed successfully!");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      } else {
+        toast.error(response.error || "Failed to update password.");
+      }
+    } catch (err) {
+      toast.error("An unexpected error occurred");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="max-w-[933px] h-screeen rounded-lg">
-      {/* Tabs */}
-      {/* <div className="flex items-center space-x-4 mb-8">
-        <button
-          onClick={onSwitchToUsers}
-          className="px-4 py-2 rounded-md bg-gray-200 text-gray-600"
-        >
-          User Management
-        </button>
-        <button className="px-4 py-2 rounded-md bg-blue-600 text-white font-medium">
-          Security
-        </button>
-      </div> */}
-
-      {/* Form */}
+    <div className="max-w-[600px] bg-white rounded-xl p-6">
+      <h3 className="font-semibold text-lg mb-6">Change Password</h3>
       <form onSubmit={handleUpdate} className="space-y-6">
-        <div>
-          <label className="block text-gray-700 font-semibold mb-2">
-            Email
-          </label>
-          <input
-            type="email"
-            placeholder="Enter Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500"
+        <div className="space-y-2">
+          <Label htmlFor="oldPassword">Current Password</Label>
+          <Input
+            id="oldPassword"
+            type="password"
+            placeholder="Enter current password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
             required
+            disabled={loading}
           />
         </div>
 
-        <div>
-          <label className="block text-gray-700 font-semibold mb-2">
-            Old Password
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="newPassword">New Password</Label>
+          <Input
+            id="newPassword"
             type="password"
-            placeholder="Old Password"
-            value={oldPassword}
-            onChange={(e) => setOldPassword(e.target.value)}
-            className="w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-gray-700 font-semibold mb-2">
-            New Password
-          </label>
-          <input
-            type="password"
-            placeholder="Enter Password"
+            placeholder="Enter new password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500"
             required
-          />
-          <input
-            type="password"
-            placeholder="Re- Enter New Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full mt-2 px-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500"
-            required
+            disabled={loading}
           />
         </div>
 
-        <div className="flex items-center space-x-4">
-          <button
-            type="submit"
-            className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword">Confirm New Password</Label>
+          <Input
+            id="confirmPassword"
+            type="password"
+            placeholder="Re-enter new password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            disabled={loading}
+          />
+        </div>
+
+        <div className="flex items-center space-x-4 pt-4">
+          <Button type="submit" disabled={loading} className="w-[140px] bg-blue-600 hover:bg-blue-700">
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Update
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="outline"
+            disabled={loading}
             onClick={() => {
-              setEmail("");
-              setOldPassword("");
+              setCurrentPassword("");
               setNewPassword("");
               setConfirmPassword("");
             }}
-            className="px-6 py-3 text-gray-600 rounded-md hover:bg-gray-100"
+            className="w-[140px]"
           >
             Cancel
-          </button>
+          </Button>
         </div>
       </form>
     </div>

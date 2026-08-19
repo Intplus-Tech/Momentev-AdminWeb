@@ -2,8 +2,8 @@
 
 import { cookies } from 'next/headers';
 
-const AUTH_TOKEN_KEY = 'auth-token';
-const REFRESH_TOKEN_KEY = 'refresh-token';
+const AUTH_TOKEN_KEY = 'moementev-admin-auth-token';
+const REFRESH_TOKEN_KEY = 'moementev-admin-refresh-token';
 
 // Token expiry defaults (in seconds)
 const ACCESS_TOKEN_MAX_AGE = 60 * 60; // 1 hour
@@ -72,11 +72,29 @@ export async function getAuthCookies(): Promise<AuthTokens | null> {
 }
 
 /**
- * Get just the access token
+ * Get just the access token, or try to refresh it if missing
  */
 export async function getAccessToken(): Promise<string | null> {
   const cookieStore = await cookies();
-  return cookieStore.get(AUTH_TOKEN_KEY)?.value || null;
+  const accessToken = cookieStore.get(AUTH_TOKEN_KEY)?.value;
+
+  // Return if access token exists
+  if (accessToken) {
+    return accessToken;
+  }
+
+  // Try to refresh using refresh token
+  const refreshToken = cookieStore.get(REFRESH_TOKEN_KEY)?.value;
+  if (!refreshToken) {
+    return null;
+  }
+
+  const result = await refreshAccessToken(refreshToken);
+  if (result.success && result.token) {
+    return result.token;
+  }
+
+  return null;
 }
 
 /**
@@ -153,4 +171,33 @@ export async function tryRefreshToken() {
   }
 
   return refreshAccessToken(refreshTokenValue);
+}
+
+/**
+ * Decode the JWT payload and return the claims.
+ * No external library needed — JWT payload is just base64url-encoded JSON.
+ */
+export interface TokenClaims {
+  userId?: string;
+  email?: string;
+  role?: string;
+  adminPermissions?: string[];
+  rootAdmin?: boolean;
+}
+
+export async function getTokenClaims(): Promise<TokenClaims | null> {
+  try {
+    const token = await getAccessToken();
+    if (!token) return null;
+
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+
+    // Base64url -> Base64 -> JSON
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const json = Buffer.from(base64, 'base64').toString('utf8');
+    return JSON.parse(json) as TokenClaims;
+  } catch {
+    return null;
+  }
 }

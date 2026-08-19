@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const AUTH_TOKEN_KEY = 'auth-token';
-const REFRESH_TOKEN_KEY = 'refresh-token';
+// const AUTH_TOKEN_KEY = 'moementev-admin-auth-token';
+// const REFRESH_TOKEN_KEY = 'moementev-admin-refresh-token';
+const AUTH_TOKEN_KEY = 'moementev-admin-auth-token';
+const REFRESH_TOKEN_KEY = 'moementev-admin-refresh-token';
 
 // Paths that don't require authentication
 const publicPaths = [
@@ -19,6 +21,53 @@ const staticPaths = [
   '/sitemap.xml',
   '/robots.txt',
 ];
+
+// Map paths to their required permissions
+const routePermissions: Record<string, string> = {
+  '/overview': 'analytics:read',
+  '/vendors': 'vendors:read',
+  '/clients': 'clients:read',
+  '/financial': 'finance:read',
+  '/bookings': 'bookings:read',
+  '/customer-requests': 'customer-requests:read',
+  '/disputes': 'disputes:read',
+  '/support-requests': 'support:read',
+  '/admin/reviews': 'reviews:read',
+  '/services': 'catalog:read',
+  '/settings': 'admins:read',
+};
+
+// Helper to decode JWT in Edge Runtime
+function parseJwt(token: string) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    return null;
+  }
+}
+
+function hasPermission(pathname: string, claims: any): boolean {
+  if (!claims) return false;
+  if (claims.rootAdmin) return true;
+
+  const userPerms = claims.adminPermissions || [];
+
+  for (const [route, requiredPerm] of Object.entries(routePermissions)) {
+    if (pathname.startsWith(route)) {
+      return userPerms.includes(requiredPerm);
+    }
+  }
+
+  return true; // Allow if no specific permission is required
+}
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -61,6 +110,20 @@ export async function proxy(request: NextRequest) {
         const newToken = data?.data?.token;
 
         if (newToken) {
+          const claims = parseJwt(newToken);
+          if (!hasPermission(pathname, claims)) {
+            const redirectUrl = new URL(pathname === '/overview' ? '/' : '/overview', request.url);
+            const res = NextResponse.redirect(redirectUrl);
+            res.cookies.set(AUTH_TOKEN_KEY, newToken, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax',
+              path: '/',
+              maxAge: 60 * 60, // 1 hour
+            });
+            return res;
+          }
+
           const res = NextResponse.next();
           res.cookies.set(AUTH_TOKEN_KEY, newToken, {
             httpOnly: true,
@@ -91,6 +154,17 @@ export async function proxy(request: NextRequest) {
   // If user is authenticated and trying to access auth pages (login, etc.)
   if (hasValidAuth && isPublicPath) {
     return NextResponse.redirect(new URL('/overview', request.url));
+  }
+
+  // Authorization check for active valid auth token
+  if (authToken && !isPublicPath) {
+    const claims = parseJwt(authToken);
+    if (!hasPermission(pathname, claims)) {
+      // If unauthorized, redirect them to a safe default page or overview
+      if (pathname !== '/overview') {
+        return NextResponse.redirect(new URL('/overview', request.url));
+      }
+    }
   }
 
   // Continue with the request

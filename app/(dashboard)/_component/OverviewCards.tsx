@@ -1,33 +1,105 @@
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { AnalyticsOverviewResponse } from "@/lib/actions/admin-analytics";
 
-export default function OverviewCard() {
+interface OverviewCardsProps {
+  performance?: AnalyticsOverviewResponse["performance"];
+  todaysPayments?: AnalyticsOverviewResponse["todaysPayments"];
+  currency?: string;
+}
+
+export default function OverviewCard({ performance, todaysPayments, currency = "GBP" }: OverviewCardsProps) {
+  const toSafeNumber = (value: unknown) => {
+    const parsed = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  const normalizeCurrency = (value?: string) => {
+    const normalized = (value || "GBP").trim().toUpperCase();
+    if (normalized === "ANY") return "GBP";
+    return /^[A-Z]{3}$/.test(normalized) ? normalized : "GBP";
+  };
+
+  const formatMoney = (minor: number) => {
+    const safeCurrency = normalizeCurrency(currency);
+    const safeAmount = toSafeNumber(minor) / 100;
+    return safeAmount.toLocaleString("en-GB", {
+      style: "currency",
+      currency: safeCurrency,
+      maximumFractionDigits: 0,
+    });
+  };
+
+  const cards = [
+    {
+      title: "Total Revenue",
+      value: performance ? formatMoney(performance.totalRevenueMinor) : "£0",
+      trend: "All-time",
+      trendUp: true,
+      trendNeutral: true,
+    },
+    {
+      title: "Platform Commission",
+      value: performance ? formatMoney(performance.platformCommissionMinor) : "£0",
+      trend: "Our Cut",
+      trendUp: true,
+      trendNeutral: true,
+    },
+    {
+      title: "Today's Volume",
+      value: todaysPayments ? formatMoney(todaysPayments.successful.amountMinor) : "£0",
+      trend: todaysPayments ? `${todaysPayments.successRatePct}% success rate` : "0 payments",
+      trendUp: todaysPayments ? todaysPayments.successRatePct >= 90 : true,
+      trendNeutral: !todaysPayments || todaysPayments.successRatePct === 0,
+    },
+    {
+      title: "Pending Payouts",
+      value: performance ? formatMoney(performance.pendingPayoutMinor) : "£0",
+      trend: "Processing",
+      trendUp: false,
+      trendNeutral: true,
+    },
+    {
+      title: "Active Escrow",
+      value: performance ? formatMoney(performance.activeEscrowMinor) : "£0",
+      trend: "Secured",
+      trendUp: true,
+      trendNeutral: true,
+    },
+    {
+      title: "Disputed Funds",
+      value: performance ? formatMoney(performance.disputedFundsMinor) : "£0",
+      trend: performance ? `${performance.disputedCases} cases` : "0 cases",
+      trendUp: false,
+      trendNeutral: false,
+    },
+  ];
+
   return (
     <div
       className="
-       grid grid-cols-2 lg:grid-cols-5 gap-4"
+       grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4"
     >
-      {Array.from({ length: 5 }).map((_, i) => (
+      {cards.map((card, i) => (
         <div
           key={i}
           className="
             bg-white rounded-xl
-           last:col-span-2 lg:last:col-span-1
             p-3 sm:p-4
             space-y-3
           "
         >
           <div className="space-y-1">
             <h2 className="text-[12px] sm:text-[14px] font-black">
-              Active user
+              {card.title}
             </h2>
-            <p className="text-[18px] sm:text-[22px] font-semibold">4,992</p>
+            <p className="text-[18px] sm:text-[22px] font-semibold">{card.value}</p>
           </div>
 
           <p className="flex items-center gap-1 text-[7px] sm:text-[8px]">
-            <span className="text-[#6DD58C]">
-              <TrendingUp size={12} />
+            <span className={card.trendNeutral ? "text-gray-400" : (card.trendUp ? "text-[#6DD58C]" : "text-red-500")}>
+              {card.trendNeutral ? <Minus size={12} /> : (card.trendUp ? <TrendingUp size={12} /> : <TrendingDown size={12} />)}
             </span>
-            <span className="font-bold">+ 12.5 % (last month)</span>
+            <span className="font-bold">{card.trend}</span>
           </p>
         </div>
       ))}

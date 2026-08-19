@@ -1,0 +1,1 @@
+﻿app/(dashboard)/vendors/profile/[id]/_components/ActiveVendorProfile.tsx(117,12): error TS17008: JSX element 'div' has no corresponding closing tag.

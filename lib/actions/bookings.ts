@@ -1,0 +1,373 @@
+"use server";
+
+import { getAccessToken } from "@/lib/session";
+import { fetchWithAuthRetry } from "@/lib/auth-retry";
+
+interface ActionResult<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  total?: number;
+  page?: number;
+  limit?: number;
+}
+
+export interface BookingResponse {
+  _id: string;
+  vendorId: any;
+  customerId: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    avatar?: string;
+  };
+  eventDetails: {
+    title: string;
+    startDate: string;
+    endDate: string;
+    guestCount: number;
+    description: string;
+  };
+  budgetAllocations: any[];
+  location: {
+    addressText: string;
+  };
+  currency: string;
+  amounts: {
+    subtotal: number;
+    fees: number;
+    commission: number;
+    total: number;
+  };
+  paymentModel: string;
+  status: "pending" | "confirmed" | "completed" | "cancelled" | "rejected" | "pending_payment" | "paid";
+  createdAt: string;
+  updatedAt: string;
+  payment: {
+    provider: string;
+    status: string;
+    paymentIntentId: string;
+  };
+}
+
+export async function getVendorBookings(
+  vendorId: string,
+  page: number = 1,
+  limit: number = 10
+): Promise<ActionResult<BookingResponse[]>> {
+  try {
+    const url = `${process.env.BACKEND_URL}/api/v1/bookings/vendor/${vendorId}?page=${page}&limit=${limit}`;
+
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+      })
+    );
+
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to fetch bookings" };
+    }
+
+    const body = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    return {
+      success: true,
+      data: body.data.data,
+      total: body.data.total,
+      page: body.data.page,
+      limit: body.data.limit,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
+
+export type BookingStatusFilter = "pending_payment" | "paid" | "confirmed" | "rejected" | "cancelled" | "completed" | "refunded" | "all" | "";
+
+export async function getAdminClientBookings(
+  clientId: string,
+  page: number = 1,
+  limit: number = 10,
+  status?: BookingStatusFilter,
+  from?: string,
+  to?: string
+): Promise<ActionResult<BookingResponse[]>> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      return { success: false, error: "Unauthorized: No access token" };
+    }
+
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+
+    if (status && status !== "all") params.append("status", status);
+    if (from) params.append("from", from);
+    if (to) params.append("to", to);
+
+    const url = `${process.env.BACKEND_URL}/api/v1/admin/clients/${clientId}/bookings?${params.toString()}`;
+
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
+
+    const body = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${res.statusText}`,
+      };
+    }
+
+    return {
+      success: true,
+      data: body.data.data,
+      total: body.data.total,
+      page: body.data.page,
+      limit: body.data.limit,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
+
+export interface AdminBookingItem {
+  _id: string;
+  customerRequestId: {
+    _id: string;
+    eventDetails: {
+      title: string;
+      startDate: string;
+      endDate: string;
+      guestCount: number;
+      location?: string;
+      description?: string;
+    };
+    serviceCategoryId: string | { _id: string; name: string; icon?: string };
+  };
+  quoteId: string;
+  vendorId: {
+    _id: string;
+    businessProfile?: string; // Sometimes populated, sometimes just ID
+    paymentModel?: string;
+  } | any; // To handle both populated and unpopulated depending on backend
+  customerId: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber?: string;
+  } | any;
+  eventDetails: {
+    title: string;
+    startDate: string;
+    endDate?: string;
+    guestCount?: number;
+    description?: string;
+  };
+  location?: {
+    addressText: string;
+  };
+  currency: string;
+  amounts: {
+    subtotal: number;
+    fees: number;
+    commission: number;
+    total: number;
+  };
+  paymentModel: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  payment?: {
+    provider: string;
+    status: string;
+    paymentIntentId?: string;
+    paidAt?: string;
+    transferId?: string;
+  };
+  budgetAllocations?: any[];
+}
+
+export interface AdminBookingsResponse {
+  data: AdminBookingItem[];
+  total?: number;
+  page?: number;
+  limit?: number;
+}
+
+export async function getAdminBookings(
+  page: number = 1,
+  limit: number = 10,
+  status: string = "all",
+  vendorId?: string,
+  customerId?: string,
+  from?: string,
+  to?: string
+): Promise<ActionResult<AdminBookingsResponse>> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      return { success: false, error: "Unauthorized: No access token found" };
+    }
+
+    const query = new URLSearchParams();
+    query.append("page", page.toString());
+    query.append("limit", limit.toString());
+
+    if (status && status !== "all" && status !== "--") query.append("status", status);
+    if (vendorId && vendorId.trim() !== "") query.append("vendorId", vendorId);
+    if (customerId && customerId.trim() !== "") query.append("customerId", customerId);
+    if (from) query.append("from", from);
+    if (to) query.append("to", to);
+
+    const queryString = query.toString() ? `?${query.toString()}` : "";
+
+    const response = await fetch(
+      `${process.env.BACKEND_URL}/api/v1/admin/bookings${queryString}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      }
+    );
+
+    const rawResponse = await response.text();
+
+    const body = rawResponse ? JSON.parse(rawResponse) : {};
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    return { success: true, data: body.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
+
+export async function releaseBookingPayout(
+  bookingId: string
+): Promise<ActionResult<{ message: string; data?: any }>> {
+  try {
+    const token = await getAccessToken();
+
+    if (!token) {
+      return { success: false, error: "Unauthorized: No access token found" };
+    }
+
+    const response = await fetch(
+      `${process.env.BACKEND_URL}/api/v1/admin/bookings/${bookingId}/release-payout`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      }
+    );
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/bookings");
+
+    return { success: true, data: body };
+  } catch (error) {
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
+
+export async function refundBookingPayment(
+  bookingId: string,
+  amount?: number
+): Promise<ActionResult<{ message: string; data?: any }>> {
+  try {
+    const token = await getAccessToken();
+
+    if (!token) {
+      return { success: false, error: "Unauthorized: No access token found" };
+    }
+
+    const bodyPayload = amount !== undefined ? JSON.stringify({ amount }) : JSON.stringify({});
+
+    const response = await fetch(
+      `${process.env.BACKEND_URL}/api/v1/admin/bookings/${bookingId}/refund`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: bodyPayload,
+        cache: "no-store",
+      }
+    );
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/bookings");
+
+    return { success: true, data: body };
+  } catch (error) {
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}

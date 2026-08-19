@@ -10,36 +10,118 @@ import {
   CartesianGrid,
 } from "recharts";
 
-const data = [
-  { month: "Jan", value: 10000 },
-  { month: "Feb", value: 17000 },
-  { month: "Mar", value: 18000 },
-  { month: "Apr", value: 17500 },
-  { month: "May", value: 25000 },
-  { month: "Jun", value: 38753 },
-  { month: "Jul", value: 30000 },
-  { month: "Aug", value: 20000 },
-  { month: "Sept", value: 18500 },
-  { month: "Oct", value: 22000 },
-  { month: "Nov", value: 24500 },
-  { month: "Dec", value: 23500 },
-];
+import { useMemo, useState } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 
-export default function TrendsChart() {
+interface TrendsChartProps {
+  chartData?: Array<{
+    periodStart: string;
+    bookingsCount: number;
+    revenueMinor: number;
+    commissionMinor: number;
+  }>;
+}
+
+export default function TrendsChart({ chartData = [] }: TrendsChartProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  const [metric, setMetric] = useState<"revenue" | "commission" | "bookings">("revenue");
+
+  const handleFilterChange = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) {
+      if (key === "from") {
+        params.set(key, `${value}T00:00:00.000Z`);
+      } else if (key === "to") {
+        params.set(key, `${value}T23:59:59.999Z`);
+      } else {
+        params.set(key, value);
+      }
+    } else {
+      params.delete(key);
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const currentPeriod = searchParams.get("period") || "day";
+  const fromParam = searchParams.get("from");
+  const toParam = searchParams.get("to");
+  
+  const fromDateValue = fromParam ? fromParam.split("T")[0] : "";
+  const toDateValue = toParam ? toParam.split("T")[0] : "";
+
+  const data = useMemo(() => {
+    if (!chartData || chartData.length === 0) return [];
+    
+    // Sort chronologically to ensure left-to-right timeline
+    const sorted = [...chartData].sort(
+      (a, b) => new Date(a.periodStart).getTime() - new Date(b.periodStart).getTime()
+    );
+
+    return sorted.map(item => {
+      const d = new Date(item.periodStart);
+      const label = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      return {
+        label,
+        revenue: item.revenueMinor / 100, // Convert to major units
+        commission: item.commissionMinor / 100,
+        bookings: item.bookingsCount,
+        fullDate: item.periodStart
+      };
+    });
+  }, [chartData]);
+
   return (
     <div className="bg-white rounded-2xl p-6 w-full">
       {/* HEADER */}
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-700">Booking Trends</h3>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+        <div className="flex items-center gap-3">
+          <h3 className="text-lg font-semibold text-gray-700">Booking Trends</h3>
+          <select 
+            className="border rounded-lg px-2 py-1 text-sm text-gray-600 bg-gray-50 outline-none font-medium cursor-pointer"
+            value={metric}
+            onChange={(e) => setMetric(e.target.value as any)}
+          >
+            <option value="revenue">Gross Revenue</option>
+            <option value="commission">Commission</option>
+            <option value="bookings">Total Bookings</option>
+          </select>
+        </div>
 
-        <select className="border rounded-lg px-4 py-2 text-sm text-gray-500 outline-none">
-          <option>Month</option>
-        </select>
+        <div className="flex flex-wrap items-center gap-2">
+          <input 
+            type="date" 
+            className="border rounded-lg px-3 py-2 text-sm text-gray-500 outline-none w-[130px]"
+            value={fromDateValue}
+            max={toDateValue || undefined}
+            onChange={(e) => handleFilterChange("from", e.target.value)}
+          />
+          <span className="text-gray-400 hidden sm:inline">-</span>
+          <input 
+            type="date" 
+            className="border rounded-lg px-3 py-2 text-sm text-gray-500 outline-none w-[130px]"
+            value={toDateValue}
+            min={fromDateValue || undefined}
+            onChange={(e) => handleFilterChange("to", e.target.value)}
+          />
+          <select 
+            className="border rounded-lg px-4 py-2 text-sm text-gray-500 outline-none"
+            value={currentPeriod}
+            onChange={(e) => handleFilterChange("period", e.target.value)}
+          >
+            <option value="day">Daily</option>
+            <option value="week">Weekly</option>
+            <option value="month">Monthly</option>
+            <option value="year">Yearly</option>
+          </select>
+        </div>
       </div>
 
       {/* CHART */}
       <div className="w-full h-[280px]">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
           <LineChart
             data={data}
             margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
@@ -49,7 +131,7 @@ export default function TrendsChart() {
 
             {/* X AXIS */}
             <XAxis
-              dataKey="month"
+              dataKey="label"
               axisLine={false}
               tickLine={false}
               tick={{ fill: "#9AA0A6", fontSize: 12 }}
@@ -59,7 +141,7 @@ export default function TrendsChart() {
             <YAxis
               axisLine={false}
               tickLine={false}
-              tickFormatter={(v) => `£${v / 1000}k`}
+              tickFormatter={(v) => metric === "bookings" ? v : `£${v >= 1000 ? v / 1000 + 'k' : v}`}
               tick={{ fill: "#9AA0A6", fontSize: 12 }}
             />
 
@@ -67,9 +149,11 @@ export default function TrendsChart() {
             <Tooltip
               content={({ active, payload }) => {
                 if (active && payload?.length) {
+                  const val = payload[0].value as number;
+                  const formattedVal = metric === "bookings" ? val.toLocaleString() : `£${val.toLocaleString()}`;
                   return (
-                    <div className="bg-blue-500 text-white text-xs px-3 py-1 rounded-lg">
-                      £ {payload[0].value?.toLocaleString()}
+                    <div className="bg-blue-500 text-white text-xs px-3 py-1 rounded-lg shadow-lg">
+                      {formattedVal} ({payload[0].payload.label})
                     </div>
                   );
                 }
@@ -84,14 +168,14 @@ export default function TrendsChart() {
             {/* LINE */}
             <Line
               type="monotone"
-              dataKey="value"
+              dataKey={metric}
               stroke="#2196F3"
               strokeWidth={3}
-              dot={({ cx, cy, payload }) =>
-                payload.month === "Jun" ? (
-                  <circle cx={cx} cy={cy} r={6} fill="#2196F3" />
+              dot={({ cx, cy, payload, index }) =>
+                index === data.length - 1 ? (
+                  <circle key={`dot-${index}`} cx={cx} cy={cy} r={6} fill="#2196F3" />
                 ) : (
-                  <circle cx={cx} cy={cy} r={4} fill="#E5E7EB" />
+                  <circle key={`dot-${index}`} cx={cx} cy={cy} r={4} fill="#E5E7EB" />
                 )
               }
               activeDot={false}
@@ -102,14 +186,18 @@ export default function TrendsChart() {
 
       {/* BOTTOM MONTH DOTS */}
       <div className="flex justify-between mt-4 px-2">
-        {data.map((item) => (
-          <div
-            key={item.month}
-            className={`w-2 h-2 rounded-full ${
-              item.month === "Jun" ? "bg-blue-500" : "bg-gray-300"
-            }`}
-          />
-        ))}
+        {data.length > 0 ? (
+          data.map((item, index) => (
+            <div
+              key={item.label + index}
+              className={`w-2 h-2 rounded-full ${
+                index === data.length - 1 ? "bg-blue-500" : "bg-gray-300"
+              }`}
+            />
+          ))
+        ) : (
+          <div className="text-sm text-gray-400 text-center w-full py-2">No timeline data available</div>
+        )}
       </div>
     </div>
   );

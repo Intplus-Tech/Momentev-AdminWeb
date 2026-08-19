@@ -1,0 +1,335 @@
+"use server";
+
+import { getAccessToken } from "@/lib/session";
+import { fetchWithAuthRetry } from "@/lib/auth-retry";
+
+// Shared common response interface
+interface ActionResult<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  total?: number;
+  page?: number;
+  limit?: number;
+}
+
+export interface ClientAddress {
+  _id: string;
+  street: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  long: number;
+  lat: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ClientAvatar {
+  _id: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  extension: string;
+  provider: string;
+  uploadedBy: string;
+  metadata?: {
+    cloudId: string;
+    folder: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ClientProfile {
+  _id: string;
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  gender: string;
+  role: string;
+  status: string; // "active", "inactive", "banned", "pending_verification"
+  emailVerified: boolean;
+  authProvider: string;
+  hasPassword: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lastActiveAt: string | null;
+  lastLoginAt: string | null;
+  customerFavoriteVendors?: string[];
+
+  // Optional extended details (often available in getById)
+  phoneNumber?: string | null;
+  stripeCustomerId?: string | null;
+  dateOfBirth?: string | null;
+  addressId?: ClientAddress | null;
+  avatar?: ClientAvatar | null;
+  googleId?: string | null;
+}
+
+export async function getAdminClients(
+  page: number = 1,
+  limit: number = 10,
+  search?: string,
+  status?: string
+): Promise<ActionResult<ClientProfile[]>> {
+  try {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+
+    if (search) params.append("search", search);
+    if (status && status !== "all") params.append("status", status);
+
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/admin/clients?${params.toString()}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      })
+    );
+
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to fetch clients" };
+    }
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    return {
+      success: true,
+      data: body.data.data, // The schema nests the array under data.data
+      total: body.data.total,
+      page: body.data.page,
+      limit: body.data.limit,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
+
+export async function getAdminClientById(id: string): Promise<ActionResult<ClientProfile>> {
+  try {
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/admin/clients/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      })
+    );
+
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to fetch client" };
+    }
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    return { success: true, data: body.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
+
+export async function updateClientStatus(
+  clientId: string,
+  action: "suspend" | "reactivate",
+  reason?: string
+): Promise<ActionResult<ClientProfile>> {
+  try {
+    const { response, error } = await fetchWithAuthRetry((token) =>
+      fetch(`${process.env.BACKEND_URL}/api/v1/admin/clients/${clientId}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ action, reason }),
+        cache: "no-store",
+      })
+    );
+
+    if (error && !response.ok) {
+      return { success: false, error: error || "Failed to update client status" };
+    }
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/clients");
+    revalidatePath(`/clients/profile/${clientId}`);
+
+    return { success: true, data: body.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
+
+export interface SpendingSummary {
+  totalLifetimeValueMinor: number;
+  averageMonthlySpendMinor: number;
+  projected12MonthValueMinor: number;
+  platformCommissionEarnedMinor: number;
+}
+
+export interface PaymentMethodDetails {
+  id: string;
+  brand: string;
+  last4: string;
+  expMonth: number;
+  expYear: number;
+  isDefault: boolean;
+  label: string;
+}
+
+export interface PaymentMethodsSummary {
+  primary: PaymentMethodDetails | null;
+  backup: PaymentMethodDetails | null;
+  successRatePct: number;
+  failedPayments: number;
+  averageTransactionMinor: number;
+}
+
+export interface CustomerPaymentDashboard {
+  customerId: string;
+  currency: string;
+  spendingSummary: SpendingSummary;
+  paymentMethods: PaymentMethodsSummary;
+}
+
+export async function getClientPaymentDashboard(
+  customerId: string
+): Promise<ActionResult<CustomerPaymentDashboard>> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      return { success: false, error: "Unauthorized: No access token" };
+    }
+
+    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/customer-profile-management/${customerId}/payment-dashboard`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    return { success: true, data: body.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}
+
+export interface CustomerPerformanceMetrics {
+  totalBookings: number;
+  totalSpendMinor: number;
+  averageBookingValueMinor: number;
+  repeatRatePct: number;
+  disputes: number;
+}
+
+export interface CustomerBasicInformation {
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  location: string;
+  signupDate: string;
+  lastLoginAt: string;
+  lastActiveAt: string;
+  accountStatus: string;
+}
+
+export interface CustomerProfileOverview {
+  customerId: string;
+  clientId: string;
+  currency: string;
+  performanceMetrics: CustomerPerformanceMetrics;
+  basicInformation: CustomerBasicInformation;
+}
+
+export async function getClientOverview(
+  customerId: string
+): Promise<ActionResult<CustomerProfileOverview>> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      return { success: false, error: "Unauthorized: No access token" };
+    }
+
+    const response = await fetch(`${process.env.BACKEND_URL}/api/v1/customer-profile-management/${customerId}/overview`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: body.message || `Error: ${response.statusText}`,
+      };
+    }
+
+    return { success: true, data: body.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: "An unexpected network error occurred.",
+    };
+  }
+}

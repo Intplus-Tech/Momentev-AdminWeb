@@ -71,14 +71,8 @@ function LoginForm() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
-      {/* Blue Header Section */}
-      <div className="flex h-50 items-center justify-center bg-[#4196F0]">
-        <h1 className="text-3xl font-medium text-white">Admin</h1>
-      </div>
-
-      {/* Form Section */}
-      <div className="flex flex-1 items-start justify-center bg-[#E8E8E8] pt-0">
+     
+      <div className="flex h-screen flex-1 items-center justify-center pt-0">
         <div className="-mt-16 w-full max-w-md rounded-lg bg-white px-10 py-8 shadow-lg">
           {/* Logo */}
           <div className="mb-8 flex justify-center">
@@ -175,7 +169,6 @@ function LoginForm() {
           </div>
         </div>
       </div>
-    </div>
   );
 }
 
