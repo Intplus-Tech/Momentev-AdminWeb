@@ -62,7 +62,6 @@ export async function getCommissions(
 export async function createCommission(data: {
   type: "flat_rate" | "percentage";
   amount: number;
-  currency: string;
 }): Promise<ActionResult<Commission>> {
   try {
     const { response, error } = await fetchWithAuthRetry((token) =>
@@ -72,7 +71,7 @@ export async function createCommission(data: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, currency: "GBP" }),
       })
     );
 
@@ -110,7 +109,6 @@ export async function updateCommission(
   id: string,
   data: {
     amount?: number;
-    currency?: string;
   }
 ): Promise<ActionResult<Commission>> {
   try {

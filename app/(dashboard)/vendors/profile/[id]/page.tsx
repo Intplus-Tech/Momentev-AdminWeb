@@ -30,12 +30,19 @@ export default async function VendorProfilePage({ params }: PageProps) {
     getAdminVendorSpecialties(vendorId),
   ]);
 
-  console.log("[VendorProfilePage] fetched data", {
-    vendorId,
-    vendorRes,
-    servicesRes,
-    specialtiesRes,
-  });
+  console.log(
+    "[VendorProfilePage] fetched data\n" +
+    JSON.stringify(
+      {
+        vendorId,
+        vendorRes,
+        servicesRes,
+        specialtiesRes,
+      },
+      null,
+      2,
+    ),
+  );
 
   if (!vendorRes.success || !vendorRes.data) {
     return (
@@ -53,10 +60,7 @@ export default async function VendorProfilePage({ params }: PageProps) {
   }
 
   const vendor = vendorRes.data;
-  const vendorStatus =
-    vendor.userId?.status === "active" || vendor.userId?.status === "suspended" || vendor.userId?.status === "banned"
-      ? vendor.userId.status
-      : vendor.vendorStatus || (vendor.isActive ? "active" : "suspended");
+  const vendorStatus = vendor.userId.status.toLowerCase();
   const vendorStatusLabel =
     vendorStatus === "banned" ? "Banned" : vendorStatus === "suspended" ? "Suspended" : "Active";
   const vendorStatusBadgeClass =

@@ -29,17 +29,7 @@ type ActionType = "suspend" | "ban" | "reactivate" | null;
 type VendorStatus = "active" | "suspended" | "banned";
 
 function getVendorStatus(vendor: VendorProfile): VendorStatus {
-  const userStatus = vendor.userId?.status?.toLowerCase();
-
-  if (userStatus === "active" || userStatus === "suspended" || userStatus === "banned") {
-    return userStatus;
-  }
-
-  if (vendor.vendorStatus) {
-    return vendor.vendorStatus;
-  }
-
-  return vendor.isActive ? "active" : "suspended";
+  return vendor.userId.status.toLowerCase() as VendorStatus;
 }
 
 export default function VendorStatusActions({ vendor }: Props) {

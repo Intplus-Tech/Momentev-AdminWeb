@@ -16,10 +16,7 @@ export default function ActiveVendorOverview({ vendor, services, specialties }: 
   const profile = vendor.businessProfile as any;
   const user = vendor.userId as any;
   const vendorAny = vendor as any;
-  const status =
-    user?.status === "active" || user?.status === "suspended" || user?.status === "banned"
-      ? user.status
-      : vendor.vendorStatus || (vendor.isActive ? "active" : "suspended");
+  const status = vendor.userId.status.toLowerCase();
 
   const quickActionCopy =
     status === "banned"
@@ -206,7 +203,7 @@ export default function ActiveVendorOverview({ vendor, services, specialties }: 
                 vendor.commissionAgreement.commissions && vendor.commissionAgreement.commissions.length > 0 ? (
                   <div className="space-y-1">
                     {vendor.commissionAgreement.commissions.map((commission) => (
-                      <div key={commission.commission}>
+                      <div key={`${commission.serviceSpecialty}-${commission.commission}`}>
                         {commission.serviceSpecialtyName}: {commission.commissionType === "percentage"
                           ? `${commission.commissionAmount}%`
                           : `${commission.currency} ${commission.commissionAmount} per booking`}

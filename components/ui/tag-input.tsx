@@ -4,7 +4,7 @@ import * as React from "react";
 import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TagInputProps {
   tags: string[];
@@ -51,25 +51,27 @@ export function TagInput({ tags, setTags, placeholder }: TagInputProps) {
         className="w-full"
       />
       {tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mt-1">
-          {tags.map((tag) => (
-            <Badge 
-              key={tag} 
-              variant="secondary" 
-              className="flex items-center gap-1 font-normal bg-blue-50 text-blue-700 hover:bg-blue-100/80 px-2 py-1 text-xs rounded-md transition-colors"
-            >
-              {tag}
-              <button
-                type="button"
-                onClick={() => removeTag(tag)}
-                className="ml-1 text-blue-400 hover:text-red-500 rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        <ScrollArea className="mt-1 h-32 w-full rounded-md">
+          <div className="flex flex-wrap gap-1.5 pr-3">
+            {tags.map((tag) => (
+              <Badge
+                key={tag}
+                variant="secondary"
+                className="flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-normal text-blue-700 transition-colors hover:bg-blue-100/80"
               >
-                <X className="h-3 w-3" />
-                <span className="sr-only">Remove {tag}</span>
-              </button>
-            </Badge>
-          ))}
-        </div>
+                {tag}
+                <button
+                  type="button"
+                  onClick={() => removeTag(tag)}
+                  className="ml-1 rounded-full text-blue-400 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                >
+                  <X className="h-3 w-3" />
+                  <span className="sr-only">Remove {tag}</span>
+                </button>
+              </Badge>
+            ))}
+          </div>
+        </ScrollArea>
       )}
     </div>
   );

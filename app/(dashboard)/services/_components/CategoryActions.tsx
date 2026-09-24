@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Edit, Trash2 } from "lucide-react";
-import { DynamicIcon } from "lucide-react/dynamic";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -35,18 +34,18 @@ import { updateServiceCategory, deleteServiceCategory, ServiceCategory } from "@
 
 // Simple custom toast hook substitution: since we could not find 'toast' in the app directory,
 // we will rely on native alert or simple console/state feedback for now until a robust toast system is confirmed.
-export function CategoryActions({ 
-  category, 
+export function CategoryActions({
+  category,
   initialSpecialties,
-  commissions 
-}: { 
+  commissions
+}: {
   category: ServiceCategory;
   initialSpecialties: ServiceSpecialty[];
   commissions: Commission[];
 }) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  
+
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -94,55 +93,55 @@ export function CategoryActions({
             <Edit className="w-4 h-4" />
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="max-h-[calc(100dvh-2rem)] p-4 sm:max-w-[560px] sm:p-6">
           <DialogHeader>
             <DialogTitle>Edit Category</DialogTitle>
             <DialogDescription>
-              Make changes to the service category here. Click save when you're done.
+              Make changes to the service category here. Click save when you&apos;re done.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right text-sm font-medium">
+          <div className="grid gap-4 py-2 sm:py-4">
+            <div className="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+              <Label htmlFor="name" className="text-left text-sm font-medium sm:text-right">
                 Name
               </Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="col-span-3 h-10 px-3 py-2 text-sm border rounded-md"
+                className="h-10 min-w-0 px-3 py-2 text-sm border rounded-md sm:col-span-3"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="icon" className="text-right text-sm font-medium">
+            <div className="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+              <Label htmlFor="icon" className="text-left text-sm font-medium sm:text-right">
                 Icon
               </Label>
-              <div className="col-span-3">
-                <IconPicker 
-                  value={icon} 
-                  onChange={(val) => setIcon(val)} 
+              <div className="min-w-0 sm:col-span-3">
+                <IconPicker
+                  value={icon}
+                  onChange={(val) => setIcon(val)}
                 />
               </div>
             </div>
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="tags" className="text-right text-sm font-medium pt-2">
+            <div className="grid gap-2 sm:grid-cols-4 sm:items-start sm:gap-4">
+              <Label htmlFor="tags" className="pt-0 text-left text-sm font-medium sm:pt-2 sm:text-right">
                 Tags
               </Label>
-              <div className="col-span-3">
-                <TagInput 
-                  tags={suggestedTags} 
-                  setTags={setSuggestedTags} 
-                  placeholder="wedding, photography..." 
+              <div className="min-w-0 sm:col-span-3">
+                <TagInput
+                  tags={suggestedTags}
+                  setTags={setSuggestedTags}
+                  placeholder="wedding, photography..."
                 />
                 <p className="text-[11px] text-muted-foreground mt-1">Press enter or comma to add a tag</p>
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button 
-               onClick={handleUpdate} 
-               disabled={isUpdating}
-               className="bg-[#2B4EFF] hover:bg-blue-700 text-white"
+          <DialogFooter className="sm:pt-2">
+            <Button
+              onClick={handleUpdate}
+              disabled={isUpdating}
+              className="w-full bg-[#2B4EFF] text-white hover:bg-blue-700 sm:w-auto"
             >
               {isUpdating ? "Saving..." : "Save changes"}
             </Button>
@@ -151,9 +150,9 @@ export function CategoryActions({
       </Dialog>
 
       {/* MANAGE SPECIALTIES */}
-      <ManageSpecialtiesDialog 
-        category={category} 
-        initialSpecialties={initialSpecialties} 
+      <ManageSpecialtiesDialog
+        category={category}
+        initialSpecialties={initialSpecialties}
         commissions={commissions}
       />
 
@@ -168,13 +167,13 @@ export function CategoryActions({
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the 
+              This action cannot be undone. This will permanently delete the
               <strong> {category.name} </strong> category and remove its data from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
                 handleDelete();

@@ -196,7 +196,22 @@ export async function getAdminVendorById(id: string): Promise<ActionResult<Vendo
       return { success: false, error: error || "Failed to fetch vendor" };
     }
 
-    const body = await response.json();
+    const rawResponse = await response.text();
+    const body = JSON.parse(rawResponse);
+
+    console.log(
+      "[getAdminVendorById] parsed API response\n" +
+      JSON.stringify(
+        {
+          vendorId: id,
+          status: response.status,
+          ok: response.ok,
+          body,
+        },
+        null,
+        2,
+      ),
+    );
 
     if (!response.ok) {
       return {

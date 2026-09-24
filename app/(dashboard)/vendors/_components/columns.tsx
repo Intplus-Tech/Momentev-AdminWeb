@@ -66,11 +66,12 @@ export const columns: ColumnDef<VendorProfile>[] = [
     header: "Status & Stage",
     cell: ({ row }) => {
       const vendor = row.original;
-      const statusText = vendor.vendorStatus === "banned"
+      const userStatus = vendor.userId.status.toLowerCase();
+      const statusText = userStatus === "banned"
         ? "Banned"
-        : vendor.vendorStatus === "suspended"
+        : userStatus === "suspended"
           ? "Suspended"
-          : vendor.isActive
+          : userStatus === "active"
             ? "Active"
             : "Inactive";
       return (
@@ -105,7 +106,7 @@ export const columns: ColumnDef<VendorProfile>[] = [
       return (
         <div className="flex max-w-52 flex-col gap-1 text-xs font-medium text-gray-700">
           {commissions.slice(0, 3).map((commission) => (
-            <span key={commission.commission} className="truncate" title={commission.serviceSpecialtyName}>
+            <span key={`${commission.serviceSpecialty}-${commission.commission}`} className="truncate" title={commission.serviceSpecialtyName}>
               {commission.serviceSpecialtyName}: {commission.commissionType === "percentage"
                 ? `${commission.commissionAmount}%`
                 : formatCommissionAmount(commission.commissionAmount, commission.commissionType, commission.currency)}
