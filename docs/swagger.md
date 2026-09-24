@@ -20483,10 +20483,7 @@ window.onload = function() {
                   "$ref": "#/components/schemas/AcceptCommissionAgreementInput"
                 },
                 "example": {
-                  "version": "v1",
-                  "commissionType": "percentage",
-                  "commissionAmount": 10,
-                  "currency": "GBP"
+                  "version": "v1"
                 }
               }
             }

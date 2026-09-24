@@ -47,9 +47,9 @@ export interface VendorProfile {
   };
   commissionAgreement?: {
     accepted: boolean;
-    commissionType?: string;
-    commissionAmount?: number;
-    currency?: string;
+    acceptedAt?: string;
+    version?: string;
+    commissions?: VendorCommission[];
   };
   profilePhoto?: {
     url: string;
@@ -68,6 +68,15 @@ export interface VendorProfile {
   onBoarded: boolean;
   vendorStatus?: "active" | "suspended" | "banned";
   suspensionReason?: string;
+}
+
+export interface VendorCommission {
+  serviceSpecialty: string;
+  serviceSpecialtyName: string;
+  commission: string;
+  commissionType: "percentage" | "flat_rate" | string;
+  commissionAmount: number;
+  currency: string;
 }
 
 export interface PaginatedVendorsResponse {

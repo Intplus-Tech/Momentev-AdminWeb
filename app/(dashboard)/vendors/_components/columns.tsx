@@ -14,6 +14,14 @@ const statusStyles: Record<string, string> = {
   Banned: "bg-red-100 text-red-700",
 };
 
+function formatCommissionAmount(amount: number, type: string, currency: string) {
+  if (type === "percentage") return `${amount}%`;
+  return new Intl.NumberFormat("en-GB", {
+    style: "currency",
+    currency,
+  }).format(amount);
+}
+
 export const columns: ColumnDef<VendorProfile>[] = [
   {
     id: "vendor",
@@ -84,13 +92,30 @@ export const columns: ColumnDef<VendorProfile>[] = [
     header: "Commission",
     cell: ({ row }) => {
       const vendor = row.original;
-      let commissionDisplay = "N/A";
-      if (vendor.commissionAgreement?.accepted && vendor.commissionAgreement.commissionAmount) {
-        const amount = vendor.commissionAgreement.commissionAmount;
-        const type = vendor.commissionAgreement.commissionType;
-        commissionDisplay = type === 'percentage' ? `${amount}%` : `${amount} ${vendor.commissionAgreement.currency || ''}`;
+      const commissions = vendor.commissionAgreement?.commissions || [];
+
+      if (!vendor.commissionAgreement?.accepted) {
+        return <span className="text-sm text-gray-500">Not accepted</span>;
       }
-      return <span className="text-sm font-medium text-gray-700">{commissionDisplay}</span>;
+
+      if (commissions.length === 0) {
+        return <span className="text-sm text-gray-500">No terms configured</span>;
+      }
+
+      return (
+        <div className="flex max-w-52 flex-col gap-1 text-xs font-medium text-gray-700">
+          {commissions.slice(0, 3).map((commission) => (
+            <span key={commission.commission} className="truncate" title={commission.serviceSpecialtyName}>
+              {commission.serviceSpecialtyName}: {commission.commissionType === "percentage"
+                ? `${commission.commissionAmount}%`
+                : formatCommissionAmount(commission.commissionAmount, commission.commissionType, commission.currency)}
+            </span>
+          ))}
+          {commissions.length > 3 && (
+            <span className="text-[10px] text-gray-500">+{commissions.length - 3} more</span>
+          )}
+        </div>
+      );
     },
   },
   {
