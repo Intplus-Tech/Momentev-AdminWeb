@@ -159,6 +159,14 @@ export default function BookingDetailsModal({
   const vendor = booking.vendorId;
   const amounts = booking.amounts;
   const payment = booking.payment;
+  const getSpecialtyId = (allocation: { vendorSpecialtyId: string | { _id: string } }) =>
+    typeof allocation.vendorSpecialtyId === "string"
+      ? allocation.vendorSpecialtyId
+      : allocation.vendorSpecialtyId?._id;
+  const getSpecialtyDetails = (allocation: { vendorSpecialtyId: string | { _id: string; priceCharge?: string; price?: string | number } }) =>
+    typeof allocation.vendorSpecialtyId === "string"
+      ? undefined
+      : allocation.vendorSpecialtyId;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -383,19 +391,21 @@ export default function BookingDetailsModal({
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-medium text-gray-700">
-                            {specialtyNames[alloc.vendorSpecialtyId?._id] || "Specialty"}
+                            {specialtyNames[getSpecialtyId(alloc)] || "Specialty"}
                           </span>
                           {isLoadingExtra && (
                             <Loader2 className="w-3 h-3 animate-spin text-gray-400" />
                           )}
                         </div>
-                        {!specialtyNames[alloc.vendorSpecialtyId?._id] && !isLoadingExtra && (
+                        {!specialtyNames[getSpecialtyId(alloc)] && !isLoadingExtra && (
                           <span className="text-[10px] text-gray-400 italic">Unknown Specialty</span>
                         )}
-                        <span className="text-[10px] text-gray-400 capitalize flex items-center gap-1">
-                          <Info className="w-3 h-3" />
-                          {alloc.vendorSpecialtyId?.priceCharge?.replace(/_/g, " ")} @ {alloc.vendorSpecialtyId?.price}
-                        </span>
+                        {getSpecialtyDetails(alloc) && (
+                          <span className="text-[10px] text-gray-400 capitalize flex items-center gap-1">
+                            <Info className="w-3 h-3" />
+                            {getSpecialtyDetails(alloc)?.priceCharge?.replace(/_/g, " ")} @ {getSpecialtyDetails(alloc)?.price}
+                          </span>
+                        )}
                       </div>
                       <Badge variant="secondary" className="font-medium bg-gray-50">
                         {formatMoneyFromMinorUnits(alloc.budgetedAmount, booking.currency || "GBP", undefined)}

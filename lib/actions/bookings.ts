@@ -29,7 +29,7 @@ export interface BookingResponse {
     guestCount: number;
     description: string;
   };
-  budgetAllocations: any[];
+  budgetAllocations: BookingBudgetAllocation[];
   location: {
     addressText: string;
   };
@@ -49,6 +49,15 @@ export interface BookingResponse {
     status: string;
     paymentIntentId: string;
   };
+}
+
+export interface BookingBudgetAllocation {
+  vendorSpecialtyId: string | {
+    _id: string;
+    priceCharge?: string;
+    price?: string | number;
+  };
+  budgetedAmount: number;
 }
 
 export async function getVendorBookings(
@@ -213,7 +222,7 @@ export interface AdminBookingItem {
     paidAt?: string;
     transferId?: string;
   };
-  budgetAllocations?: any[];
+  budgetAllocations?: BookingBudgetAllocation[];
 }
 
 export interface AdminBookingsResponse {

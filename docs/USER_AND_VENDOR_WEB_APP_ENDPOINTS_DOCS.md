@@ -146,7 +146,7 @@ This document lists all the backend API endpoints consumed by the Momentev front
 | `GET`  | `/vendors/{vendorId}/stripe-account`              | Get Stripe account status       | ✅   | **Path:** `vendorId`                                                                         | `lib/actions/payment.ts` |
 | `GET`  | `/vendors/{vendorId}/stripe-onboarding`           | Get Stripe onboarding link      | ✅   | **Path:** `vendorId`                                                                         | `lib/actions/payment.ts` |
 | `GET`  | `/vendors/{vendorId}/stripe-dashboard`            | Get Stripe dashboard link       | ✅   | **Path:** `vendorId`                                                                         | `lib/actions/payment.ts` |
-| `POST` | `/vendors/{vendorId}/commission-agreement/accept` | Accept commission agreement     | ✅   | **Path:** `vendorId` · **Body:** `{ version, commissionType, commissionAmount, currency }`   | `lib/actions/payment.ts` |
+| `POST` | `/vendors/{vendorId}/commission-agreement/accept` | Accept commission agreement     | ✅   | **Path:** `vendorId` · **Body:** `{ version }` (optional agreement version)   | `lib/actions/payment.ts` |
 
 ### Vendor Financial Data
 

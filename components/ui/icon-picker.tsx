@@ -13,9 +13,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { DynamicIcon } from "lucide-react/dynamic";
 
 export const POPULAR_CATEGORY_ICONS = [
-  "camera", "video", "music", "mic", "image", "scissors", "pen-tool", "gem", "gift", 
-  "car", "truck", "plane", "home", "building", "star", "heart", "users", "map-pin", 
-  "calendar", "cake", "flower2", "glass-water", "headphones", "party-popper", 
+  "camera", "video", "music", "mic", "image", "scissors", "pen-tool", "gem", "gift",
+  "car", "truck", "plane", "home", "building", "star", "heart", "users", "map-pin",
+  "calendar", "cake", "flower2", "glass-water", "headphones", "party-popper",
   "sparkles", "utensils", "shirt", "palette", "scissors-line-dashed", "tent",
   "monitor-play", "venetian-mask", "wine", "croissant"
 ];
@@ -30,7 +30,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+      <PopoverTrigger asChild className="w-full">
         <Button
           variant="outline"
           role="combobox"

@@ -47,9 +47,9 @@ export interface VendorProfile {
   };
   commissionAgreement?: {
     accepted: boolean;
-    commissionType?: string;
-    commissionAmount?: number;
-    currency?: string;
+    acceptedAt?: string;
+    version?: string;
+    commissions?: VendorCommission[];
   };
   profilePhoto?: {
     url: string;
@@ -68,6 +68,15 @@ export interface VendorProfile {
   onBoarded: boolean;
   vendorStatus?: "active" | "suspended" | "banned";
   suspensionReason?: string;
+}
+
+export interface VendorCommission {
+  serviceSpecialty: string;
+  serviceSpecialtyName: string;
+  commission: string;
+  commissionType: "percentage" | "flat_rate" | string;
+  commissionAmount: number;
+  currency: string;
 }
 
 export interface PaginatedVendorsResponse {
@@ -187,7 +196,22 @@ export async function getAdminVendorById(id: string): Promise<ActionResult<Vendo
       return { success: false, error: error || "Failed to fetch vendor" };
     }
 
-    const body = await response.json();
+    const rawResponse = await response.text();
+    const body = JSON.parse(rawResponse);
+
+    console.log(
+      "[getAdminVendorById] parsed API response\n" +
+      JSON.stringify(
+        {
+          vendorId: id,
+          status: response.status,
+          ok: response.ok,
+          body,
+        },
+        null,
+        2,
+      ),
+    );
 
     if (!response.ok) {
       return {

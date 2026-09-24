@@ -16,10 +16,7 @@ export default function ActiveVendorOverview({ vendor, services, specialties }: 
   const profile = vendor.businessProfile as any;
   const user = vendor.userId as any;
   const vendorAny = vendor as any;
-  const status =
-    user?.status === "active" || user?.status === "suspended" || user?.status === "banned"
-      ? user.status
-      : vendor.vendorStatus || (vendor.isActive ? "active" : "suspended");
+  const status = vendor.userId.status.toLowerCase();
 
   const quickActionCopy =
     status === "banned"
@@ -199,7 +196,29 @@ export default function ActiveVendorOverview({ vendor, services, specialties }: 
           <InfoRow label="Onboarding" value={vendor.onBoarded ? "Complete" : `In progress (stage ${vendor.onBoardingStage || 0})`} />
           <InfoRow label="Payment model" value={<span className="capitalize">{vendorAny.paymentModel?.replace(/_/g, " ") || "Not configured"}</span>} />
           <InfoRow label="Payment account" value={<span className="capitalize">{vendorAny.paymentAccountProvider?.replace(/_/g, " ") || "Not connected"}</span>} />
-          <InfoRow label="Commission" value={vendor.commissionAgreement?.accepted ? "Accepted" : "Not accepted"} />
+          <InfoRow
+            label="Commission"
+            value={
+              vendor.commissionAgreement?.accepted ? (
+                vendor.commissionAgreement.commissions && vendor.commissionAgreement.commissions.length > 0 ? (
+                  <div className="space-y-1">
+                    {vendor.commissionAgreement.commissions.map((commission) => (
+                      <div key={`${commission.serviceSpecialty}-${commission.commission}`}>
+                        {commission.serviceSpecialtyName}: {commission.commissionType === "percentage"
+                          ? `${commission.commissionAmount}%`
+                          : `${commission.currency} ${commission.commissionAmount} per booking`}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  "No terms configured"
+                )
+              ) : (
+                "Not accepted"
+              )
+            }
+            multiline
+          />
           <InfoRow label="Vendor ID" value={vendor.id} />
         </SectionCard>
       </div>
@@ -277,7 +296,7 @@ export default function ActiveVendorOverview({ vendor, services, specialties }: 
                   key={specialty._id || specialty.id}
                   className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium capitalize text-sky-800"
                 >
-                  {specialty.specialty?.name || specialty.name || "Unknown"}
+                  {specialty.serviceSpecialty?.name || specialty.specialty?.name || specialty.name || "Unknown"}
                 </span>
               ))}
             </div>
